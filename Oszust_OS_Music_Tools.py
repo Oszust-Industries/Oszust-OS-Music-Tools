@@ -20,7 +20,7 @@ def getScaling():
     return scaling
 
 def softwareSetup():
-    ## Setup Software
+    ## Setup Software5
     global exitSystem, screenHeight, screenWidth
     print("Loading...\nLaunching Interface...")
     ## Fix Screen Size
