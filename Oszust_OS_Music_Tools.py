@@ -1,15 +1,16 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 2-04-23
-softwareVersion = "v1.0.0.000 (02.04.23)"
-import ctypes, datetime, eyed3, json, os, pathlib, platform, psutil, re, requests, threading, urllib.request, webbrowser, win32clipboard
+## Created on: 1-02-23 - Last update: 2-06-23
+softwareVersion = "v1.0.0.000 (02.06.23)"
+import ctypes, datetime, eyed3, json, os, pathlib, platform, psutil, re, requests, threading, urllib.request, webbrowser, win32clipboard, pickle, textwrap
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
 
 def softwareConfig():
     ## System Configuration
-    global exitSystem, systemBuild, systemName
+    global exitSystem, systemBuild, systemName, musicSub
     exitSystem, systemName, systemBuild = False, "Oszust OS Music Tools", "dev"
+    musicSub = "Apple"
 
 def getScaling():
     # Get Scaling Infomation
@@ -19,7 +20,7 @@ def getScaling():
     return scaling
 
 def softwareSetup():
-    global topSongsList
+    global profanityEngineDefinitions, topSongsList, screenWidth, screenHeight
     ## Setup Software
     print("Loading...\nLaunching Interface...")
     ## Fix Screen Size
@@ -47,6 +48,8 @@ def softwareSetup():
             for item in billboardCache[1:]: topSongsList.append(item) ## Set List from Cache
         else: loadingScreen("Billboard_List_Download", agr1=False, arg2=False, arg3=False, arg4=False, arg5=False) ## Download Billboard Data
     except: loadingScreen("Billboard_List_Download", agr1=False, arg2=False, arg3=False, arg4=False, arg5=False) ## Download Billboard Data
+    ## Retrieve Profanity Engine Definitions
+    profanityEngineDefinitions = json.loads(urllib.request.urlopen(f"https://raw.githubusercontent.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/Server/profanityEngineDefinitions.txt").read().decode())
     ## Launch Default Home App
     homeScreen("Music_Search")
 
@@ -93,9 +96,9 @@ def downloadTop100Songs():
 def homeScreenAppPanels(appName): ## CLEAN THIS ONE
     if appName == "Music_Search":
         topSongsListBoxed = [[sg.Listbox(topSongsList, size=(80, 15), key='billboardTopSongsList', horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white')]]
-        return [[sg.Push(background_color='#4d4d4d'), sg.Text("Music Search:", font='Any 20', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d')],
-        [sg.Text("Search:", font='Any 16', background_color='#4d4d4d'), sg.Input(do_not_clear=True, size=(50,1), enable_events=True, key='songSearchBox'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#4d4d4d', key='searchSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\listSearch.png', border_width=0, button_color='#4d4d4d', key='listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#4d4d4d', key='clearInputSongSearchButton', tooltip="Clear Search")],
-        [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief="flat", background_color='#4d4d4d', key='topSongsListFrame'), sg.Push(background_color='#4d4d4d')]]
+        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+        [sg.Text("Search:", font='Any 16', background_color='#2B475D'), sg.Input(do_not_clear=True, size=(50,1), enable_events=True, key='songSearchBox'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#2B475D', key='searchSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\listSearch.png', border_width=0, button_color='#2B475D', key='listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', key='clearInputSongSearchButton', tooltip="Clear Search")],
+        [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief="flat", background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]]
     elif appName == "Music_Downloader":
         return [[sg.Push(background_color='#4d4d4d'), sg.Text("Music Downloader:", font='Any 20', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d')],
         [sg.Text("YouTube Link:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(48,1),enable_events=True, key='musicDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='musicDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='musicDownloaderOpenYoutube', tooltip="Open YouTube")],
@@ -104,7 +107,7 @@ def homeScreenAppPanels(appName): ## CLEAN THIS ONE
         [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#4d4d4d')],
         [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#4d4d4d')],
         [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
-        [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#4d4d4d')], [sg.Push(background_color='#4d4d4d'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#4d4d4d')]]
+        ]#[sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#4d4d4d')], [sg.Push(background_color='#4d4d4d'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#4d4d4d')]]
     elif appName == "YouTube_Downloader":
         return [[sg.Push(background_color='#4d4d4d'), sg.Text("YouTube Downloader:", font='Any 20', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d')],
         [sg.Text("YouTube Link:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(48,1),enable_events=True, key='youtubeDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderOpenYoutube', tooltip="Open YouTube")],
@@ -117,14 +120,15 @@ def homeScreenAppPanels(appName): ## CLEAN THIS ONE
     else: return [[sg.Text(appName)]]
 
 def homeScreen(appSelected):
+    global HomeWindow
     ## Oszust OS Music Tools List
-    applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader"] ##["Music Search", "Metadata Burner", "Music Downloader", "YouTube Downloader", "Music Player", "Settings"]
+    applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader"] ##["Music Search", "Metadata Burner", "Music Downloader", "YouTube Downloader", "CD Burner", "Settings"]
     for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#64778D', border_width=0, key=app.replace(" ", "_") + "_AppSelector", tooltip='Open ' + app)]], pad=((5,5), (5, 5)))]] ## Add apps to side panel
     ## Home Window
     appWindow = homeScreenAppPanels(appSelected) ## App Panel Loading Based on App
-    layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#4d4d4d', scrollable=False, vertical_scroll_only=True), sg.Column(appWindow, size=(600,390), pad=((10,10), (10, 10)), background_color='#4d4d4d', scrollable=False, vertical_scroll_only=True)]]
+    layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(appWindow, size=(600,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
     layout += [[sg.Column([[sg.Text(platform.system() + " | " + softwareVersion + " | " + systemBuild + " | Online", enable_events=True, font='Any 13', key='versionTextHomeBottom'), sg.Push(), sg.Text("Oszust Industries", enable_events=True, font='Any 13', key='creditsTextHomeBottom')], [sg.Column([[]], size=(715, 1), pad=(0,0))]], size=(715, 30), pad=(0,0))]]
-    HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#1b2838', margins=(0,0), finalize=True, resizable=True, text_justification='r')
+    HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), finalize=True, resizable=True, text_justification='r')
     ## Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     if appSelected == "Music_Search":
         HomeWindow['billboardTopSongsList'].bind('<Return>', '_Enter')  ## Enter on Top 100 list
@@ -233,9 +237,9 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
             if functionLoader == "Billboard_List_Download":
                 downloadTop100SongsThread = threading.Thread(name="downloadTop100Songs", target=downloadTop100Songs, args=())
                 downloadTop100SongsThread.start()
-                loadingStatus = "Downloading Billboard Hot 100 Songs..."
+                loadingStatus = "Downloading Billboard Hot 100 Songs..."  
             elif functionLoader == "YouTube_Downloader":
-                youtubeDownloaderThread = threading.Thread(name="downloadYouTube", target=downloadYouTube, args=(agr1,arg2, arg3, arg4, arg5,))
+                youtubeDownloaderThread = threading.Thread(name="downloadYouTube", target=downloadYouTube, args=(agr1, arg2, arg3, arg4, arg5,))
                 youtubeDownloaderThread.start()
                 loadingStatus = "Downloading YouTube Video..."
         elif loadingStatus == "Done":
@@ -272,22 +276,88 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameF
 
 
 
+
+def messagePopupTimed(EMMAMessage, title, message, imageFile, clickAction, timeOpen, messageImportant):
+    global messagePopupActive 
+    if messagePopupActive: messageWindow.close() ## Close Opened Message Window
+    if clickAction == None: clickAction = "" ## Fix clickAction Format
+    wrapper = textwrap.TextWrapper(width=43, max_lines=4, placeholder='...')
+    ## Change Height of Window on Message Size
+    if len(wrapper.wrap(message)) == 1: messageHeight, screenHeightSub = 135, 165
+    elif len(wrapper.wrap(message)) == 2: messageHeight, screenHeightSub = 165, 195
+    elif len(wrapper.wrap(message)) == 3: messageHeight, screenHeightSub = 185, 215
+    elif len(wrapper.wrap(message)) == 4: messageHeight, screenHeightSub = 210, 240
+    message = '\n'.join(wrapper.wrap(message)) ## Wrap Message Text
+    timeOpen += 500 ## Extend Time for Fading
+    ## Create Message Window
+    if EMMAMessage: alpha, messageWindow, messagePopupActive, timeOpened = 0.9, sg.Window("Message", [[sg.Column([[sg.Text("E.M.M.A. | Oszust Industries", font=('Any', 12), text_color='White', background_color='#696969'), sg.Push(background_color='#696969'), sg.Text("X", font=('Any', 14, 'bold'), enable_events=True, text_color='White', background_color='#696969', key='closeWindowButton')], [sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\EMMA\\" + imageFile + ".png", background_color='#696969'), sg.Text(title, font=('Any', 16, 'bold'), text_color='White', background_color='#696969')], [sg.Column([[]], size=(400, 3), background_color='#696969')]], background_color='#696969')], [sg.Text(message, font=('Any', 14), size=(430, None), text_color='White', background_color='#696969')]], background_color='#696969', location=(screenWidth-445,screenHeight-screenHeightSub), size=(430,messageHeight), alpha_channel=0, no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='l'), True, 0
+    else: alpha, messageWindow, messagePopupActive, timeOpened = 0.9, sg.Window("Message", [[sg.Column([[sg.Text(systemName + " | Oszust Industries", font=('Any', 12), text_color='White', background_color='#696969'), sg.Push(background_color='#696969'), sg.Text("X", font=('Any', 14, 'bold'), enable_events=True, text_color='White', background_color='#696969', key='closeWindowButton')], [sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + imageFile + ".png", background_color='#696969'), sg.Text(title, font=('Any', 16, 'bold'), text_color='White', background_color='#696969')], [sg.Column([[]], size=(400, 3), background_color='#696969')]], background_color='#696969')], [sg.Text(message, font=('Any', 14), size=(430, None), text_color='White', background_color='#696969')]], background_color='#696969', location=(screenWidth-445,screenHeight-screenHeightSub), size=(430,messageHeight), alpha_channel=0, no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='l'), True, 0
+    ## Window Shortcuts
+    messageWindow.bind('<Delete>', '_Delete')            ## Close Window shortcut
+    messageWindow.bind('<FocusOut>', '_FocusOut')        ## Window Focus Out
+    messageWindow.bind('<ButtonRelease-1>', '_Clicked')  ## Window Clicked
+    ## Mouse Icon Changes
+    messageWindow["closeWindowButton"].Widget.config(cursor="hand2") ## Hover icon
+    ## Fade In
+    for i in range(1,int(alpha*100)):
+        try:
+            messageWindow.set_alpha(i/100)
+            event, values = messageWindow.read(timeout=20)
+            if (messageImportant == False and event != sg.TIMEOUT_KEY) or event == 'closeWindowButton' or (event == '_Delete'): ## Clicking Away Enabled
+                messageWindow.close()
+                messagePopupActive = False
+                break
+            elif event == '_Clicked': ## Clicked Action
+                messageWindow.close()
+                messagePopupActive = False
+                break
+        except: ## Issue with Fade in Effect
+            messageWindow.close()
+            messagePopupActive = False
+            break
+    while True:
+        event, values = messageWindow.read(timeout=10)
+        if messageImportant == True and (event == sg.WIN_CLOSED or event == 'closeWindowButton' or (event == '_Delete')): ## Message Important - No Clicking Away
+            messageWindow.close()
+            messagePopupActive = False
+            break
+        elif messageImportant == False and (event == sg.WIN_CLOSED or event == 'closeWindowButton' or (event == '_Delete') or (event == '_FocusOut')): ## Clicking Away Enabled
+            messageWindow.close()
+            messagePopupActive = False
+            break
+        elif event == '_Clicked': ## Clicked Action
+            messageWindow.close()
+            messagePopupActive = False
+            break
+        elif timeOpened >= timeOpen: ## Fade Out Window
+            for i in range(int(alpha*100),1,-1): ## Start Fade Out
+                messageWindow.set_alpha(i/150)
+                event, values = messageWindow.read(timeout=20)
+                if event != sg.TIMEOUT_KEY:
+                    break
+            messagePopupActive = False
+            messageWindow.close()
+            break
+        timeOpened += 10
+
+
+
 def loadGeniusMusicList(userInput):
     from PIL import Image
     import cloudscraper, io
-    global geniusSongIDs, geniusURLs, layout, loadingPopupAction, resultNumbers, songArtists, songNames
+    global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
     artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(), sg.Text('Music Search Results:', font='Any 20'), sg.Push()]], 0, [], [], []
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
-    resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':getServerData("geniusLyricsKey"),'x-rapidapi-host':"genius.p.rapidapi.com"})
+    resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
     content = json.loads((resp.content).decode('utf8'))
     try: ## Test if bad API key
         if 'You are not subscribed to this API' in content['message']:
-           loadingPopupAction = "Genius_Page_Down"
+           loadingAction = "Genius_Page_Down"
            return
     except: pass
     ## No Song Found
     if len(content["response"]["hits"]) == 0:
-        loadingPopupAction = "No_Result_Found"
+        loadingAction = "No_Result_Found"
         return
     ## Find Number of Hits
     if len(content["response"]["hits"]) <= 8: hitCount = len(content["response"]["hits"]) ## Set Max to Max Results
@@ -350,24 +420,24 @@ def loadGeniusMusicList(userInput):
         hitCount -= 1
     layout += [[sg.Push(), sg.Text("Music Search powered by Genius", font='Any 11'), sg.Push()]] ## Credits
     ## Check if Any Good Results Found
-    if len(resultNumbers) == 0: loadingPopupAction = "No_Result_Found"
-    elif len(resultNumbers) == 1: loadingPopupAction = "Only_One_Result"
-    else: loadingPopupAction = "Search_Finished"
+    if len(resultNumbers) == 0: loadingAction = "No_Result_Found"
+    elif len(resultNumbers) == 1: loadingAction = "Only_One_Result"
+    else: loadingAction = "Search_Finished"
 
 def geniusMusicSearchList(userInput):
-    global geniusSongIDs, geniusURLs, layout, loadingPopupAction, resultNumbers, songArtists, songNames
+    global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
     ## Loading Screen
-    loadingPopup, loadingPopupAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", key='loadingGIFImage')]], transparent_color=sg.theme_background_color(), element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
+    loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", key='loadingGIFImage')]], transparent_color=sg.theme_background_color(), element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
     loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Start Loading Screen Faster
     while True:
         event, values = loadingPopup.read(timeout=10)
         loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
         ## Actions from Thread
-        if loadingPopupAction == "Start": ## Start Music Search List Thread
+        if loadingAction == "Start": ## Start Music Search List Thread
             loadGeniusMusicListThread = threading.Thread(name="loadGeniusMusicList", target=loadGeniusMusicList, args=(userInput,))
             loadGeniusMusicListThread.start()
-            loadingPopupAction = "Running"
-        elif loadingPopupAction == "No_Result_Found": ## No Music Search Result Found
+            loadingAction = "Running"
+        elif loadingAction == "No_Result_Found": ## No Music Search Result Found
             loadingPopup.close() ## Close Loading Popup
             MusicSearchSongWindow = sg.Window("*", [[sg.Text("No results found.", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -377,7 +447,7 @@ def geniusMusicSearchList(userInput):
                 if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
                     MusicSearchSongWindow.close()
                     return
-        elif loadingPopupAction == "Genius_Page_Down": ## Genius's Service is Down
+        elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
             MusicSearchSongWindow = sg.Window("*", [[sg.Text("            Genius service down.      \n       Please try again a little later.      ", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -387,10 +457,10 @@ def geniusMusicSearchList(userInput):
                 if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
                     MusicSearchSongWindow.close()
                     return
-        elif loadingPopupAction == "Search_Finished": ## Show Music Search List Window
+        elif loadingAction == "Search_Finished": ## Show Music Search List Window
             loadingPopup.close()
             break
-        elif loadingPopupAction == "Only_One_Result": ## Only One Result Found, Open It
+        elif loadingAction == "Only_One_Result": ## Only One Result Found, Open It
             loadingPopup.close()
             geniusMusicSearch(geniusSongIDs[0], True)
             return
@@ -420,30 +490,31 @@ def geniusMusicSearchList(userInput):
 def loadGeniusMusic(userInput, forceResult):
     from PIL import Image
     import bs4, cloudscraper, io, re
-    global badWordCount, clearMusicSearch, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingPopupAction, lyrics, lyricsListFinal, png_data
+    global badWordCount, clearMusicSearch, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, lyrics, lyricsListFinal, png_data
     artistSearch, goodResult, resultCount = False, False, 0
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     if "/songs/" in userInput: ## Song ID Search
-        resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':getServerData("geniusLyricsKey"),'x-rapidapi-host':"genius.p.rapidapi.com"})
+        resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
         content = json.loads((resp.content).decode('utf8'))
         try: ## Test if bad API key
             if 'You are not subscribed to this API' in content['message']:
-               loadingPopupAction = "Genius_Page_Down"
+               loadingAction = "Genius_Page_Down"
                return
         except: pass
         musicSearchJsonContent = content["response"]["song"]
     else: ## Normal Search
-        resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':getServerData("geniusLyricsKey"),'x-rapidapi-host':"genius.p.rapidapi.com"})
+        resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
         content = json.loads((resp.content).decode('utf8'))
         try: ## Test if bad API key
             if 'You are not subscribed to this API' in content['message']:
-               loadingPopupAction = "Genius_Page_Down"
+               loadingAction = "Genius_Page_Down"
                return
         except: pass
         ## No Song Found
         hitsFound = len(content["response"]["hits"])
         if hitsFound == 0: ## No Results Found
-            loadingPopupAction = "No_Result_Found"
+            loadingAction = "No_Result_Found"
+            print("HI")
             return
         musicSearchJsonContent = content["response"]["hits"][resultCount]["result"]
     while goodResult == False:
@@ -451,12 +522,13 @@ def loadGeniusMusic(userInput, forceResult):
         if artistSearch == False or str(musicSearchJsonContent["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
             try: geniusMusicSearchArtists = str(musicSearchJsonContent["artist_names"]).replace("(Rock)", "") ## Song Artists
             except: ## No Results Left
-                loadingPopupAction = "No_Result_Found"
+                loadingAction = "No_Result_Found"
+                print("HI")
                 return
             geniusMusicSearchPrimeArtist = str(musicSearchJsonContent["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
         ## Move to List Results
             if forceResult == False and str(musicSearchJsonContent["artist_names"]).replace(" ", "-").lower() == userInput: ## Change to Artist Search
-                loadingPopupAction = "Artist_Search"
+                loadingAction = "Artist_Search"
                 return
             geniusMusicSearchDate = str(musicSearchJsonContent["release_date_for_display"]) ## Song Release Date
             if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
@@ -489,10 +561,10 @@ def loadGeniusMusic(userInput, forceResult):
             ## Album, Album List, Genre, and Label
             html = bs4.BeautifulSoup((requests.get(geniusMusicSearchGeniusURL)).text, "html.parser") # Scrape the info from the HTML
             if "Genius is down for a quick minute!" in str(html): ## Check if Genius's Service is Down
-                loadingPopupAction = "Genius_Page_Down"
+                loadingAction = "Genius_Page_Down"
                 return
             elif "make sure you're a human" in str(html): ## Check if Genius's Service is Down
-                loadingPopupAction = "Genius_Robot_Check"
+                loadingAction = "Genius_Robot_Check"
                 return
             try: ## Album
                 songScrapedInfo = html.select("div[class*=PrimaryAlbum__AlbumDetails]") ## Album Container
@@ -543,25 +615,26 @@ def loadGeniusMusic(userInput, forceResult):
             else: lyrics = None ## Lyrics Aren't Complete
             if "/songs/" in userInput or geniusMusicSearchArtists.lower() not in ["spotify", "genius"]: goodResult = True ## Good Result Found
             elif resultCount < hitsFound: resultCount += 1 ## Move to Next Result
-            else: loadingPopupAction = "No_Result_Found" ## No Good Result Found
-    loadingPopupAction = "Search_Finished"
+            else:loadingAction = "No_Result_Found" ## No Good Result Found
+    loadingAction = "Search_Finished"
 
 def geniusMusicSearch(userInput, forceResult):
     import eyed3, re
-    global badWordCount, clearMusicSearch, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingPopupAction, lyrics, lyricsListFinal, png_data
+    global badWordCount, clearMusicSearch, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, lyrics, lyricsListFinal, png_data
     ## Loading Screen
-    loadingPopup, loadingPopupAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", key='loadingGIFImage')]], transparent_color=sg.theme_background_color(), element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
+    loadingPopup, loadingAction, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Start", "Start"
     loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Start Loading Screen Faster
     ## Refresh Home Screen's Time
     while True:
         event, values = loadingPopup.read(timeout=10)
         loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
         ## Actions from Thread
-        if loadingPopupAction == "Start": ## Start Music Search Thread
+        if loadingAction == "Start": ## Start Music Search Thread
             loadGeniusMusicThread = threading.Thread(name="loadGeniusMusic", target=loadGeniusMusic, args=(userInput,forceResult,))
             loadGeniusMusicThread.start()
-            loadingPopupAction = "Running"
-        elif loadingPopupAction == "No_Result_Found": ## No Music Search Result Found
+            loadingAction = "Running"
+        elif loadingAction == "No_Result_Found": ## No Music Search Result Found
+            print("FFFF")
             loadingPopup.close() ## Close Loading Popup
             MusicSearchSongWindow = sg.Window("*", [[sg.Text("No results found.", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -571,7 +644,7 @@ def geniusMusicSearch(userInput, forceResult):
                 if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
                     MusicSearchSongWindow.close()
                     return
-        elif loadingPopupAction == "Genius_Page_Down": ## Genius's Service is Down
+        elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
             MusicSearchSongWindow = sg.Window("*", [[sg.Text("            Genius service down.      \n       Please try again a little later.      ", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -581,7 +654,7 @@ def geniusMusicSearch(userInput, forceResult):
                 if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
                     MusicSearchSongWindow.close()
                     return
-        elif loadingPopupAction == "Genius_Robot_Check": ## Genius is Checking Robot
+        elif loadingAction == "Genius_Robot_Check": ## Genius is Checking Robot
             loadingPopup.close() ## Close Loading Popup
             MusicSearchSongWindow = sg.Window("*", [[sg.Text("      Genius thinks you're a robot.      \n         Please disable your VPN.        ", font='Any 14')], [sg.Button("Fix", button_color=('White', 'Blue'), key='openGeniusLink'), sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -594,11 +667,11 @@ def geniusMusicSearch(userInput, forceResult):
                 elif event == 'openGeniusLink':
                     os.chdir("C:\\Program Files\\NordVPN\\")
                     os.system('nordvpn -d')
-        elif loadingPopupAction == "Artist_Search": ## Start Artist Search
+        elif loadingAction == "Artist_Search": ## Start Artist Search
             loadingPopup.close()
             geniusMusicSearchList(userInput)
             return
-        elif loadingPopupAction == "Search_Finished": ## Show Music Search Window
+        elif loadingAction == "Search_Finished": ## Show Music Search Window
             loadingPopup.close()
             break
     ## Shorten Results
@@ -609,22 +682,22 @@ def geniusMusicSearch(userInput, forceResult):
     if geniusMusicSearchArtists != None and len(geniusMusicSearchArtists) > 45: geniusMusicSearchArtists = geniusMusicSearchArtists[:42] + "..." ## Shorten Artists Names
     if geniusMusicSearchAlbum != None and len(geniusMusicSearchAlbum) > 45: geniusMusicSearchAlbum = geniusMusicSearchAlbum[:42] + "..." ## Shorten Album Name
     ## Song Window
-    if (accountLevel >= 3 or (any(role in ["Music Assistant-Director", "Music-Director", "Dev Team-Director"] for role in accountRoles) and accountLevel > 0)) and lyrics != None: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']] ## Lyrics Right Click Menu - Profanity Engine
+    if lyrics != None: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']] ## Lyrics Right Click Menu - Profanity Engine
     else: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition']] ## Lyrics Right Click Menu - No Profanity Engine
-    layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(), sg.Text("Music Search Result", font='Any 20'), sg.Push(), sg.Push(), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
     if musicSub == "Apple": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenApple.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Apple Music")]]
     elif layout == "Spotify": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenSpotify.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Spotify")]]
-    if geniusMusicSearchAlbum != None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
-    elif geniusMusicSearchAlbum != None and geniusMusicSearchDate == None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found and No Release Date
-    elif geniusMusicSearchAlbum == None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name not Found
-    else: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', enable_events=True, key='geniusMusicSearchGenreText')]] ## No Album Name and No Release Date
+    if geniusMusicSearchAlbum != None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
+    elif geniusMusicSearchAlbum != None and geniusMusicSearchDate == None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found and No Release Date
+    elif geniusMusicSearchAlbum == None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name not Found
+    else: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## No Album Name and No Release Date
     if lyrics != None: layout += [[sg.Multiline("", size=(55,20), font='Any 11', autoscroll=False, disabled=True, right_click_menu=lyricsRightClickMenu, key='MusicSearchSongWindowLyrics')]] ## Add Empty Lyrics Box
-    else: layout += [[sg.Text("Lyrics couldn't be found on Genius.", font='Any 12 bold')]] ## No Lyrics Found Message
-    if lyrics != None: layout += [[sg.Text("Profanity Engine: Lyrics are 100% clean.", font='Any 11', key='songUsableText')]] ## Default Profanity Engine Text
-    if geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) > 1: layout += [[sg.Text("Labels: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Labels
-    elif geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) == 1: layout += [[sg.Text("Label: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
-    layout += [[sg.Text("Music Search powered by Genius", font='Any 11')]] ## Credits
-    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, resizable=False, finalize=True, keep_on_top=True, element_justification='c')
+    else: layout += [[sg.Text("Lyrics couldn't be found on Genius.", font='Any 12 bold', background_color='#2B475D')]] ## No Lyrics Found Message
+    if lyrics != None: layout += [[sg.Text("Profanity Engine: Lyrics are 100% clean.", font='Any 11', background_color='#2B475D', key='songUsableText')]] ## Default Profanity Engine Text
+    if geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) > 1: layout += [[sg.Text("Labels: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Labels
+    elif geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) == 1: layout += [[sg.Text("Label: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
+    layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
+    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=False, finalize=True, keep_on_top=True, element_justification='c')
     ## Lyrics Right Click Menu
     if lyrics != None: lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics']
     ## Window Shortcuts
@@ -645,12 +718,11 @@ def geniusMusicSearch(userInput, forceResult):
     if lyrics != None:
         try:
             ## Load Profanity Engine Dictionary
-            profanityWordList = getServerData("profanityList")
-            for word in range(len(profanityWordList)): profanityWordList[word] = profanityWordList[word].lower().replace("\n", "")
+            for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
             ## Print Each Lyric Line and Check for Profanity
             for i in range(len(lyricsListFinal)):
                 badLine = False ## Reset Bad Line for each Line
-                for phrase in profanityWordList:
+                for phrase in profanityEngineDefinitions:
                     if badLine == False and phrase[len(phrase)-1] == "~" and re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words, Ending with '
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
                         badWordCount += 1
@@ -661,16 +733,16 @@ def geniusMusicSearch(userInput, forceResult):
                         badLine = True
                 if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
         except: ## Profanity Engine Dictionary Failed to Load
-            profanityWordList = "Failed"
+            profanityEngineDefinitions = "Failed"
             for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
     ## Update Profanity Engine Text
-    if lyrics != None and profanityWordList != "Failed":
+    if lyrics != None and profanityEngineDefinitions != "Failed":
         MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
         if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
         elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
         elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
         elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-    elif lyrics != None and profanityWordList == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+    elif lyrics != None and profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
     while True:
         event, values = MusicSearchSongWindow.read(timeout=10)
         if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
@@ -714,12 +786,12 @@ def geniusMusicSearch(userInput, forceResult):
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("")
                         try:
                             ## Load Profanity Engine Dictionary
-                            badWordCount, profanityWordList = 0, getServerData("profanityList")
-                            for word in range(len(profanityWordList)): profanityWordList[word] = profanityWordList[word].lower().replace("\n", "")
+                            badWordCount, profanityEngineDefinitions = 0, getServerData("profanityList")
+                            for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
                             ## Print Each Lyric Line and Check for Profanity
                             for i in range(len(lyricsListFinal)):
                                 badLine = False ## Reset Bad Line for each Line
-                                for phrase in profanityWordList:
+                                for phrase in profanityEngineDefinitions:
                                     if badLine == False and phrase[len(phrase)-1] == "~" and re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words, Ending with '
                                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
                                         badWordCount += 1
@@ -730,16 +802,16 @@ def geniusMusicSearch(userInput, forceResult):
                                         badLine = True
                                 if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
                         except: ## Profanity Engine Dictionary Failed to Load
-                            profanityWordList = "Failed"
+                            profanityEngineDefinitions = "Failed"
                             for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
                         ## Update Profanity Engine Text
-                        if lyrics != None and profanityWordList != "Failed":
+                        if lyrics != None and profanityEngineDefinitions != "Failed":
                             MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
                             if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-                        elif profanityWordList == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+                        elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
                         if selectedText[0] == " ": selectedText = selectedText[1:]
                         if selectedText[len(selectedText)-1] == " ": selectedText = selectedText[:-1]
                         messagePopupTimed(False, "Profanity Engine",'"' + selectedText + '" was successfully added to Profanity Engine.', "saved", None, 2000, False) ## Show Success Message
@@ -770,28 +842,28 @@ def geniusMusicSearch(userInput, forceResult):
                             MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("")
                             try:
                                 ## Load Profanity Engine Dictionary
-                                badWordCount, profanityWordList = 0, getServerData("profanityList")
-                                for word in range(len(profanityWordList)): profanityWordList[word] = profanityWordList[word].lower().replace("\n", "")
+                                badWordCount, profanityEngineDefinitions = 0, getServerData("profanityList")
+                                for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
                                 ## Print Each Lyric Line and Check for Profanity
                                 for i in range(len(lyricsListFinal)):
                                     badLine = False ## Reset Bad Line for each Line
-                                    for phrase in profanityWordList:
+                                    for phrase in profanityEngineDefinitions:
                                         if badLine == False and re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i], re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words
                                             MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
                                             badWordCount += 1
                                             badLine = True
                                     if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
                             except: ## Profanity Engine Dictionary Failed to Load
-                                profanityWordList = "Failed"
+                                profanityEngineDefinitions = "Failed"
                                 for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
                             ## Update Profanity Engine Text
-                            if lyrics != None and profanityWordList != "Failed":
+                            if lyrics != None and profanityEngineDefinitions != "Failed":
                                 MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
                                 if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
                                 elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
                                 elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
                                 elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-                            elif profanityWordList == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+                            elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
                             ## Show Success Message
                             if str(profanityEngineMatches)[2] == " ": profanityEngineMatches = str(profanityEngineMatches)[3:]
                             if str(profanityEngineMatches)[len(profanityEngineMatches)-3] == " ": profanityEngineMatches = str(profanityEngineMatches)[:-3]
@@ -889,248 +961,6 @@ def geniusMusicSearch(userInput, forceResult):
         elif event == 'musicSearchListenButton' or (event == '_`'): ## Play Song Online
             if musicSub == "Apple": webbrowser.open("https://music.apple.com/us/search?term=" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
             elif musicSub == "Spotify": webbrowser.open("https://open.spotify.com/search/" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
-
-
-
-
-
-def loadGeniusMusicList(userInput):
-    from PIL import Image
-    import cloudscraper, io
-    global geniusSongIDs, geniusURLs, layout, loadingPopupAction, resultNumbers, songArtists, songNames
-    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(), sg.Text('Music Search Results:', font='Any 20'), sg.Push()], [sg.Push(), sg.Input(userInput, do_not_clear=True, size=(40,1),enable_events=True, key='songSearchBox'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, key='searchSongSearchButton', tooltip="Search Music"), sg.Push()]], 0, [], [], []
-    resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
-    content = json.loads((resp.content).decode('utf8'))
-    try: ## Test if bad API key
-        if 'You are not subscribed to this API' in content['message']:
-           loadingPopupAction = "Genius_Page_Down"
-           return
-    except: pass
-    ## No Song Found
-    if len(content["response"]["hits"]) == 0:
-        loadingPopupAction = "No_Result_Found"
-        layout += [[sg.Push(), sg.Text("No results found", font='Any 14'), sg.Push()]]
-        return
-    ## Find Number of Hits
-    if len(content["response"]["hits"]) <= 8: hitCount = len(content["response"]["hits"]) ## Set Max to Max Results
-    else: hitCount = 8 ## Set Max to 8 if More Than 8 Results Returned
-    while hitCount > 0 and resultNumber < hitCount:
-        geniusMusicSearchArtists = str(content["response"]["hits"][resultNumber]["result"]["artist_names"]).replace("(Rock)", "") ## Song Artists
-        songArtists.append(geniusMusicSearchArtists) ## Add Artists to List 
-        geniusMusicSearchPrimeArtist = str(content["response"]["hits"][resultNumber]["result"]["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
-        if str(content["response"]["hits"][0]["result"]["artist_names"]).replace(" ", "-").lower() == userInput: artistSearch = True ## Find if Search is an Artist
-        geniusMusicSearchDate = str(content["response"]["hits"][resultNumber]["result"]["release_date_for_display"]) ## Result Release Date
-        if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
-        geniusMusicSearchSongNameInfo = str(content["response"]["hits"][resultNumber]["result"]["title_with_featured"]) ## Result Full Title
-        songNames.append(geniusMusicSearchSongNameInfo) ## Add Song Full Title to List
-        geniusMusicSearchGeniusURL = str(content["response"]["hits"][resultNumber]["result"]["url"]) ## Result Genius URL
-        geniusURLs.append(geniusMusicSearchGeniusURL) ## Add Genius URL to List
-        geniusMusicSearchGeniusSongID = str(content["response"]["hits"][resultNumber]["result"]["api_path"]) ## Song ID
-        geniusSongIDs.append(geniusMusicSearchGeniusSongID) ## Add Song ID to List
-        ## Shorten Results
-        longSongNameInfo = geniusMusicSearchSongNameInfo
-        longArtists = geniusMusicSearchArtists
-        if len(geniusMusicSearchSongNameInfo) > 30: geniusMusicSearchSongNameInfo = geniusMusicSearchSongNameInfo[:29] + "..." ## Shorten Song Name
-        if len(geniusMusicSearchArtists) > 30: geniusMusicSearchArtists = geniusMusicSearchArtists[:29] + "..." ## Shorten Artists Names
-        ## Song Artwork
-        try:
-            geniusMusicSearchArtworkURL = str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"])
-            if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
-            else:
-                try: ## Look in Cache for Artwork
-                    pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png") ## Open Artwork from Cache
-                    png_bio = io.BytesIO()
-                    pil_image.save(png_bio, format="PNG")
-                    png_data = png_bio.getvalue()
-                except: ## Download Artwork From Online
-                    jpg_data = (cloudscraper.create_scraper(browser={"browser": "firefox", "platform": "windows", "mobile": False}).get(geniusMusicSearchArtworkURL).content)
-                    pil_image = Image.open(io.BytesIO(jpg_data))
-                    pil_image = pil_image.resize((80, 80)) ## Artwork Size
-                    png_bio = io.BytesIO()
-                    pil_image.save(png_bio, format="PNG")
-                    try: ## Save Artwork to Cache
-                        pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search").mkdir(parents=True, exist_ok=True) ## Create Music Search Cache Folder
-                        png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png")
-                    except: pass
-                    png_data = png_bio.getvalue()
-        except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png" ## Default Artwork if Retrieval Fails
-        ## Song Lyrics
-        geniusMusicSearchLyricsState = str(content["response"]["hits"][resultNumber]["result"]["lyrics_state"]) ## Result Song Lyrics
-        if geniusMusicSearchLyricsState.lower() == "complete": lyricsImage, lyricsHoverMessage = "checked", "Lyrics Found" ## Lyrics Found
-        else: lyricsImage, lyricsHoverMessage = "failed", "Lyrics Not Found" ## No Lyrics Found
-        ## Song Window
-        if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius"] and "genius" not in geniusMusicSearchArtists.lower():
-            if geniusMusicSearchDate != None: layout += [[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12')]]), sg.Push(), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + lyricsImage + '.png', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Music Search Result")]])]]
-            else: layout += [[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', tooltip=longArtists)]]), sg.Push(), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + lyricsImage + '.png', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Music Search Result")]])]]
-            resultNumbers.append(resultNumber)
-        elif len(content["response"]["hits"]) > 8: hitCount += 1
-        else: hitCount -= 1
-        resultNumber += 1
-        hitCount -= 1
-    layout += [[sg.Push(), sg.Text("Music Search powered by Genius", font='Any 11'), sg.Push()]] ## Credits
-    loadingPopupAction = "Search_Finished"
-
-def geniusMusicSearchList(userInput):
-    global geniusSongIDs, geniusURLs, layout, loadingPopupAction, resultNumbers, songArtists, songNames
-    ## Loading Screen
-    loadingPopup, loadingPopupAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", key='loadingGIFImage')]], transparent_color=sg.theme_background_color(), element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
-    loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Start Loading Screen Faster
-    while True:
-        event, values = loadingPopup.read(timeout=10)
-        loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
-        ## Actions from Thread
-        if loadingPopupAction == "Start": ## Start Music Search List Thread
-            loadGeniusMusicListThread = threading.Thread(name="loadGeniusMusicList", target=loadGeniusMusicList, args=(userInput,))
-            loadGeniusMusicListThread.start()
-            loadingPopupAction = "Running"
-        elif loadingPopupAction == "Genius_Page_Down": ## Genius's Service is Down
-            loadingPopup.close() ## Close Loading Popup
-            MusicSearchSongWindow = sg.Window("*", [[sg.Text("            Genius service down.      \n       Please try again a little later.      ", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
-            MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-            for key in ['closeFailedMusicSearchButton']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
-            while True:
-                event, values = MusicSearchSongWindow.read()
-                if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
-                    MusicSearchSongWindow.close()
-                    return
-        elif loadingPopupAction in ["Search_Finished", "Only_One_Result", "No_Result_Found"]: ## Show Music Search List Window
-            loadingPopup.close()
-            break
-    MusicSearchListWindow = sg.Window("Music Search - List Results", layout, resizable=False, finalize=True, keep_on_top=True, element_justification='l')
-    ## Window Shortcuts
-    MusicSearchListWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-    ## Mouse Icon Changes
-    for key in ['searchSongSearchButton']: MusicSearchListWindow[key].Widget.config(cursor="hand2") ## Hover icons
-    for resultNumber in resultNumbers:
-        MusicSearchListWindow["searchmusicListSearchGenius_" + str(resultNumber)].Widget.config(cursor="hand2")  ## Genius Page Hover icon
-        MusicSearchListWindow["searchMusicListOpenSong_" + str(resultNumber)].Widget.config(cursor="hand2")      ## Open Song Hover icon
-    while True:
-        event, values = MusicSearchListWindow.read(timeout=10)
-        if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
-            MusicSearchListWindow.close()
-            break
-        elif event == 'searchSongSearchButton':
-            MusicSearchListWindow.close()
-            geniusMusicSearchList(values['songSearchBox'])
-            break
-        elif 'searchmusicListSearchGenius' in event: webbrowser.open(geniusURLs[int(event.split("_")[-1])], new=2, autoraise=True) ## Open Genius Page
-        elif 'searchMusicListOpenSong' in event: ## Open Song in Music Search
-            MusicSearchListWindow.close()
-            loadGeniusMusic(geniusSongIDs[int(event.split("_")[-1])], True)
-            break
-
-def loadGeniusMusic(userInput, forceResult):
-    from PIL import Image
-    import bs4, cloudscraper, io, re
-    global audioSavedPath, badWordCount, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingPopupAction, lyrics, lyricsListFinal, png_data
-    artistSearch, goodResult = False, False
-    if "/songs/" in userInput: ## Song ID Search
-        resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
-        content = json.loads((resp.content).decode('utf8'))
-        try: ## Test if bad API key
-            if 'You are not subscribed to this API' in content['message']:
-               loadingPopupAction = "Genius_Page_Down"
-               return
-        except: pass
-        musicSearchJsonContent = content["response"]["song"]
-    while goodResult == False:
-        badWordCount, lyricsList, lyricsListFinal = 0, [], []
-        if artistSearch == False or str(musicSearchJsonContent["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
-            try: geniusMusicSearchArtists = str(musicSearchJsonContent["artist_names"]).replace("(Rock)", "") ## Song Artists
-            except: ## No Results Left
-                loadingPopupAction = "No_Result_Found"
-                return
-            geniusMusicSearchPrimeArtist = str(musicSearchJsonContent["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
-        ## Move to List Results
-            if forceResult == False and str(musicSearchJsonContent["artist_names"]).replace(" ", "-").lower() == userInput: ## Change to Artist Search
-                loadingPopupAction = "Artist_Search"
-                return
-            geniusMusicSearchDate = str(musicSearchJsonContent["release_date_for_display"]) ## Song Release Date
-            if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
-            geniusMusicSearchSongNameInfo = str(musicSearchJsonContent["title_with_featured"]) ## Song Full Title
-            geniusMusicSearchArtistURL = str(musicSearchJsonContent["primary_artist"]["url"])
-            geniusMusicSearchGeniusURL = str(musicSearchJsonContent["url"]) ## Song Genius URL
-            geniusMusicSearchSongName = str(musicSearchJsonContent["title"]) ## Song Title
-            ## Song Artwork
-            try:
-                geniusMusicSearchArtworkURL = str(musicSearchJsonContent["song_art_image_url"])
-                if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
-                else:
-                    try: ## Look in Cache for Artwork
-                        pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(musicSearchJsonContent["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
-                        png_bio = io.BytesIO()
-                        pil_image.save(png_bio, format="PNG")
-                        png_data = png_bio.getvalue()
-                    except: ## Download Artwork From Online
-                        jpg_data = (cloudscraper.create_scraper(browser={"browser": "firefox", "platform": "windows", "mobile": False}).get(geniusMusicSearchArtworkURL).content)
-                        pil_image = Image.open(io.BytesIO(jpg_data))
-                        pil_image = pil_image.resize((200, 200)) ## Artwork Size
-                        png_bio = io.BytesIO()
-                        pil_image.save(png_bio, format="PNG")
-                        try: ## Save Artwork to Cache
-                            pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search").mkdir(parents=True, exist_ok=True) ## Create Music Search Cache Folder
-                            png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(musicSearchJsonContent["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
-                        except: pass
-                        png_data = png_bio.getvalue()
-            except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
-            ## Album, Album List, Genre, and Label
-            html = bs4.BeautifulSoup((requests.get(geniusMusicSearchGeniusURL)).text, "html.parser") # Scrape the info from the HTML
-            if "Genius is down for a quick minute!" in str(html): ## Check if Genius's Service is Down
-                loadingPopupAction = "Genius_Page_Down"
-                return
-            elif "make sure you're a human" in str(html): ## Check if Genius's Service is Down
-                loadingPopupAction = "Genius_Robot_Check"
-                return
-            try: ## Album
-                songScrapedInfo = html.select("div[class*=PrimaryAlbum__AlbumDetails]") ## Album Container
-                geniusMusicSearchAlbum = ((re.sub(r'<.+?>', '', str(songScrapedInfo))).replace("[", "").replace("]", "").replace("&amp;", "&")).split(" (")[0] ## Song Album
-                if len(geniusMusicSearchAlbum) == 0: geniusMusicSearchAlbum = None ## No Album Found
-            except: geniusMusicSearchAlbum = None
-            try: ## Album List
-                songScrapedInfo, albumList = str(html.select("div[class*=AlbumTracklist__Track]")).split('</a>'), [] ## Song's Album List
-                for song in songScrapedInfo:
-                    if song.count('.') >= 4: geniusMusicSearchAlbumCurrent = len(albumList) + 1 ## Current Song Position
-                    else: geniusMusicSearchAlbumCurrent = 1
-                    albumList.append(song)
-                geniusMusicSearchAlbumLength = len(albumList)
-            except: geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength = None, None
-            try: ## Song's Genre
-                infoList = str(html.select("div[class*=SongTags__Container]")).split('</a>') ## Song Genre Container
-                geniusMusicSearchGenre = (re.sub(r'<.+?>', '', str(infoList[0]))).replace("[", "").replace("]", "").replace("&amp;", "&") ## Song Genre
-            except: geniusMusicSearchGenre = None
-            try: ## Record Label
-                songScrapedInfo = html.select("div[class*=SongInfo__Credit]") ## Song's Label Container
-                songScrapedInfo = (str(songScrapedInfo).split("Label</div><div>")[1]).split("</a></div></div>")[0]
-                geniusMusicSearchLabels = (re.sub(r'<.+?>', '', str(songScrapedInfo))).replace(" &amp; ", ",,,").replace(" ,,,", ",,,").replace(" (Label)", "") ## Song's Labels
-                geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(", Release Date")[0].split(", Copyright")[0].split(',,,') ## Put Labels in List
-                geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(',') ## Split Labels
-                if len(geniusMusicSearchLabels) > 3: geniusMusicSearchLabels = geniusMusicSearchLabels[:3] ## Shorten Labels List
-            except: geniusMusicSearchLabels = None
-            ## Song Lyrics
-            if str(musicSearchJsonContent["lyrics_state"]).lower() == "complete":
-                try:
-                    lyrics, count = html.select("div[class*=Lyrics__Container]"), 1
-                    lyricsList = str(lyrics).split('<br/>')
-                    for line in lyricsList:
-                        oldLyricLine = line ## Save Unedited Lyric Line
-                        if "[" not in line and "]" not in line and "{" not in line and "}" not in line: ## Test if Line has [] in it
-                            if "InreadContainer__Container" in line: lyricsListFinal.append("")
-                            line = re.sub(r'<.+?>', '', str(line))
-                            if len(line) > 0 and line[0] == ",": ## Leftover Start Comma
-                                lyricsListFinal.append("")
-                                line = line[2:]
-                            elif len(line) == 0 and len(lyricsListFinal) > 0 and lyricsListFinal[len(lyricsListFinal)-1] != "": lyricsListFinal.append("")
-                            elif ("[" in line and line == lyricsList[0]) or ("[" not in line and len(line) > 0): lyricsListFinal.append(line.replace("</div>]", "").replace("]", "")) ## Line is Good
-                            elif any(word in line.lower() for word in ["instrumental", "guitar solo", "mandolin solo", "produced by", "refrain"]) == False and any(word in lyricsList[lyricsList.index(oldLyricLine)-1].lower() for word in ["instrumental", "guitar solo", "mandolin solo", "refrain"]) == False and len(lyricsListFinal) > 1 and lyricsListFinal[len(lyricsListFinal)-1] != "": lyricsListFinal.append("") ## Replace Different [] Messages
-                        elif line != str(lyricsList[0]) and "container" in line.lower() and any(word in line.lower() for word in ["instrumental", "guitar solo", "mandolin solo", "produced by", "refrain"]) == False and lyricsListFinal[len(lyricsListFinal)-1] != "": lyricsListFinal.append("") ## Fix for Two Transcribed With Space in Middle
-                        elif (line == str(lyricsList[0]) or line == str(lyricsList[len(lyricsList)-1])) and any(word in line.lower() for word in ["verse", "verse 1", "intro", "instrumental", "guitar solo", "mandolin solo", "produced by", "chorus", "refrain"]) == False: ## Fix for First/Last Line
-                            line = re.sub(r'<.+?>', '', str(line))
-                            lyricsListFinal.append(line.replace("[", "").replace("]", "").replace("{", "").replace("}", ""))
-                        count += 1
-                except: lyrics = None ## Lyrics Failed to Load
-            else: lyrics = None ## Lyrics Aren't Complete
-            burnAudioData()
-            return
 
 def burnAudioData():
     try:
