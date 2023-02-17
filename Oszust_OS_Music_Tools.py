@@ -20,7 +20,7 @@ def getScaling():
     return scaling
 
 def softwareSetup():
-    global profanityEngineDefinitions, topSongsList, screenWidth, screenHeight
+    global firstHomeLaunch, profanityEngineDefinitions, screenHeight, screenWidth, topSongsList
     ## Setup Software
     print("Loading...\nLaunching Interface...")
     ## Fix Screen Size
@@ -28,6 +28,7 @@ def softwareSetup():
     scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100 ## Get Windows Scale Factor
     screenWidth, screenHeight = sg.Window.get_screen_size() ## Get WxH of Pixels
     sg.set_options(scaling = (getScaling() * min(screenWidth / (screenWidth * scaleFactor), screenHeight / (1080 * scaleFactor)))) ## Apply Fix to Window
+    firstHomeLaunch = True
     ## Setup Commands
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
     softwareConfig() ## Get User's Configs
@@ -96,31 +97,31 @@ def downloadTop100Songs():
 def homeScreenAppPanels(appName): ## CLEAN THIS ONE
     if appName == "Music_Search":
         topSongsListBoxed = [[sg.Listbox(topSongsList, size=(80, 15), key='billboardTopSongsList', horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white')]]
-        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
         [sg.Text("Search:", font='Any 16', background_color='#2B475D'), sg.Input(do_not_clear=True, size=(50,1), enable_events=True, key='songSearchBox'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#2B475D', key='searchSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\listSearch.png', border_width=0, button_color='#2B475D', key='listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', key='clearInputSongSearchButton', tooltip="Clear Search")],
         [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief="flat", background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]]
     elif appName == "Music_Downloader":
-        return [[sg.Push(background_color='#4d4d4d'), sg.Text("Music Downloader:", font='Any 20', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d')],
-        [sg.Text("YouTube Link:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(48,1),enable_events=True, key='musicDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='musicDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='musicDownloaderOpenYoutube', tooltip="Open YouTube")],
-        [sg.Text("Download Location:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(50,1),enable_events=True, key='musicDownloaderLocation'), sg.FolderBrowse()],
-        [sg.HorizontalSeparator()], [sg.Push(background_color='#4d4d4d'), sg.Text("Downloader Settings:", font='Any 15', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='musicDownloaderResetSettings', tooltip="Paste Link")],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#4d4d4d')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#4d4d4d')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
-        ]#[sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#4d4d4d')], [sg.Push(background_color='#4d4d4d'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#4d4d4d')]]
+        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+        [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='musicDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='musicDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='musicDownloaderOpenYoutube', tooltip="Open YouTube")],
+        [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='musicDownloaderLocation'), sg.FolderBrowse()],
+        [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='musicDownloaderResetSettings', tooltip="Paste Link")],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#2B475D')],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#2B475D')],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
+        ]#[sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]]
     elif appName == "YouTube_Downloader":
-        return [[sg.Push(background_color='#4d4d4d'), sg.Text("YouTube Downloader:", font='Any 20', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d')],
-        [sg.Text("YouTube Link:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(48,1),enable_events=True, key='youtubeDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderOpenYoutube', tooltip="Open YouTube")],
-        [sg.Text("Download Location:", font='Any 13', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(50,1),enable_events=True, key='youtubeDownloaderLocation'), sg.FolderBrowse(key='youtubeDownloaderLocationFinder')],
-        [sg.HorizontalSeparator()], [sg.Push(background_color='#4d4d4d'), sg.Text("Downloader Settings:", font='Any 15', background_color='#4d4d4d'), sg.Push(background_color='#4d4d4d'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='youtubeDownloaderResetSettings', tooltip="Paste Link")],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#4d4d4d')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='youtubeDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#4d4d4d')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#4d4d4d'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClear', tooltip="Paste Link")],
-        [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#4d4d4d')], [sg.Push(background_color='#4d4d4d'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderDownloadButton'), sg.Push(background_color='#4d4d4d')]]
+        return [[sg.Push(background_color='#2B475D'), sg.Text("YouTube Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+        [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderOpenYoutube', tooltip="Open YouTube")],
+        [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderLocation'), sg.FolderBrowse(key='youtubeDownloaderLocationFinder')],
+        [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='youtubeDownloaderResetSettings', tooltip="Paste Link")],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='youtubeDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClear', tooltip="Paste Link")],
+        [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]]
     else: return [[sg.Text(appName)]]
 
 def homeScreen(appSelected):
-    global HomeWindow
+    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY
     ## Oszust OS Music Tools List
     applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader"] ##["Music Search", "Metadata Burner", "Music Downloader", "YouTube Downloader", "CD Burner", "Settings"]
     for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#64778D', border_width=0, key=app.replace(" ", "_") + "_AppSelector", tooltip='Open ' + app)]], pad=((5,5), (5, 5)))]] ## Add apps to side panel
@@ -128,7 +129,10 @@ def homeScreen(appSelected):
     appWindow = homeScreenAppPanels(appSelected) ## App Panel Loading Based on App
     layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(appWindow, size=(600,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
     layout += [[sg.Column([[sg.Text(platform.system() + " | " + softwareVersion + " | " + systemBuild + " | Online", enable_events=True, font='Any 13', key='versionTextHomeBottom'), sg.Push(), sg.Text("Oszust Industries", enable_events=True, font='Any 13', key='creditsTextHomeBottom')], [sg.Column([[]], size=(715, 1), pad=(0,0))]], size=(715, 30), pad=(0,0))]]
-    HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), finalize=True, resizable=True, text_justification='r')
+    if firstHomeLaunch == False: HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), location=(homeWindowLocationX, homeWindowLocationY), finalize=True, resizable=False, text_justification='r')
+    else:
+        HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), finalize=True, resizable=False, text_justification='r')
+        firstHomeLaunch = False
     ## Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     if appSelected == "Music_Search":
         HomeWindow['billboardTopSongsList'].bind('<Return>', '_Enter')  ## Enter on Top 100 list
@@ -146,6 +150,7 @@ def homeScreen(appSelected):
     ## Reading Home Window
     while True:
         event, values = HomeWindow.read(timeout=10)
+        homeWindowLocationX, homeWindowLocationY = HomeWindow.CurrentLocation()
 ## Closed Window
         if event == sg.WIN_CLOSED or event == 'Exit':
             HomeWindow.close()
@@ -217,14 +222,15 @@ def homeScreen(appSelected):
                 HomeWindow.Element('youtubeDownloaderDownloadNameInput').Update(win32clipboard.GetClipboardData())
                 win32clipboard.CloseClipboard()
             elif event == 'youtubeDownloaderDownloadNameClear': HomeWindow.Element('youtubeDownloaderDownloadNameInput').Update("") ## Clear File Name Input
-            elif event == 'youtubeDownloaderDownloadButton': ## Download YouTube Button
+            elif event == 'youtubeDownloaderDownloadButton' and values['youtubeDownloaderYoutubeLink'].strip() != "": ## Download YouTube Button
                 if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderDownloadNameInput']
                 loadingScreen("YouTube_Downloader", values['youtubeDownloaderYoutubeLink'], values['youtubeDownloaderLocation'], youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
                 HomeWindow["youtubeDownloaderYoutubeLink"].update("")
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
     global loadingStatus
-    loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
+    if firstHomeLaunch == False: loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', location=(homeWindowLocationX + 150, homeWindowLocationY + 16), no_titlebar=True, keep_on_top=True), "Start"
+    else: loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
     loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=10) ## Load Loading GIF
     while True:
         event, values = loadingPopup.read(timeout=10)
