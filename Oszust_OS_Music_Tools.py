@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 2-06-23
-softwareVersion = "v1.0.0.000 (02.06.23)"
+## Created on: 1-02-23 - Last update: 2-19-23
+softwareVersion = "v1.0.0.000 (02.19.23.1)"
 import ctypes, datetime, eyed3, json, os, pathlib, platform, psutil, re, requests, threading, urllib.request, webbrowser, win32clipboard, pickle, textwrap
 from moviepy.editor import *
 from pytube import YouTube
@@ -52,7 +52,7 @@ def softwareSetup():
     ## Retrieve Profanity Engine Definitions
     profanityEngineDefinitions = json.loads(urllib.request.urlopen(f"https://raw.githubusercontent.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/Server/profanityEngineDefinitions.txt").read().decode())
     ## Launch Default Home App
-    homeScreen("Music_Search")
+    homeScreen()
 
 def crashMessage(message):
     errorWindow = sg.Window("ERROR", [[sg.Text(message, font=("Any", 13))], [sg.Button("Report Error", button_color=("White", "Blue"), key='Report'), sg.Button("Quit", button_color=("White", "Red"), key='Quit')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
@@ -94,138 +94,125 @@ def downloadTop100Songs():
     except: topSongsList.append("Billboard Top 100 Failed to Load")
     loadingStatus = "Done"
 
-def homeScreenAppPanels(appName): ## CLEAN THIS ONE
-    if appName == "Music_Search":
-        topSongsListBoxed = [[sg.Listbox(topSongsList, size=(80, 15), key='billboardTopSongsList', horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white')]]
-        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-        [sg.Text("Search:", font='Any 16', background_color='#2B475D'), sg.Input(do_not_clear=True, size=(50,1), enable_events=True, key='songSearchBox'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#2B475D', key='searchSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\listSearch.png', border_width=0, button_color='#2B475D', key='listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', key='clearInputSongSearchButton', tooltip="Clear Search")],
-        [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief="flat", background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]]
-    elif appName == "Music_Downloader":
-        return [[sg.Push(background_color='#2B475D'), sg.Text("Music Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-        [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='musicDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='musicDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='musicDownloaderOpenYoutube', tooltip="Open YouTube")],
-        [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='musicDownloaderLocation'), sg.FolderBrowse()],
-        [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='musicDownloaderResetSettings', tooltip="Paste Link")],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#2B475D')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#2B475D')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
-        ]#[sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]]
-    elif appName == "YouTube_Downloader":
-        return [[sg.Push(background_color='#2B475D'), sg.Text("YouTube Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-        [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderYoutubeLink'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderLinkClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderOpenYoutube', tooltip="Open YouTube")],
-        [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderLocation'), sg.FolderBrowse(key='youtubeDownloaderLocationFinder')],
-        [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='youtubeDownloaderResetSettings', tooltip="Paste Link")],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='youtubeDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
-        [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='youtubeDownloaderDownloadNameClear', tooltip="Paste Link")],
-        [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]]
-    else: return [[sg.Text(appName)]]
+def homeScreenAppPanels():
+    ## Music Search Panel [Default]
+    topSongsListBoxed = [[sg.Listbox(topSongsList, size=(79, 15), horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white', key='musicSearchPanel_billboardTopSongsList')]]
+    return [[sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Text("Search:", font='Any 16', background_color='#2B475D'), sg.Input(do_not_clear=True, size=(50,1), enable_events=True, key='musicSearchPanel_songSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_normalSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\listSearch.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_clearSongSearchInputButton', tooltip="Clear Search")],
+    [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief='flat', background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=True, key='musicSearchPanel'),
+    ## Music Downloader Panel
+     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='musicDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='musicDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='musicDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
+    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='musicDownloaderPanel_downloadLocationInput'), sg.FolderBrowse()],
+    [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='musicDownloaderPanel_resetSettings', tooltip="Reset Settings")],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
+    [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicDownloaderPanel'),
+    ## YouTube Downloader Panel
+     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("YouTube Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
+    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='youtubeDownloaderPanel_fileBrowseButton')],
+    [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='youtubeDownloaderPanel_resetSettings', tooltip="Reset Settings")],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderPanel_audioDownloadCheckbox'), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='youtubeDownloaderPanel_videoDownloadCheckbox'), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderPanel_changeNameCheckbox'), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderPanel_changeNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderPanel_changeNameClipboard', tooltip="Paste Clipboard"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='youtubeDownloaderPanel_changeNameClearInput', tooltip="Clear Input")],
+    [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderPanel_downloadButton'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='youtubeDownloaderPanel')
+    ]]
 
-def homeScreen(appSelected):
+def homeScreen():
     global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY
     ## Oszust OS Music Tools List
     applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader"] ##["Music Search", "Metadata Burner", "Music Downloader", "YouTube Downloader", "CD Burner", "Settings"]
-    for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#64778D', border_width=0, key=app.replace(" ", "_") + "_AppSelector", tooltip='Open ' + app)]], pad=((5,5), (5, 5)))]] ## Add apps to side panel
+    for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#657076', border_width=0, key=app.replace(" ", "_") + '_AppSelector', tooltip='Open ' + app)]], pad=((5,5), (5, 5)), background_color='#657076')]] ## Add Apps to Side Panel
     ## Home Window
-    appWindow = homeScreenAppPanels(appSelected) ## App Panel Loading Based on App
-    layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(appWindow, size=(600,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
-    layout += [[sg.Column([[sg.Text(platform.system() + " | " + softwareVersion + " | " + systemBuild + " | Online", enable_events=True, font='Any 13', key='versionTextHomeBottom'), sg.Push(), sg.Text("Oszust Industries", enable_events=True, font='Any 13', key='creditsTextHomeBottom')], [sg.Column([[]], size=(715, 1), pad=(0,0))]], size=(715, 30), pad=(0,0))]]
-    if firstHomeLaunch == False: HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), location=(homeWindowLocationX, homeWindowLocationY), finalize=True, resizable=False, text_justification='r')
-    else:
-        HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#4d4d4d', margins=(0,0), finalize=True, resizable=False, text_justification='r')
-        firstHomeLaunch = False
-    ## Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
-    if appSelected == "Music_Search":
-        HomeWindow['billboardTopSongsList'].bind('<Return>', '_Enter')  ## Enter on Top 100 list
-        HomeWindow['songSearchBox'].bind('<Return>', '_Enter')          ## Enter on Song Search
-        for key in ['searchSongSearchButton', 'listSongSearchButton', 'clearInputSongSearchButton', 'billboardTopSongsList']: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
-    elif appSelected == "Music_Downloader":
-         ## App Variables
-        for key in []: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
-    elif appSelected == "YouTube_Downloader":
-        youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName, = False, True, False ## App Variables
-        for key in ['youtubeDownloaderLinkClipboard', 'youtubeDownloaderOpenYoutube', 'youtubeDownloaderLocationFinder', 'youtubeDownloaderResetSettings', 'youtubeDownloaderAudioDownloadCheckbox', 'youtubeDownloaderVideoDownloadCheckbox', 'youtubeDownloaderDownloadNameCheckbox', 'youtubeDownloaderDownloadNameClipboard', 'youtubeDownloaderDownloadNameClear', 'youtubeDownloaderDownloadButton']: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(homeScreenAppPanels(), size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
+    layout += [[sg.Column([[sg.Text(platform.system() + " | " + softwareVersion + " | " + systemBuild + " | Online", enable_events=True, font='Any 13', background_color='#5A6E80', key='versionTextHomeBottom'), sg.Push(background_color='#5A6E80'), sg.Text("Oszust Industries", enable_events=True, font='Any 13', background_color='#5A6E80', key='creditsTextHomeBottom')], [sg.Column([[]], size=(710, 1), pad=(0,0))]], size=(710, 30), pad=(0,0), background_color='#5A6E80')]]
+    HomeWindow = sg.Window('Oszust OS Music Tools', layout, background_color='#657076', margins=(0,0), finalize=True, resizable=False, text_justification='r')
+    ## Music Search: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
+    HomeWindow['musicSearchPanel_billboardTopSongsList'].bind('<Return>', '_Enter')  ## Enter on Top 100 list
+    HomeWindow['musicSearchPanel_songSearchInput'].bind('<Return>', '_Enter')        ## Enter on Song Search
+    for key in ['normalSongSearchButton', 'listSongSearchButton', 'clearSongSearchInputButton', 'billboardTopSongsList']: HomeWindow['musicSearchPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    ## Music Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
+    #for key in []: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    ## YouTube Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
+    youtubeAudioDownload, youtubeDownloadName, youtubeVideoDownload = False, False, True ## App Variables
+    for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'audioDownloadCheckbox', 'videoDownloadCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['youtubeDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Main Window: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     for key in ['versionTextHomeBottom', 'creditsTextHomeBottom']: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
     for app in apps: HomeWindow[app.replace(" ", "_") + "_AppSelector"].Widget.config(cursor="hand2") ## App Side Panel hover icons
+    appSelected, firstHomeLaunch = "Music_Search", False ## App Variables
     ## Reading Home Window
     while True:
         event, values = HomeWindow.read(timeout=10)
-        homeWindowLocationX, homeWindowLocationY = HomeWindow.CurrentLocation()
+        homeWindowLocationX, homeWindowLocationY = HomeWindow.CurrentLocation() ## X & Y Location of Home Window
 ## Closed Window
         if event == sg.WIN_CLOSED or event == 'Exit':
             HomeWindow.close()
             thisSystem = psutil.Process(os.getpid()) ## Close Program
             thisSystem.terminate()
 ## Home Screen Bottom Text
-        elif event == 'creditsTextHomeBottom':
-            creditsWindow = sg.Window("Credits", [[sg.Text("Music Downloader Credits", font='Any 16')], [sg.Text("Development Started: January 2, 2023")], [sg.HorizontalSeparator()], [sg.Text("Developer Team:", font='Any 12')], [sg.Text("Lead Developer: Simon Oszust")], [sg.HorizontalSeparator()], [sg.Button("Ok", button_color=("White", "Blue"), key='okButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
-            creditsWindow["okButton"].Widget.config(cursor="hand2") ## Hover icon
-            creditsWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-            while True:
-                event, values = creditsWindow.read()
-                if event == sg.WIN_CLOSED or event == 'okButton' or (event == '_Delete'): ## Window Closed
-                    creditsWindow.close()
-                    break
-        elif event == 'versionTextHomeBottom': webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases", new=2, autoraise=True)
-## App Picker Panel (Buttons)
+        elif event == 'versionTextHomeBottom': webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases", new=2, autoraise=True) ## Home Screen: Version Text
+        elif event == 'creditsTextHomeBottom': webbrowser.open("https://github.com/Oszust-Industries/", new=2, autoraise=True) ## Home Screen: Credits Button
+## Side Panel Apps (Buttons)
         elif "_AppSelector" in event and event.replace("_AppSelector", "") != appSelected:
-            HomeWindow.close()
-            homeScreen(event.replace("_AppSelector", ""))
-            break
+            appSelected = event.replace("_AppSelector", "")
+            for app in apps:
+                if app.replace(" ", "_") == appSelected: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=True)
+                else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
-            if (event == 'searchSongSearchButton' or (event == 'songSearchBox' + '_Enter')) and values['songSearchBox'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['songSearchBox'].lower().replace(" by ", "-").replace(" ","-"), False) ## Music Search
-            elif event == 'listSongSearchButton' and values['songSearchBox'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['songSearchBox'].lower().replace(" by ", "-").replace(" ","-")) ## Music Search All Results
-            elif event == 'clearInputSongSearchButton': HomeWindow.Element('songSearchBox').Update("") ## Clear Music Search Input
-            elif event == 'billboardTopSongsList' and values['billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('songSearchBox').Update(values['billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
-            elif (event == 'billboardTopSongsList' + '_Enter'): geniusMusicSearch(values['billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
+            if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'].lower().replace(" by ", "-").replace(" ","-"), False) ## Music Search
+            elif event == 'musicSearchPanel_listSongSearchButton' and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput'].lower().replace(" by ", "-").replace(" ","-")) ## Music Search All Results
+            elif event == 'musicSearchPanel_clearSongSearchInputButton': HomeWindow.Element('musicSearchPanel_songSearchInput').Update("") ## Clear Music Search Input
+            elif event == 'musicSearchPanel_billboardTopSongsList' and values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('musicSearchPanel_songSearchInput').Update(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
+            elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
 ## Music Downloader (Buttons/Events)
 
 ## YouTube Downloader (Buttons/Events)
         elif appSelected == "YouTube_Downloader":
-            if event == 'youtubeDownloaderLinkClipboard': ## Paste Clipboard in YouTube Link Input
+            if event == 'youtubeDownloaderPanel_pasteClipboardButton': ## Paste Clipboard in YouTube Link Input
                 win32clipboard.OpenClipboard()
-                HomeWindow.Element('youtubeDownloaderYoutubeLink').Update(win32clipboard.GetClipboardData())
+                HomeWindow.Element('youtubeDownloaderPanel_youtubeUrlInput').Update(win32clipboard.GetClipboardData())
                 win32clipboard.CloseClipboard()
-            elif event == 'youtubeDownloaderOpenYoutube': webbrowser.open("youtube.com", new=2, autoraise=True) ## Open YouTube Website
-            elif event == 'youtubeDownloaderResetSettings': ## Reset Settings
+            elif event == 'youtubeDownloaderPanel_openYoutubeButton': webbrowser.open("youtube.com", new=2, autoraise=True) ## Open YouTube Website
+            elif event == 'youtubeDownloaderPanel_resetSettings': ## Reset Settings
+                youtubeAudioDownload, youtubeDownloadName, youtubeVideoDownload = False, False, True
+                HomeWindow['youtubeDownloaderPanel_audioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                HomeWindow['youtubeDownloaderPanel_videoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+                HomeWindow['youtubeDownloaderPanel_changeNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                HomeWindow.Element('youtubeDownloaderPanel_changeNameInput').Update("")
+                for key in ['youtubeDownloaderPanel_changeNameInput', 'youtubeDownloaderPanel_changeNameClipboard', 'youtubeDownloaderPanel_changeNameClearInput']: HomeWindow.Element(key).Update(visible=False)
+            elif event == 'youtubeDownloaderPanel_audioDownloadCheckbox' and youtubeAudioDownload == True and youtubeVideoDownload == True: ## Download Audio - False
+                HomeWindow['youtubeDownloaderPanel_audioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
                 youtubeAudioDownload = False
-                HomeWindow['youtubeDownloaderAudioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
-                HomeWindow['youtubeDownloaderVideoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
-                youtubeVideoDownload = True
-                HomeWindow['youtubeDownloaderDownloadNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
-                HomeWindow.Element('youtubeDownloaderDownloadNameInput').Update("")
-                for key in ['youtubeDownloaderDownloadNameInput', 'youtubeDownloaderDownloadNameClipboard', 'youtubeDownloaderDownloadNameClear']: HomeWindow.Element(key).Update(visible=False)
-                youtubeDownloadName = False
-            elif event == 'youtubeDownloaderAudioDownloadCheckbox' and youtubeAudioDownload == True and youtubeVideoDownload == True: ## Download Audio - False
-                HomeWindow['youtubeDownloaderAudioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
-                youtubeAudioDownload = False
-            elif event == 'youtubeDownloaderAudioDownloadCheckbox' and youtubeAudioDownload == False: ## Download Audio - True
-                HomeWindow['youtubeDownloaderAudioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+            elif event == 'youtubeDownloaderPanel_audioDownloadCheckbox' and youtubeAudioDownload == False: ## Download Audio - True
+                HomeWindow['youtubeDownloaderPanel_audioDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
                 youtubeAudioDownload = True
-            elif event == 'youtubeDownloaderVideoDownloadCheckbox' and youtubeVideoDownload == True and youtubeAudioDownload == True: ## Download Video - False
-                HomeWindow['youtubeDownloaderVideoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+            elif event == 'youtubeDownloaderPanel_videoDownloadCheckbox' and youtubeVideoDownload == True and youtubeAudioDownload == True: ## Download Video - False
+                HomeWindow['youtubeDownloaderPanel_videoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
                 youtubeVideoDownload = False
-            elif event == 'youtubeDownloaderVideoDownloadCheckbox' and youtubeVideoDownload == False: ## Download Video - True
-                HomeWindow['youtubeDownloaderVideoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+            elif event == 'youtubeDownloaderPanel_videoDownloadCheckbox' and youtubeVideoDownload == False: ## Download Video - True
+                HomeWindow['youtubeDownloaderPanel_videoDownloadCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
                 youtubeVideoDownload = True
-            elif event == 'youtubeDownloaderDownloadNameCheckbox' and youtubeDownloadName == True: ## Change File Name - False
-                HomeWindow['youtubeDownloaderDownloadNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
-                for key in ['youtubeDownloaderDownloadNameInput', 'youtubeDownloaderDownloadNameClipboard', 'youtubeDownloaderDownloadNameClear']: HomeWindow.Element(key).Update(visible=False)
+            elif event == 'youtubeDownloaderPanel_changeNameCheckbox' and youtubeDownloadName == True: ## Change File Name - False
+                HomeWindow['youtubeDownloaderPanel_changeNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                for key in ['youtubeDownloaderPanel_changeNameInput', 'youtubeDownloaderPanel_changeNameClipboard', 'youtubeDownloaderPanel_changeNameClearInput']: HomeWindow.Element(key).Update(visible=False)
                 youtubeDownloadName = False
-            elif event == 'youtubeDownloaderDownloadNameCheckbox' and youtubeDownloadName == False: ## Change File Name - True
-                HomeWindow['youtubeDownloaderDownloadNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
-                for key in ['youtubeDownloaderDownloadNameInput', 'youtubeDownloaderDownloadNameClipboard', 'youtubeDownloaderDownloadNameClear']: HomeWindow.Element(key).Update(visible=True)
+            elif event == 'youtubeDownloaderPanel_changeNameCheckbox' and youtubeDownloadName == False: ## Change File Name - True
+                HomeWindow['youtubeDownloaderPanel_changeNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+                for key in ['youtubeDownloaderPanel_changeNameInput', 'youtubeDownloaderPanel_changeNameClipboard', 'youtubeDownloaderPanel_changeNameClearInput']: HomeWindow.Element(key).Update(visible=True)
                 youtubeDownloadName = True
-            elif event == 'youtubeDownloaderDownloadNameClipboard': ## Paste Clipboard in File Name Input
+            elif event == 'youtubeDownloaderPanel_changeNameClipboard': ## Paste Clipboard in File Name Input
                 win32clipboard.OpenClipboard()
-                HomeWindow.Element('youtubeDownloaderDownloadNameInput').Update(win32clipboard.GetClipboardData())
+                HomeWindow.Element('youtubeDownloaderPanel_changeNameInput').Update(win32clipboard.GetClipboardData())
                 win32clipboard.CloseClipboard()
-            elif event == 'youtubeDownloaderDownloadNameClear': HomeWindow.Element('youtubeDownloaderDownloadNameInput').Update("") ## Clear File Name Input
-            elif event == 'youtubeDownloaderDownloadButton' and values['youtubeDownloaderYoutubeLink'].strip() != "": ## Download YouTube Button
-                if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderDownloadNameInput']
-                loadingScreen("YouTube_Downloader", values['youtubeDownloaderYoutubeLink'], values['youtubeDownloaderLocation'], youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
-                HomeWindow["youtubeDownloaderYoutubeLink"].update("")
+            elif event == 'youtubeDownloaderPanel_changeNameClearInput': HomeWindow.Element('youtubeDownloaderPanel_changeNameInput').Update("") ## Clear File Name Input
+            elif event == 'youtubeDownloaderPanel_downloadButton' and values['youtubeDownloaderPanel_youtubeUrlInput'].strip() != "": ## Download YouTube Button
+                if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderPanel_changeNameInput']
+                loadingScreen("YouTube_Downloader", values['youtubeDownloaderPanel_youtubeUrlInput'], values['youtubeDownloaderPanel_downloadLocationInput'], youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
+                HomeWindow["youtubeDownloaderPanel_youtubeUrlInput"].update("")
+                popupMessage("Weather Alert", "All reports are saying record snowfalls are expected by 4:00 PM - to ensure the safety of our students and faculty we will be dismissing all students an hour early at 1 PM. District school buses will follow norm drop off procedures just an hour earlier.")
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
     global loadingStatus
@@ -252,6 +239,13 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
             loadingPopup.close()
             break
 
+def popupMessage(popupMessageTitle, popupMessageText):
+    wrapper = textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')
+    popupMessageText = '\n'.join(wrapper.wrap(popupMessageText))
+    messagePopup = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\error_Popup.png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='loadingScreenText')], [sg.Button("Ok", font=('Any 12'), button_color=('white','blue'), key='loadingScreenButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True)
+    while True:
+        event, values = messagePopup.read(timeout=10)
+
 def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameFile):
     global audioSavedPath, loadingStatus, youtubeTitle
     try: YouTube(youtubeLink).streams.filter(file_extension="mp4").get_highest_resolution().download(downloadLocation) ## Download Video
@@ -277,7 +271,6 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameF
     ## Remove extra characters from YouTube title for Music Search
     youtubeTitle = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", youtubeTitle)
     loadingStatus = "Done"
-
 
 
 
