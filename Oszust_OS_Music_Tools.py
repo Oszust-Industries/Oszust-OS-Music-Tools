@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 2-27-23
-softwareVersion = "v1.0.0.000 (02.27.23.1)"
+softwareVersion = "v1.0.0.000 (02.27.23.3)"
 import ctypes, datetime, eyed3, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -565,17 +565,17 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                     searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
                     searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
                     if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, text_color_for_value='black', append=True)
+                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, text_color_for_value='black', append=True)
+                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
                         except: pass
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, text_color_for_value='black', append=True)
                         badWordCount += 1
                         badLine = True
                     elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, text_color_for_value='black', append=True)
+                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, text_color_for_value='black', append=True)
+                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
                         except: pass
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, text_color_for_value='black', append=True)
                         badWordCount += 1
@@ -658,13 +658,9 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
                         elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
-                        if selectedText[0] == " ": selectedText = selectedText[1:]
-                        if selectedText[len(selectedText)-1] == " ": selectedText = selectedText[:-1]
-                        messagePopupTimed(False, "Profanity Engine",'"' + selectedText + '" was successfully added to Profanity Engine.', "saved", None, 2000, False) ## Show Success Message
+                        popupMessage("Profanity Engine", '"' + lyricsLine.Widget.selection_get() + '" was successfully added to Profanity Engine.', "saved", 3000) ## Show Success Message
                     except:
-                        if selectedText[0] == " ": selectedText = selectedText[1:]
-                        if selectedText[len(selectedText)-1] == " ": selectedText = selectedText[:-1]
-                        messagePopupTimed(False, "Profanity Engine", "Failed to add " + selectedText + " to Profanity Engine.", "error", None, 2000, False)
+                        popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
                 elif event == 'Remove from Profanity Engine':
                     try:
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
@@ -712,10 +708,10 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                             ## Show Success Message
                             if str(profanityEngineMatches)[2] == " ": profanityEngineMatches = str(profanityEngineMatches)[3:]
                             if str(profanityEngineMatches)[len(profanityEngineMatches)-3] == " ": profanityEngineMatches = str(profanityEngineMatches)[:-3]
-                            if len(profanityEngineMatches) == 1: messagePopupTimed(False, "Profanity Engine",'"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", None, 2000, False)
-                            else: messagePopupTimed(False, "Profanity Engine",'"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" were successfully removed from Profanity Engine.', "saved", None, 2000, False)
-                        else: messagePopupTimed(False, "Profanity Engine","No words needed to be removed from Profanity Engine.", "saved", None, 2000, False)
-                    except: messagePopupTimed(False, "Profanity Engine", 'Failed to remove "' + selectedText + '" from Profanity Engine.', "error", None, 2000, False)
+                            if len(profanityEngineMatches) == 1: popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
+                            else: popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" were successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
+                        else: popupMessage("Profanity Engine", "No words needed to be removed from Profanity Engine.", "success", 3000)
+                    except: popupMessage("Profanity Engine", 'Failed to remove "' + selectedText + '" from Profanity Engine.', "error", 3000) ## Show Error Message
             except: pass
         elif event == 'musicSearchResultsMenu' or (event == '_Tab'): ## Move Song to List Results
             MusicSearchSongWindow.close()
@@ -792,11 +788,11 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                                 try: os.rename(values['metadataBurnerFileChooserInput'], values['metadataBurnerFileChooserInput'].rsplit('/', 1)[0] + "/" + geniusMusicSearchSongNameInfo + "." + values['metadataBurnerFileChooserInput'].rsplit('.', 1)[1]) ## Raname MP3 to Song Name
                                 except: pass
                             musicSearchMetadataWindow.close()
-                            messagePopupTimed(False, "Metadata Burner", "Metadata has been saved to " + values['metadataBurnerFileChooserInput'] + ".", "saved", None, 2000, False) ## Metadata Worked
+                            popupMessage("Metadata Burner", "Metadata has been saved to " + values['metadataBurnerFileChooserInput'] + ".", "saved", 3000) ## Show Success Message
                             break
                         except:
                             musicSearchMetadataWindow.close()
-                            messagePopupTimed(False, "Metadata Burner", "Metadata failed.\nPlease try again.", "error", None, 2000, False) ## Metadata Failed
+                            popupMessage("Metadata Burner", "Metadata failed.\t\t\t\t\tPlease try again.", "error", 3000) ## Show Error Message
                             break
                     else:
                         musicSearchMetadataWindow.close()
