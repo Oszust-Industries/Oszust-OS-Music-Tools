@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 2-27-23
-softwareVersion = "v1.0.0.000 (02.27.23.3)"
+## Created on: 1-02-23 - Last update: 3-04-23
+softwareVersion = "v1.0.0.000 (03.04.23.1)"
 import ctypes, datetime, eyed3, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -112,7 +112,9 @@ def loadProfanityEngineDefinitions(downloadList):
         except: pass
         try: ## Remove User's Definitions
             removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb"))
-            for phrase in removalsProfanityEngineInfo: profanityEngineDefinitions.remove(phrase)
+            for phrase in removalsProfanityEngineInfo:
+                try: profanityEngineDefinitions.remove(phrase)
+                except: pass
         except: pass
     except: profanityEngineDefinitions = "Failed"
 
@@ -362,7 +364,8 @@ def loadGeniusMusic(userInput, forceResult):
         if hitsFound == 0: ## No Results Found
             loadingAction = "No_Result_Found"
             return
-    musicSearchJsonContent = content["response"]["hits"][resultCount]["result"]
+    if "/songs/" in userInput: musicSearchJsonContent = content["response"]["song"]
+    else: musicSearchJsonContent = content["response"]["hits"][resultCount]["result"]
     while goodResult == False:
         lyricsList, lyricsListFinal = [], []
         if artistSearch == False or str(musicSearchJsonContent["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
@@ -431,7 +434,7 @@ def loadGeniusMusic(userInput, forceResult):
                 songScrapedInfo = html.select("div[class*=SongInfo__Credit]") ## Song's Label Container
                 songScrapedInfo = (str(songScrapedInfo).split("Label</div><div>")[1]).split("</a></div></div>")[0]
                 geniusMusicSearchLabels = ((re.sub(r'<.+?>', '', str(songScrapedInfo))).replace(" &amp; ", ",,,").replace(" ,,,", ",,,").replace(" (Label)", "")).split(',,,') ## Song's Labels
-                for blacklist in [", Release Date", ", Publishers", ", Distributor", ", Copyright", " Copyright", ", Recorded At", ", Assistant Mix Engineer", ", Writer"]:  geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(blacklist)[0] ## Put Labels in List
+                for blacklist in [", Release Date", ", Publishers", ", Distributor", ", Copyright", " Copyright", ", Recorded At", ", Assistant Mix Engineer", ", Writer", ", Phonographic", ", Vocal Programmer"]:  geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(blacklist)[0].replace("\\u200b", "") ## Put Labels in List
                 geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(',') ## Split Labels
                 if len(geniusMusicSearchLabels) > 3: geniusMusicSearchLabels = geniusMusicSearchLabels[:3] ## Shorten Labels List
             except: geniusMusicSearchLabels = None
@@ -555,7 +558,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
     if geniusMusicSearchLabels != None: MusicSearchSongWindow["geniusMusicSearchLabels"].Widget.config(cursor="hand2")                  ## Song Label Hover icon
     ## Print Lyrics and Check for Profanity
     if lyrics != None:
-        if True:
+        try:
             ## Load Profanity Engine Dictionary
             for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
             ## Print Each Lyric Line and Check for Profanity
@@ -569,7 +572,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
                         try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
                         except: pass
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, text_color_for_value='black', append=True)
+                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
                         badWordCount += 1
                         badLine = True
                     elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
@@ -577,13 +580,13 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                         MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
                         try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
                         except: pass
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, text_color_for_value='black', append=True)
+                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
                         badWordCount += 1
                         badLine = True
                 if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
-        if False: ## Profanity Engine Dictionary Failed to Load
+        except: ## Profanity Engine Dictionary Failed to Load
             profanityEngineDefinitions = "Failed"
-            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False, text_color_for_value='black')
+            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
             for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
     ## Update Profanity Engine Text
     if lyrics != None and profanityEngineDefinitions != "Failed":
@@ -624,31 +627,48 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                 elif event == 'Add to Profanity Engine':
                     try:
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
-                        try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb"))
+                        try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb")) ## Load Additions Cache
                         except: additionProfanityEngineInfo = []
-                        additionProfanityEngineInfo.append(lyricsLine.Widget.selection_get())
+                        try: removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb")) ## Load Removals Cache
+                        except: removalsProfanityEngineInfo = []
+                        additionProfanityEngineInfo.append(lyricsLine.Widget.selection_get().lower())
                         pickle.dump(additionProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "wb"))
+                        try: ## Remove from the Removals Cache List
+                            removalsProfanityEngineInfo.remove(lyricsLine.Widget.selection_get().lower())
+                            pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
+                        except: pass
                         ## Reload Music Search's Lyrics
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("")
                         try:
-                            ## Load Profanity Engine Dictionary
+                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
                             loadProfanityEngineDefinitions(True)
+                            ## Load Profanity Engine Dictionary
                             for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
                             ## Print Each Lyric Line and Check for Profanity
                             for i in range(len(lyricsListFinal)):
                                 badLine = False ## Reset Bad Line for each Line
                                 for phrase in profanityEngineDefinitions:
-                                    if badLine == False and phrase[len(phrase)-1] == "~" and re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
+                                    searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                                    searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                                    if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
+                                        except: pass
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
                                         badWordCount += 1
                                         badLine = True
-                                    elif badLine == False and phrase[len(phrase)-1] != "~" and re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
+                                    elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
+                                        except: pass
+                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
                                         badWordCount += 1
                                         badLine = True
                                 if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
                         except: ## Profanity Engine Dictionary Failed to Load
                             profanityEngineDefinitions = "Failed"
+                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
                             for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
                         ## Update Profanity Engine Text
                         if lyrics != None and profanityEngineDefinitions != "Failed":
@@ -658,44 +678,60 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
                             elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
                         elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
-                        popupMessage("Profanity Engine", '"' + lyricsLine.Widget.selection_get() + '" was successfully added to Profanity Engine.', "saved", 3000) ## Show Success Message
                     except:
                         popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
                 elif event == 'Remove from Profanity Engine':
                     try:
+                        profanityEngineMatches, selectedText = "", lyricsLine.Widget.selection_get()
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
-                        try: removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb"))
+                        try: removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb")) ## Load Removals Cache
                         except: removalsProfanityEngineInfo = []
+                        try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb")) ## Load Additions Cache
+                        except: additionProfanityEngineInfo = []
                         loadProfanityEngineDefinitions(True)
-                        profanityEngineMatches, selectedText = [], lyricsLine.Widget.selection_get()
                         try:
                             profanityEngineDefinitions.remove(selectedText.strip().replace("'", "~").lower().replace(",", "").replace(".", "").replace("?", "").replace("!", ""))
-                            profanityEngineMatches.append(selectedText.replace("'", "~"))
-                        except:
-                            try:
-                                for word in selectedText.split():
-                                    if word.strip().replace("'", "~").replace(",", "").replace(".", "").replace("?", "").replace("!", "").lower() in profanityEngineDefinitions: profanityEngineMatches.append(word.replace("'", "~"))
-                            except: pass
+                            profanityEngineMatches = selectedText.replace("'", "~")
+                        except: pass
                         if len(profanityEngineMatches) > 0:
-                            for match in profanityEngineMatches: removalsProfanityEngineInfo.append(match)
+                            removalsProfanityEngineInfo.append(profanityEngineMatches.lower())
                             pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
+                            try: ## Remove from the Additions Cache List
+                                additionProfanityEngineInfo.remove(profanityEngineMatches.lower())
+                                pickle.dump(additionProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "wb"))
+                            except: pass
                             ## Reload Music Search's Lyrics
-                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("")
                             try:
-                                ## Load Profanity Engine Dictionary
+                                MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
                                 loadProfanityEngineDefinitions(True)
+                                ## Load Profanity Engine Dictionary
                                 for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
                                 ## Print Each Lyric Line and Check for Profanity
                                 for i in range(len(lyricsListFinal)):
                                     badLine = False ## Reset Bad Line for each Line
                                     for phrase in profanityEngineDefinitions:
-                                        if badLine == False and re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i], re.IGNORECASE) is not None: ## Check Words and Phrases for Bad Words
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False, text_color='Red')
+                                        searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                                        searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                                        if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                                            try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
+                                            except: pass
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
+                                            badWordCount += 1
+                                            badLine = True
+                                        elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                                            try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
+                                            except: pass
+                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
                                             badWordCount += 1
                                             badLine = True
                                     if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
                             except: ## Profanity Engine Dictionary Failed to Load
                                 profanityEngineDefinitions = "Failed"
+                                MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
                                 for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
                             ## Update Profanity Engine Text
                             if lyrics != None and profanityEngineDefinitions != "Failed":
@@ -706,10 +742,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                                 elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
                             elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
                             ## Show Success Message
-                            if str(profanityEngineMatches)[2] == " ": profanityEngineMatches = str(profanityEngineMatches)[3:]
-                            if str(profanityEngineMatches)[len(profanityEngineMatches)-3] == " ": profanityEngineMatches = str(profanityEngineMatches)[:-3]
-                            if len(profanityEngineMatches) == 1: popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
-                            else: popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" were successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
+                            popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
                         else: popupMessage("Profanity Engine", "No words needed to be removed from Profanity Engine.", "success", 3000)
                     except: popupMessage("Profanity Engine", 'Failed to remove "' + selectedText + '" from Profanity Engine.', "error", 3000) ## Show Error Message
             except: pass
@@ -839,7 +872,7 @@ def loadGeniusMusicList(userInput): ## NEEDS CLEANING
     from PIL import Image
     import cloudscraper, io
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
-    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(), sg.Text('Music Search Results:', font='Any 20'), sg.Push()]], 0, [], [], []
+    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(), sg.Text('Music Search Results:', font='Any 20'), sg.Push()], [sg.Push(), sg.Text('Search:', font='Any 16'), sg.Input(userInput.replace("-", " ")), sg.Push()]], 0, [], [], []
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
     content = json.loads((resp.content).decode('utf8'))
