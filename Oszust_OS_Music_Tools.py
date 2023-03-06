@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 3-04-23
-softwareVersion = "v1.0.0.000 (03.04.23.1)"
+## Created on: 1-02-23 - Last update: 3-05-23
+softwareVersion = "v1.0.0.000 (03.05.23.1)"
 import ctypes, datetime, eyed3, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -156,7 +156,7 @@ def homeScreenAppPanels():
 def homeScreen():
     global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, wifiStatus
     ## Oszust OS Music Tools List
-    if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader", "CD Burner", "Music Tools", "Settings"]
+    if wifiStatus: applist, apps = [[]], ["Music Search", "YouTube Downloader"] ## "Music Search", "Music Downloader", "YouTube Downloader", "CD Burner", "Music Tools", "Settings"
     else: applist, apps = [[]], ["CD Burner", "Music Tools", "Settings"]
     for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#657076', border_width=0, key=app.replace(" ", "_") + '_AppSelector', tooltip='Open ' + app)]], pad=((5,5), (5, 5)), background_color='#657076')]] ## Add Apps to Side Panel
     ## Home Window
@@ -263,7 +263,7 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
         loadingPopup.hide()
         loadingPopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - loadingPopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - loadingPopup.size[1] // 2)
         loadingPopup.un_hide()
-    else: loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
+    else: loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Downloading Billboard Hot 100 Songs...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Start"
     loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=10) ## Load Loading GIF
     while True:
         event, values = loadingPopup.read(timeout=10)
@@ -348,7 +348,7 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameF
 def loadGeniusMusic(userInput, forceResult):
     from PIL import Image
     import bs4, cloudscraper, io, re
-    global geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, lyrics, lyricsListFinal, png_data
+    global geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, hitsFound, loadingAction, lyrics, lyricsListFinal, png_data
     artistSearch, goodResult, resultCount = False, False, 0
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     if "/songs/" in userInput: resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"}) ## Song ID Search
@@ -493,19 +493,8 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
             return
         elif loadingAction == "Genius_Robot_Check": ## Genius is Checking Robot
             loadingPopup.close() ## Close Loading Popup
-            MusicSearchSongWindow = sg.Window("*", [[sg.Text("      Genius thinks you're a robot.      \n         Please disable your VPN.        ", font='Any 14')], [sg.Button("Fix", button_color=('White', 'Blue'), key='openGeniusLink'), sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
-            MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-            for key in ['closeFailedMusicSearchButton', 'openGeniusLink']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
-            while True:
-                event, values = MusicSearchSongWindow.read()
-                if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
-                    MusicSearchSongWindow.close()
-                    return
-                elif event == 'openGeniusLink':
-                    MusicSearchSongWindow.close()
-                    os.chdir("C:\\Program Files\\NordVPN\\")
-                    os.system('nordvpn -d')
-                    return
+            popupMessage("Music Search Error", "Genius thinks you're a robot.\t\t\t\t\tPlease disable your VPN.", "error")
+            return
         elif loadingAction == "Artist_Search": ## Start Artist Search
             loadingPopup.close()
             geniusMusicSearchList(userInput)
@@ -523,7 +512,8 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
     ## Song Window
     if lyrics != None: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']] ## Lyrics Right Click Menu - Profanity Engine
     else: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition']] ## Lyrics Right Click Menu - No Profanity Engine
-    layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    if hitsFound > 1: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    else: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
     if musicSub == "Apple": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenApple.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Apple Music")]]
     elif layout == "Spotify": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenSpotify.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Spotify")]]
     if geniusMusicSearchAlbum != None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
@@ -550,7 +540,8 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
     MusicSearchSongWindow.bind('<End>', '_End')            ## Artist shortcut
     MusicSearchSongWindow.bind('<`>', '_`')                ## Listen shortcut
     ## Mouse Icon Changes
-    for key in ['downloadMetadataMp3Button','musicSearchArtistButton','musicSearchArtistResultsMenu','musicSearchListenButton','musicSearchResultsMenu','searchmusicSearchGenius']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    for key in ['downloadMetadataMp3Button', 'musicSearchArtistButton', 'musicSearchArtistResultsMenu', 'musicSearchListenButton', 'searchmusicSearchGenius']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    if hitsFound > 1: MusicSearchSongWindow["musicSearchResultsMenu"].Widget.config(cursor="hand2")                                     ## List Search Results Hover icon
     if geniusMusicSearchSongNameInfo != None: MusicSearchSongWindow["geniusMusicSearchSongNameInfoText"].Widget.config(cursor="hand2")  ## Song Name Text Hover icon
     if geniusMusicSearchAlbum != None: MusicSearchSongWindow["geniusMusicSearchAlbumText"].Widget.config(cursor="hand2")                ## Song Album Text Hover icon
     if geniusMusicSearchArtists != None: MusicSearchSongWindow["geniusMusicSearchArtistsText"].Widget.config(cursor="hand2")            ## Song Artist Text Hover icon
@@ -597,7 +588,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
         elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
     elif lyrics != None and profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
     while True:
-        event, values = MusicSearchSongWindow.read(timeout=10)
+        event, values = MusicSearchSongWindow.read()
         if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
             MusicSearchSongWindow.close()
             HomeWindow.Element('musicSearchPanel_songSearchInput').Update("")
@@ -757,36 +748,36 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
             break
         elif event == 'downloadMetadataMp3Button' or (event == '_PageDown'): ## Download Metadata to MP3
             lyricsText, metadataBurnLyricsOnlyValue, metadataChangeFileNameValue, metadataMultipleArtistsValue = "", False, True, False
-            musicSearchMetadataWindow = sg.Window("Music Search - Metadata Burner", [[sg.Text("Oszust OS Metadata Burner", font=('Helvetica', 20), background_color='#696969')], [sg.HorizontalSeparator()], [sg.Text("Choose Audio File: ", font=("Helvetica", 14), background_color='#696969')], [sg.Input("", do_not_clear=True, size=(38,1), enable_events=True, key='metadataBurnerFileChooserInput'), sg.FileBrowse(file_types=(("Audio Files", "*.mp3"),), key='metadataBurnerFileChooser')], [sg.HorizontalSeparator()], [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#696969', key='metadataBurnLyricsOnlyCheckbox', tooltip="Burn lyrics only - No"), sg.Text("Burn Lyrics Only", font=('Helvetica', 11), background_color='#696969', key='metadataBurnLyricsOnlyText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#696969', key='metadataMultipleArtistsCheckbox', tooltip="Multiple artists - No"), sg.Text("Album Includes Multiple Artists?", font=('Helvetica', 11), background_color='#696969', key='metadataMultipleArtistsText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png', border_width=0, button_color='#696969', key='metadataChangeFileNameCheckbox', tooltip="Change file name - Yes"), sg.Text("Change Audio File's Name", font=('Helvetica', 11), background_color='#696969', key='metadataChangeFileNameText')]], element_justification='l', background_color='#696969')], [sg.Button("Burn Metadata", button_color=("White", "Blue"), key='burnMetadataInfo'), sg.Button("Cancel", button_color=("White", "Red"), key='closeMetadataWindow')]], background_color='#696969', no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='c')
+            musicSearchMetadataWindow = sg.Window("Music Search - Metadata Burner", [[sg.Text("Oszust OS Metadata Burner", font=('Helvetica', 20), background_color='#646f75')], [sg.HorizontalSeparator()], [sg.Text("Choose Audio File: ", font=("Helvetica", 14), background_color='#646f75')], [sg.Input("", do_not_clear=True, size=(38,1), enable_events=True, key='metadataBurnerFileChooserInput'), sg.FileBrowse(file_types=(("Audio Files", "*.mp3"),), key='metadataBurnerFileChooser')], [sg.HorizontalSeparator()], [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataBurnLyricsOnlyCheckbox', tooltip="Burn lyrics only - No"), sg.Text("Burn Lyrics Only", font=('Helvetica', 11), background_color='#646f75', key='metadataBurnLyricsOnlyText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataMultipleArtistsCheckbox', tooltip="Multiple artists - No"), sg.Text("Album Includes Multiple Artists?", font=('Helvetica', 11), background_color='#646f75', key='metadataMultipleArtistsText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png', border_width=0, button_color='#646f75', key='metadataChangeFileNameCheckbox', tooltip="Change file name - Yes"), sg.Text("Change Audio File's Name", font=('Helvetica', 11), background_color='#646f75', key='metadataChangeFileNameText')]], element_justification='l', background_color='#646f75')], [sg.Button("Burn Metadata", button_color=("White", "Blue"), key='burnMetadataInfo'), sg.Button("Cancel", button_color=("White", "Red"), key='closeMetadataWindow')]], background_color='#646f75', no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             for key in ['metadataBurnerFileChooser', 'metadataBurnLyricsOnlyCheckbox', 'metadataMultipleArtistsCheckbox', 'metadataChangeFileNameCheckbox', 'burnMetadataInfo', 'closeMetadataWindow']: musicSearchMetadataWindow[key].Widget.config(cursor="hand2") ## Hover icons
             musicSearchMetadataWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
             while True:
-                event, values = musicSearchMetadataWindow.read(timeout=10)
+                event, values = musicSearchMetadataWindow.read()
                 if event == sg.WIN_CLOSED or event == 'closeMetadataWindow' or (event == '_Delete'): ## Close Settings Window
                     musicSearchMetadataWindow.close()
                     break
                 elif event == 'metadataBurnLyricsOnlyCheckbox' and metadataBurnLyricsOnlyValue == True: ## Set Burn Lyrics Only to False
-                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\crossMark.png')
+                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
                     musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].set_tooltip("Burn lyrics only - No")
                     metadataBurnLyricsOnlyValue = False
                 elif event == 'metadataBurnLyricsOnlyCheckbox' and metadataBurnLyricsOnlyValue == False: ## Set Burn Lyrics Only to True
-                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\checkMark.png')
+                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
                     musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].set_tooltip("Burn lyrics only - Yes")
                     metadataBurnLyricsOnlyValue = True
                 elif event == 'metadataMultipleArtistsCheckbox' and metadataMultipleArtistsValue == True: ## Set Multiple Artists to False
-                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\crossMark.png')
+                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
                     musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].set_tooltip("Multiple artists - No")
                     metadataMultipleArtistsValue = False
                 elif event == 'metadataMultipleArtistsCheckbox' and metadataMultipleArtistsValue == False: ## Set Multiple Artists to True
-                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\checkMark.png')
+                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
                     musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].set_tooltip("Multiple artists - Yes")
                     metadataMultipleArtistsValue = True
                 elif event == 'metadataChangeFileNameCheckbox' and metadataChangeFileNameValue == True: ## Set Change File Name to False
-                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\crossMark.png')
+                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
                     musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].set_tooltip("Change file name - No")
                     metadataChangeFileNameValue = False
                 elif event == 'metadataChangeFileNameCheckbox' and metadataChangeFileNameValue == False: ## Set Change File Name to True
-                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\checkMark.png')
+                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
                     musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].set_tooltip("Change file name - Yes")
                     metadataChangeFileNameValue = True
                 elif event == 'burnMetadataInfo': ## Burn Metadata
@@ -830,13 +821,13 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                     else:
                         musicSearchMetadataWindow.close()
                         break
-        elif event == 'musicSearchArtistButton' or (event == '_End'): webbrowser.open(geniusMusicSearchArtistURL, new=2, autoraise=True)  ## Open Artist's Genius Page
-        elif event == 'searchmusicSearchGenius' or (event == '_Home'): webbrowser.open(geniusMusicSearchGeniusURL, new=2, autoraise=True) ## Open Genius Page
+        elif event == 'musicSearchArtistButton' or (event == '_Home'): webbrowser.open(geniusMusicSearchArtistURL, new=2, autoraise=True)  ## Open Artist's Genius Page
+        elif event == 'searchmusicSearchGenius' or (event == '_End'): webbrowser.open(geniusMusicSearchGeniusURL, new=2, autoraise=True) ## Open Genius Page
         elif event == 'musicSearchListenButton' or (event == '_`'): ## Play Song Online
             if musicSub == "Apple": webbrowser.open("https://music.apple.com/us/search?term=" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
             elif musicSub == "Spotify": webbrowser.open("https://open.spotify.com/search/" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
 
-def burnAudioData():  ## NEEDS CLEANING
+def burnAudioData():
     try:
         lyricsText = "" ## Reset Variables
         for i in range(len(lyricsListFinal)): ## Get Lyrics
@@ -853,26 +844,21 @@ def burnAudioData():  ## NEEDS CLEANING
         if geniusMusicSearchLabels != None: audiofile.tag.publisher = geniusMusicSearchLabels[0].replace("[", "").replace("]", "").replace("'", "") ## Label
         if geniusMusicSearchAlbumCurrent != None: audiofile.tag.track_num = geniusMusicSearchAlbumCurrent ## Curent Song Position
         if geniusMusicSearchAlbumLength != None: audiofile.tag.track_total = geniusMusicSearchAlbumLength ## Album length
-        audiofile.tag.images.set(4, png_data, "image/png") ## Artwork - Back Cover
-        audiofile.tag.images.set(3, png_data, "image/png") ## Artwork - Front Cover
-        audiofile.tag.images.set(0, png_data, "image/png") ## Artwork - Other
-        audiofile.tag.images.set(4, png_data, "image/jpeg", "cover") ## Artwork - Back Cover
-        audiofile.tag.images.set(3, png_data, "image/jpeg", "cover") ## Artwork - Front Cover
-        audiofile.tag.images.set(0, png_data, "image/jpeg", "cover") ## Artwork - Other
+        for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/png") ## Artwork - Basic
+        for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/jpeg", "cover") ## Artwork - Higher Quality
         if lyrics != None: audiofile.tag.lyrics.set(lyricsText) ## Save Lyrics
         audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
         audiofile.tag.save() ## Save File
         ## Change the audio file's name
         try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + geniusMusicSearchSongNameInfo + "." + audioSavedPath.rsplit('.', 1)[1]) ## Raname MP3 to Song Name
         except: pass
-        print("Burn Worked")
-    except Exception as Argument: crashMessage("Error Burner: " + str(Argument))
+    except: popupMessage("Metadata Burner", "The Burner failed.", "error")
 
-def loadGeniusMusicList(userInput): ## NEEDS CLEANING
+def loadGeniusMusicList(userInput):
     from PIL import Image
     import cloudscraper, io
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
-    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(), sg.Text('Music Search Results:', font='Any 20'), sg.Push()], [sg.Push(), sg.Text('Search:', font='Any 16'), sg.Input(userInput.replace("-", " ")), sg.Push()]], 0, [], [], []
+    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInput.replace("-", " "), do_not_clear=True, size=(40,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], 0, [], [], []
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
     content = json.loads((resp.content).decode('utf8'))
@@ -931,36 +917,36 @@ def loadGeniusMusicList(userInput): ## NEEDS CLEANING
         ## Song Lyrics
         geniusMusicSearchLyricsState = str(content["response"]["hits"][resultNumber]["result"]["lyrics_state"]) ## Result Song Lyrics
         if geniusMusicSearchLyricsState.lower() == "complete": lyricsImage, lyricsHoverMessage = "checked", "Lyrics Found" ## Lyrics Found
-        else: lyricsImage, lyricsHoverMessage = "failed", "Lyrics Not Found" ## No Lyrics Found
+        else: lyricsImage, lyricsHoverMessage = "checkFailed", "Lyrics Not Found" ## No Lyrics Found
         ## Music Service
         if musicSub == "Apple": musicServiceImage = "musicSearchListenApple" ## Set Listening Link to Apple
         elif musicSub == "Spotify": musicServiceImage = "musicSearchListenSpotify" ## Set Listening Link to Spotify
         ## Song Window
         if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius"] and "genius" not in geniusMusicSearchArtists.lower():
-            if geniusMusicSearchDate != None: layout += [[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12')]]), sg.Push(), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + lyricsImage + '.png', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + musicServiceImage + '.png', border_width=0, button_color='#2B475D', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2B475D', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Music Search Result")]])]]
-            else: layout += [[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', tooltip=longArtists)]]), sg.Push(), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + lyricsImage + '.png', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\' + musicServiceImage + '.png', border_width=0, button_color='#2B475D', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2B475D', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Music Search Result")]])]]
+            if geniusMusicSearchDate != None: layout += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12', background_color='#2b475d')]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
+            else: layout += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
             resultNumbers.append(resultNumber)
         elif len(content["response"]["hits"]) > 8: hitCount += 1
         else: hitCount -= 1
         resultNumber += 1
         hitCount -= 1
-    layout += [[sg.Push(), sg.Text("Music Search powered by Genius", font='Any 11'), sg.Push()]] ## Credits
+    layout += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
     ## Check if Any Good Results Found
     if len(resultNumbers) == 0: loadingAction = "No_Result_Found"
     elif len(resultNumbers) == 1: loadingAction = "Only_One_Result"
     else: loadingAction = "Search_Finished"
 
-def geniusMusicSearchList(userInput): ## NEEDS CLEANING
+def geniusMusicSearchList(userInput):
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
     loadingPopup.hide()
     loadingPopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - loadingPopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - loadingPopup.size[1] // 2)
     loadingPopup.un_hide()
-    loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Start Loading Screen Faster
+    loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=10) ## Load Loading GIF
     while True:
         event, values = loadingPopup.read(timeout=10)
-        loadingPopup["loadingGIFImage"].update_animation_no_buffering(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
+        loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
         ## Actions from Thread
         if loadingAction == "Start": ## Start Music Search List Thread
             loadGeniusMusicListThread = threading.Thread(name="loadGeniusMusicList", target=loadGeniusMusicList, args=(userInput,))
@@ -968,46 +954,40 @@ def geniusMusicSearchList(userInput): ## NEEDS CLEANING
             loadingAction = "Running"
         elif loadingAction == "No_Result_Found": ## No Music Search Result Found
             loadingPopup.close() ## Close Loading Popup
-            MusicSearchSongWindow = sg.Window("*", [[sg.Text("No results found.", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
-            MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-            for key in ['closeFailedMusicSearchButton']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
-            while True:
-                event, values = MusicSearchSongWindow.read()
-                if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
-                    MusicSearchSongWindow.close()
-                    return
+            popupMessage("No Search Result", "", "fail")
+            return
         elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
-            MusicSearchSongWindow = sg.Window("*", [[sg.Text("            Genius service down.      \n       Please try again a little later.      ", font='Any 14')], [sg.Button("Close", button_color=('White', 'Red'), key='closeFailedMusicSearchButton')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
-            MusicSearchSongWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
-            for key in ['closeFailedMusicSearchButton']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
-            while True:
-                event, values = MusicSearchSongWindow.read()
-                if event == sg.WIN_CLOSED or event == 'closeFailedMusicSearchButton' or (event == '_Delete'): ## Window Closed
-                    MusicSearchSongWindow.close()
-                    return
-        elif loadingAction == "Search_Finished": ## Show Music Search List Window
-            loadingPopup.close()
-            break
+            popupMessage("Music Search Error", "Genius is down.\t\t\t\t\tPlease try again a little later.", "error")
+            return
         elif loadingAction == "Only_One_Result": ## Only One Result Found, Open It
             loadingPopup.close()
             geniusMusicSearch(geniusSongIDs[0], True)
             return
-    MusicSearchListWindow = sg.Window("Music Search - List Results", layout, resizable=False, finalize=True, keep_on_top=False, element_justification='l')
+        elif loadingAction == "Search_Finished": ## Show Music Search List Window
+            loadingPopup.close()
+            break
+    MusicSearchListWindow = sg.Window("Music Search - List Results", layout, background_color='#657076', finalize=True, resizable=False, keep_on_top=False, element_justification='l')
     MusicSearchListWindow.hide()
     MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
     MusicSearchListWindow.un_hide()
     ## Window Shortcuts
-    MusicSearchListWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
+    MusicSearchListWindow.bind('<Delete>', '_Delete')                               ## Close Window shortcut
+    MusicSearchListWindow['geniusMusicListSearchInput'].bind('<Return>', '_Enter')  ## Enter on Song Search
     ## Mouse Icon Changes
+    MusicSearchListWindow["geniusMusicListSearchButton"].Widget.config(cursor="hand2")  ## Change Search Button Hover icon
     for resultNumber in resultNumbers:
         MusicSearchListWindow["searchmusicListSearchGenius_" + str(resultNumber)].Widget.config(cursor="hand2")  ## Genius Page Hover icon
         MusicSearchListWindow["searchmusicListPlaySong_" + str(resultNumber)].Widget.config(cursor="hand2")      ## Listen Music Hover icon
         MusicSearchListWindow["searchMusicListOpenSong_" + str(resultNumber)].Widget.config(cursor="hand2")      ## Open Song Hover icon
     while True:
-        event, values = MusicSearchListWindow.read(timeout=10)
+        event, values = MusicSearchListWindow.read()
         if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
             MusicSearchListWindow.close()
+            break
+        elif (event == 'geniusMusicListSearchButton' or (event == 'geniusMusicListSearchInput' + '_Enter')) and values['geniusMusicListSearchInput'].replace(" ", "-") != userInput: ## Change Search
+            MusicSearchListWindow.close()
+            geniusMusicSearchList(values['geniusMusicListSearchInput'].lower().replace(" by ", "-").replace(" ","-"))
             break
         elif 'searchmusicListSearchGenius' in event: webbrowser.open(geniusURLs[int(event.split("_")[-1])], new=2, autoraise=True) ## Open Genius Page
         elif 'searchmusicListPlaySong_' in event: ## Play Song Online
