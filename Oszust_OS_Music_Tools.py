@@ -1,7 +1,7 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 3-05-23
-softwareVersion = "v1.0.0.000 (03.05.23.1)"
-import ctypes, datetime, eyed3, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
+## Created on: 1-02-23 - Last update: 3-06-23
+softwareVersion = "v1.0.0.000 (03.06.23.1)"
+import ctypes, datetime, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
@@ -131,16 +131,16 @@ def homeScreenAppPanels():
     [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='musicDownloaderPanel_resetSettings', tooltip="Reset Settings")],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='musicDownloaderAudioDownloadCheckbox', tooltip="Paste Link"), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#2B475D')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderVideoDownloadCheckbox', tooltip="Paste Link"), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#2B475D')],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='musicDownloaderDownloadNameCheckbox', tooltip="Paste Link"), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='musicDownloaderDownloadNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='musicDownloaderDownloadNameClipboard', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', visible=False, key='musicDownloaderDownloadNameClear', tooltip="Paste Link")],
     [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='musicDownloaderDownloadButton'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicDownloaderPanel'),
     ## YouTube Downloader Panel
      sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("YouTube Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, key='youtubeDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, key='youtubeDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
+    [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\youtubeDownloader.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
     [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='youtubeDownloaderPanel_fileBrowseButton')],
-    [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, key='youtubeDownloaderPanel_resetSettings', tooltip="Reset Settings")],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderPanel_audioDownloadCheckbox'), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, key='youtubeDownloaderPanel_videoDownloadCheckbox'), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, key='youtubeDownloaderPanel_changeNameCheckbox'), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderPanel_changeNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderPanel_changeNameClipboard', tooltip="Paste Clipboard"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, visible=False, key='youtubeDownloaderPanel_changeNameClearInput', tooltip="Clear Input")],
+    [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\reset.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_resetSettings', tooltip="Reset Settings")],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_audioDownloadCheckbox'), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_videoDownloadCheckbox'), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_changeNameCheckbox'), sg.Text("Rename download to:", font='Any 14', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(31,1), enable_events=True, visible=False, key='youtubeDownloaderPanel_changeNameInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, visible=False, key='youtubeDownloaderPanel_changeNameClipboard', tooltip="Paste Clipboard"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', visible=False, key='youtubeDownloaderPanel_changeNameClearInput', tooltip="Clear Input")],
     [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderPanel_downloadButton'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='youtubeDownloaderPanel'),
     ## CD Burner Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("CD Burner:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
@@ -349,7 +349,7 @@ def loadGeniusMusic(userInput, forceResult):
     from PIL import Image
     import bs4, cloudscraper, io, re
     global geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, hitsFound, loadingAction, lyrics, lyricsListFinal, png_data
-    artistSearch, goodResult, resultCount = False, False, 0
+    artistSearch, goodResult, hitsFound, resultCount = False, False, 1, 0
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     if "/songs/" in userInput: resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"}) ## Song ID Search
     else: resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
@@ -407,7 +407,10 @@ def loadGeniusMusic(userInput, forceResult):
                         png_data = png_bio.getvalue()
             except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
             ## Album, Album List, Genre, and Label
-            html = bs4.BeautifulSoup((requests.get(geniusMusicSearchGeniusURL)).text, "html.parser") # Scrape the info from the HTML
+            try: html = bs4.BeautifulSoup((requests.get(geniusMusicSearchGeniusURL)).text, "html.parser") # Scrape the info from the HTML
+            except:
+                loadingAction = "Genius_Page_Down"
+                return
             if "Genius is down for a quick minute!" in str(html): ## Check if Genius's Service is Down
                 loadingAction = "Genius_Page_Down"
                 return
@@ -434,7 +437,7 @@ def loadGeniusMusic(userInput, forceResult):
                 songScrapedInfo = html.select("div[class*=SongInfo__Credit]") ## Song's Label Container
                 songScrapedInfo = (str(songScrapedInfo).split("Label</div><div>")[1]).split("</a></div></div>")[0]
                 geniusMusicSearchLabels = ((re.sub(r'<.+?>', '', str(songScrapedInfo))).replace(" &amp; ", ",,,").replace(" ,,,", ",,,").replace(" (Label)", "")).split(',,,') ## Song's Labels
-                for blacklist in [", Release Date", ", Publishers", ", Distributor", ", Copyright", " Copyright", ", Recorded At", ", Assistant Mix Engineer", ", Writer", ", Phonographic", ", Vocal Programmer"]:  geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(blacklist)[0].replace("\\u200b", "") ## Put Labels in List
+                for blacklist in [", Release Date", ", Publishers", ", Distributor", ", Copyright", " Copyright", ", Recorded At", ", Assistant Mix Engineer", ", Writer", ", Phonographic", ", Vocal Programmer", ", Background Vocals"]:  geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(blacklist)[0].replace("\\u200b", "") ## Put Labels in List
                 geniusMusicSearchLabels = str(geniusMusicSearchLabels).split(',') ## Split Labels
                 if len(geniusMusicSearchLabels) > 3: geniusMusicSearchLabels = geniusMusicSearchLabels[:3] ## Shorten Labels List
             except: geniusMusicSearchLabels = None
@@ -466,9 +469,8 @@ def loadGeniusMusic(userInput, forceResult):
             else:loadingAction = "No_Result_Found" ## No Good Result Found
     loadingAction = "Search_Finished"
 
-def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
-    import eyed3, re
-    global badWordCount, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, lyrics, lyricsListFinal, png_data, profanityEngineDefinitions
+def geniusMusicSearch(userInput, forceResult):
+    global extendedSongInfo, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, MusicSearchSongWindow, png_data
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
     loadingPopup.hide()
@@ -503,9 +505,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
             loadingPopup.close()
             break
     ## Shorten Results
-    longSongNameInfo = geniusMusicSearchSongNameInfo
-    longArtists = geniusMusicSearchArtists
-    longAlbum = geniusMusicSearchAlbum
+    extendedSongInfo = [geniusMusicSearchSongNameInfo, geniusMusicSearchArtists, geniusMusicSearchAlbum]
     if geniusMusicSearchSongNameInfo != None and len(geniusMusicSearchSongNameInfo) > 42: geniusMusicSearchSongNameInfo = geniusMusicSearchSongNameInfo[:39] + "..." ## Shorten Song Name
     if geniusMusicSearchArtists != None and len(geniusMusicSearchArtists) > 45: geniusMusicSearchArtists = geniusMusicSearchArtists[:42] + "..." ## Shorten Artists Names
     if geniusMusicSearchAlbum != None and len(geniusMusicSearchAlbum) > 45: geniusMusicSearchAlbum = geniusMusicSearchAlbum[:42] + "..." ## Shorten Album Name
@@ -516,29 +516,28 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
     else: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
     if musicSub == "Apple": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenApple.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Apple Music")]]
     elif layout == "Spotify": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchListenSpotify.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Spotify")]]
-    if geniusMusicSearchAlbum != None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
-    elif geniusMusicSearchAlbum != None and geniusMusicSearchDate == None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=longAlbum)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found and No Release Date
-    elif geniusMusicSearchAlbum == None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name not Found
-    else: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=longSongNameInfo)], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=longArtists)], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## No Album Name and No Release Date
+    if geniusMusicSearchAlbum != None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=extendedSongInfo[0])], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=extendedSongInfo[2])], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=extendedSongInfo[1])], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
+    elif geniusMusicSearchAlbum != None and geniusMusicSearchDate == None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=extendedSongInfo[0])], [sg.Text(geniusMusicSearchAlbum, font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=extendedSongInfo[2])], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=extendedSongInfo[1])], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found and No Release Date
+    elif geniusMusicSearchAlbum == None and geniusMusicSearchDate != None: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=extendedSongInfo[0])], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=extendedSongInfo[1])], [sg.Text(geniusMusicSearchGenre.upper() + " " + u"\N{Dot Operator}" + " " + geniusMusicSearchDate, font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name not Found
+    else: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=extendedSongInfo[0])], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=extendedSongInfo[1])], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## No Album Name and No Release Date
     if lyrics != None: layout += [[sg.Multiline("", size=(55,20), font='Any 11', autoscroll=False, disabled=False, right_click_menu=lyricsRightClickMenu, key='MusicSearchSongWindowLyrics')]] ## Add Empty Lyrics Box
     else: layout += [[sg.Text("Lyrics couldn't be found on Genius.", font='Any 12 bold', background_color='#2B475D')]] ## No Lyrics Found Message
     if lyrics != None: layout += [[sg.Text("Profanity Engine: Lyrics are 100% clean.", font='Any 11', background_color='#2B475D', key='songUsableText')]] ## Default Profanity Engine Text
     if geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) > 1: layout += [[sg.Text("Labels: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Labels
     elif geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) == 1: layout += [[sg.Text("Label: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
     layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
-    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=False, finalize=True, keep_on_top=False, element_justification='c') #location=(homeWindowLocationX+125,homeWindowLocationY)
+    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=False, finalize=True, keep_on_top=False, element_justification='c')
     MusicSearchSongWindow.hide()
     MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchSongWindow.size[1] // 2)
     MusicSearchSongWindow.un_hide()
     ## Lyrics Right Click Menu
     if lyrics != None: lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics']
     ## Window Shortcuts
-    MusicSearchSongWindow.bind('<Tab>', '_Tab')            ## List Result shortcut
-    MusicSearchSongWindow.bind('<PageDown>', '_PageDown')  ## List Result shortcut
+    MusicSearchSongWindow.bind('<PageUp>', '_PageUp')      ## List Result shortcut
+    MusicSearchSongWindow.bind('<PageDown>', '_PageDown')  ## Download Metadata shortcut
     MusicSearchSongWindow.bind('<Delete>', '_Delete')      ## Close Window shortcut
     MusicSearchSongWindow.bind('<Home>', '_Home')          ## Genius Lyrics shortcut
     MusicSearchSongWindow.bind('<End>', '_End')            ## Artist shortcut
-    MusicSearchSongWindow.bind('<`>', '_`')                ## Listen shortcut
     ## Mouse Icon Changes
     for key in ['downloadMetadataMp3Button', 'musicSearchArtistButton', 'musicSearchArtistResultsMenu', 'musicSearchListenButton', 'searchmusicSearchGenius']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
     if hitsFound > 1: MusicSearchSongWindow["musicSearchResultsMenu"].Widget.config(cursor="hand2")                                     ## List Search Results Hover icon
@@ -548,45 +547,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
     if geniusMusicSearchGenre != None: MusicSearchSongWindow["geniusMusicSearchGenreText"].Widget.config(cursor="hand2")                ## Song Genre Text Hover icon
     if geniusMusicSearchLabels != None: MusicSearchSongWindow["geniusMusicSearchLabels"].Widget.config(cursor="hand2")                  ## Song Label Hover icon
     ## Print Lyrics and Check for Profanity
-    if lyrics != None:
-        try:
-            ## Load Profanity Engine Dictionary
-            for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
-            ## Print Each Lyric Line and Check for Profanity
-            for i in range(len(lyricsListFinal)):
-                badLine = False ## Reset Bad Line for each Line
-                for phrase in profanityEngineDefinitions:
-                    searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                    searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                    if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
-                        except: pass
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                        badWordCount += 1
-                        badLine = True
-                    elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
-                        except: pass
-                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                        badWordCount += 1
-                        badLine = True
-                if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
-        except: ## Profanity Engine Dictionary Failed to Load
-            profanityEngineDefinitions = "Failed"
-            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-            for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
-    ## Update Profanity Engine Text
-    if lyrics != None and profanityEngineDefinitions != "Failed":
-        MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
-        if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-    elif lyrics != None and profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+    if lyrics != None: musicSearchPrintSongLyrics()
     while True:
         event, values = MusicSearchSongWindow.read()
         if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
@@ -607,7 +568,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
             MusicSearchSongWindow.TKroot.clipboard_append(' '.join(word.capitalize() for word in (geniusMusicSearchGenre.lower()).split()))
         elif event == 'geniusMusicSearchLabels': ## Click Song Labels
             for label in geniusMusicSearchLabels: webbrowser.open("https://en.wikipedia.org/wiki/" + label.replace("[", "").replace("]", "").replace('"', "").replace("'", "").replace(" ", "_"), new=2, autoraise=True)
-        elif event in lyricsRightClickMenu[1]:
+        elif event in lyricsRightClickMenu[1]: ## Right Click Menu Actions
             try:
                 if event == 'Copy': ## Copy Lyrics Text
                     try:
@@ -615,7 +576,7 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                         MusicSearchSongWindow.TKroot.clipboard_append(lyricsLine.Widget.selection_get())
                     except: pass
                 elif event == 'Lookup Definition': webbrowser.open("https://www.dictionary.com/browse/" + (lyricsLine.Widget.selection_get().split(" ")[0]).replace(",", "").replace(".", "").replace("?", "").replace("!", "").replace(" ", "-"), new=2, autoraise=True)
-                elif event == 'Add to Profanity Engine':
+                elif event == 'Add to Profanity Engine': ## Add Text to Profanity Engine
                     try:
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
                         try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb")) ## Load Additions Cache
@@ -628,50 +589,10 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                             removalsProfanityEngineInfo.remove(lyricsLine.Widget.selection_get().lower())
                             pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
                         except: pass
-                        ## Reload Music Search's Lyrics
-                        try:
-                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-                            loadProfanityEngineDefinitions(True)
-                            ## Load Profanity Engine Dictionary
-                            for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
-                            ## Print Each Lyric Line and Check for Profanity
-                            for i in range(len(lyricsListFinal)):
-                                badLine = False ## Reset Bad Line for each Line
-                                for phrase in profanityEngineDefinitions:
-                                    searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                                    searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                                    if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
-                                        except: pass
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                                        badWordCount += 1
-                                        badLine = True
-                                    elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                                        try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
-                                        except: pass
-                                        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                                        badWordCount += 1
-                                        badLine = True
-                                if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
-                        except: ## Profanity Engine Dictionary Failed to Load
-                            profanityEngineDefinitions = "Failed"
-                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-                            for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
-                        ## Update Profanity Engine Text
-                        if lyrics != None and profanityEngineDefinitions != "Failed":
-                            MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
-                            if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
-                            elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
-                            elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
-                            elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-                        elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+                        musicSearchPrintSongLyrics() ## Reload Music Search's Lyrics
                     except:
                         popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
-                elif event == 'Remove from Profanity Engine':
+                elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
                     try:
                         profanityEngineMatches, selectedText = "", lyricsLine.Widget.selection_get()
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
@@ -691,53 +612,12 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                                 additionProfanityEngineInfo.remove(profanityEngineMatches.lower())
                                 pickle.dump(additionProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "wb"))
                             except: pass
-                            ## Reload Music Search's Lyrics
-                            try:
-                                MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-                                loadProfanityEngineDefinitions(True)
-                                ## Load Profanity Engine Dictionary
-                                for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
-                                ## Print Each Lyric Line and Check for Profanity
-                                for i in range(len(lyricsListFinal)):
-                                    badLine = False ## Reset Bad Line for each Line
-                                    for phrase in profanityEngineDefinitions:
-                                        searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                                        searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
-                                        if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                                            try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
-                                            except: pass
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                                            badWordCount += 1
-                                            badLine = True
-                                        elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                                            try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
-                                            except: pass
-                                            MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
-                                            badWordCount += 1
-                                            badLine = True
-                                    if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
-                            except: ## Profanity Engine Dictionary Failed to Load
-                                profanityEngineDefinitions = "Failed"
-                                MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-                                for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
-                            ## Update Profanity Engine Text
-                            if lyrics != None and profanityEngineDefinitions != "Failed":
-                                MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
-                                if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
-                                elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
-                                elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
-                                elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-                            elif profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
-                            ## Show Success Message
+                            musicSearchPrintSongLyrics() ## Reload Music Search's Lyrics
                             popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
                         else: popupMessage("Profanity Engine", "No words needed to be removed from Profanity Engine.", "success", 3000)
                     except: popupMessage("Profanity Engine", 'Failed to remove "' + selectedText + '" from Profanity Engine.', "error", 3000) ## Show Error Message
             except: pass
-        elif event == 'musicSearchResultsMenu' or (event == '_Tab'): ## Move Song to List Results
+        elif event == 'musicSearchResultsMenu' or (event == '_PageUp'): ## Move Song to List Results
             MusicSearchSongWindow.close()
             if "/songs/" in userInput: geniusMusicSearchList(geniusMusicSearchSongNameInfo + " - " + geniusMusicSearchArtists)
             else: geniusMusicSearchList(userInput)
@@ -746,9 +626,9 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
             MusicSearchSongWindow.close()
             geniusMusicSearchList(geniusMusicSearchPrimeArtist)
             break
-        elif event == 'downloadMetadataMp3Button' or (event == '_PageDown'): ## Download Metadata to MP3
-            lyricsText, metadataBurnLyricsOnlyValue, metadataChangeFileNameValue, metadataMultipleArtistsValue = "", False, True, False
-            musicSearchMetadataWindow = sg.Window("Music Search - Metadata Burner", [[sg.Text("Oszust OS Metadata Burner", font=('Helvetica', 20), background_color='#646f75')], [sg.HorizontalSeparator()], [sg.Text("Choose Audio File: ", font=("Helvetica", 14), background_color='#646f75')], [sg.Input("", do_not_clear=True, size=(38,1), enable_events=True, key='metadataBurnerFileChooserInput'), sg.FileBrowse(file_types=(("Audio Files", "*.mp3"),), key='metadataBurnerFileChooser')], [sg.HorizontalSeparator()], [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataBurnLyricsOnlyCheckbox', tooltip="Burn lyrics only - No"), sg.Text("Burn Lyrics Only", font=('Helvetica', 11), background_color='#646f75', key='metadataBurnLyricsOnlyText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataMultipleArtistsCheckbox', tooltip="Multiple artists - No"), sg.Text("Album Includes Multiple Artists?", font=('Helvetica', 11), background_color='#646f75', key='metadataMultipleArtistsText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png', border_width=0, button_color='#646f75', key='metadataChangeFileNameCheckbox', tooltip="Change file name - Yes"), sg.Text("Change Audio File's Name", font=('Helvetica', 11), background_color='#646f75', key='metadataChangeFileNameText')]], element_justification='l', background_color='#646f75')], [sg.Button("Burn Metadata", button_color=("White", "Blue"), key='burnMetadataInfo'), sg.Button("Cancel", button_color=("White", "Red"), key='closeMetadataWindow')]], background_color='#646f75', no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='c')
+        elif event == 'downloadMetadataMp3Button' or (event == '_PageDown'):
+            metadataBurnLyricsOnlyValue, metadataChangeFileNameValue, metadataMultipleArtistsValue = False, True, False ## Reset Variables
+            musicSearchMetadataWindow = sg.Window("Music Search - Metadata Burner", [[sg.Text("Metadata Burner", font=('Helvetica', 20), background_color='#646f75')], [sg.HorizontalSeparator()], [sg.Text("Choose .MP3 Audio File: ", font=("Helvetica", 14), background_color='#646f75')], [sg.Input("", do_not_clear=True, size=(38,1), enable_events=True, key='metadataBurnerFileChooserInput'), sg.FileBrowse(file_types=(("Audio Files", "*.mp3"),), key='metadataBurnerFileChooser')], [sg.HorizontalSeparator()], [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataBurnLyricsOnlyCheckbox', tooltip="Burn lyrics only - No"), sg.Text("Burn Lyrics Only", font=('Helvetica', 11), background_color='#646f75', key='metadataBurnLyricsOnlyText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png', border_width=0, button_color='#646f75', key='metadataMultipleArtistsCheckbox', tooltip="Multiple artists - No"), sg.Text("Album Includes Multiple Artists?", font=('Helvetica', 11), background_color='#646f75', key='metadataMultipleArtistsText')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png', border_width=0, button_color='#646f75', key='metadataChangeFileNameCheckbox', tooltip="Change file name - Yes"), sg.Text("Change Audio File's Name", font=('Helvetica', 11), background_color='#646f75', key='metadataChangeFileNameText')]], element_justification='l', background_color='#646f75')], [sg.HorizontalSeparator()], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\cancel.png', border_width=0, button_color='#646f75', key='closeMetadataWindow'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\start.png',  border_width=0,button_color='#646f75', key='burnMetadataInfo')]], background_color='#646f75', no_titlebar=True, resizable=False, finalize=True, keep_on_top=True, element_justification='c')
             for key in ['metadataBurnerFileChooser', 'metadataBurnLyricsOnlyCheckbox', 'metadataMultipleArtistsCheckbox', 'metadataChangeFileNameCheckbox', 'burnMetadataInfo', 'closeMetadataWindow']: musicSearchMetadataWindow[key].Widget.config(cursor="hand2") ## Hover icons
             musicSearchMetadataWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
             while True:
@@ -757,102 +637,117 @@ def geniusMusicSearch(userInput, forceResult): ## NEEDS CLEANING
                     musicSearchMetadataWindow.close()
                     break
                 elif event == 'metadataBurnLyricsOnlyCheckbox' and metadataBurnLyricsOnlyValue == True: ## Set Burn Lyrics Only to False
-                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png')
                     musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].set_tooltip("Burn lyrics only - No")
                     metadataBurnLyricsOnlyValue = False
                 elif event == 'metadataBurnLyricsOnlyCheckbox' and metadataBurnLyricsOnlyValue == False: ## Set Burn Lyrics Only to True
-                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+                    musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png')
                     musicSearchMetadataWindow['metadataBurnLyricsOnlyCheckbox'].set_tooltip("Burn lyrics only - Yes")
                     metadataBurnLyricsOnlyValue = True
                 elif event == 'metadataMultipleArtistsCheckbox' and metadataMultipleArtistsValue == True: ## Set Multiple Artists to False
-                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png')
                     musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].set_tooltip("Multiple artists - No")
                     metadataMultipleArtistsValue = False
                 elif event == 'metadataMultipleArtistsCheckbox' and metadataMultipleArtistsValue == False: ## Set Multiple Artists to True
-                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+                    musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png')
                     musicSearchMetadataWindow['metadataMultipleArtistsCheckbox'].set_tooltip("Multiple artists - Yes")
                     metadataMultipleArtistsValue = True
                 elif event == 'metadataChangeFileNameCheckbox' and metadataChangeFileNameValue == True: ## Set Change File Name to False
-                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\false.png')
+                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\false.png')
                     musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].set_tooltip("Change file name - No")
                     metadataChangeFileNameValue = False
                 elif event == 'metadataChangeFileNameCheckbox' and metadataChangeFileNameValue == False: ## Set Change File Name to True
-                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\true.png')
+                    musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\true.png')
                     musicSearchMetadataWindow['metadataChangeFileNameCheckbox'].set_tooltip("Change file name - Yes")
                     metadataChangeFileNameValue = True
-                elif event == 'burnMetadataInfo': ## Burn Metadata
-                    if values['metadataBurnerFileChooserInput'] != None and len(values['metadataBurnerFileChooserInput']) > 0: ## Check if input has value
-                        try:
-                            for i in range(len(lyricsListFinal)): ## Get Lyrics
-                                if len(lyricsListFinal[i]) == 0: lyricsText += "\n"
-                                else: lyricsText += lyricsListFinal[i] + "\n"
-                            audiofile = eyed3.load(values['metadataBurnerFileChooserInput']) ## Load MP3
-                            audiofile.initTag(version=(2, 3, 0)) ## Version is Important
-                            if metadataBurnLyricsOnlyValue == False: ## Save All Details
-                                audiofile.tag.artist = longArtists ## Artist
-                                if metadataMultipleArtistsValue: audiofile.tag.album_artist = "Various Artists" ## Album's Artists (Various Artists)
-                                else: audiofile.tag.album_artist = geniusMusicSearchPrimeArtist ## Album's Artists
-                                audiofile.tag.title = longSongNameInfo ## Title
-                                if geniusMusicSearchDate != "Unknown Release Date": audiofile.tag.recording_date = geniusMusicSearchDate[-4:] ## Year
-                                audiofile.tag.genre = geniusMusicSearchGenre ## Genre
-                                audiofile.tag.album = longAlbum ## Album
-                                if geniusMusicSearchLabels != None: audiofile.tag.publisher = geniusMusicSearchLabels[0].replace("[", "").replace("]", "").replace("'", "") ## Label
-                                if geniusMusicSearchAlbumCurrent != None: audiofile.tag.track_num = geniusMusicSearchAlbumCurrent ## Curent Song Position
-                                if geniusMusicSearchAlbumLength != None: audiofile.tag.track_total = geniusMusicSearchAlbumLength ## Album length
-                                audiofile.tag.images.set(4, png_data, "image/png") ## Artwork - Back Cover
-                                audiofile.tag.images.set(3, png_data, "image/png") ## Artwork - Front Cover
-                                audiofile.tag.images.set(0, png_data, "image/png") ## Artwork - Other
-                                audiofile.tag.images.set(4, png_data, "image/jpeg", "cover") ## Artwork - Back Cover
-                                audiofile.tag.images.set(3, png_data, "image/jpeg", "cover") ## Artwork - Front Cover
-                                audiofile.tag.images.set(0, png_data, "image/jpeg", "cover") ## Artwork - Other
-                            if lyrics != None: audiofile.tag.lyrics.set(lyricsText) ## Save Lyrics
-                            audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
-                            audiofile.tag.save() ## Save File
-                            if metadataChangeFileNameValue: ## Change the audio file's name
-                                try: os.rename(values['metadataBurnerFileChooserInput'], values['metadataBurnerFileChooserInput'].rsplit('/', 1)[0] + "/" + geniusMusicSearchSongNameInfo + "." + values['metadataBurnerFileChooserInput'].rsplit('.', 1)[1]) ## Raname MP3 to Song Name
-                                except: pass
-                            musicSearchMetadataWindow.close()
-                            popupMessage("Metadata Burner", "Metadata has been saved to " + values['metadataBurnerFileChooserInput'] + ".", "saved", 3000) ## Show Success Message
-                            break
-                        except:
-                            musicSearchMetadataWindow.close()
-                            popupMessage("Metadata Burner", "Metadata failed.\t\t\t\t\tPlease try again.", "error", 3000) ## Show Error Message
-                            break
-                    else:
-                        musicSearchMetadataWindow.close()
-                        break
+                elif event == 'burnMetadataInfo':
+                    musicSearchMetadataWindow.close()
+                    if metadataChangeFileNameValue: burnAudioData(values['metadataBurnerFileChooserInput'], metadataBurnLyricsOnlyValue, metadataMultipleArtistsValue, extendedSongInfo[0]) ## Download Metadata to MP3 (File Name Change)
+                    else: burnAudioData(values['metadataBurnerFileChooserInput'], metadataBurnLyricsOnlyValue, metadataMultipleArtistsValue, extendedSongInfo[0]) ## Download Metadata to MP3
+                    break
         elif event == 'musicSearchArtistButton' or (event == '_Home'): webbrowser.open(geniusMusicSearchArtistURL, new=2, autoraise=True)  ## Open Artist's Genius Page
         elif event == 'searchmusicSearchGenius' or (event == '_End'): webbrowser.open(geniusMusicSearchGeniusURL, new=2, autoraise=True) ## Open Genius Page
-        elif event == 'musicSearchListenButton' or (event == '_`'): ## Play Song Online
+        elif event == 'musicSearchListenButton': ## Play Song Online
             if musicSub == "Apple": webbrowser.open("https://music.apple.com/us/search?term=" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
             elif musicSub == "Spotify": webbrowser.open("https://open.spotify.com/search/" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
 
-def burnAudioData():
+def musicSearchPrintSongLyrics():
+    global badWordCount, lyrics, lyricsListFinal, profanityEngineDefinitions
     try:
-        lyricsText = "" ## Reset Variables
+        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
+        loadProfanityEngineDefinitions(True)
+        ## Load Profanity Engine Dictionary
+        for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
+        ## Print Each Lyric Line and Check for Profanity
+        for i in range(len(lyricsListFinal)):
+            badLine = False ## Reset Bad Line for each Line
+            for phrase in profanityEngineDefinitions:
+                searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
+                if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                    try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
+                    except: pass
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
+                    badWordCount += 1
+                    badLine = True
+                elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                    try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
+                    except: pass
+                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
+                    badWordCount += 1
+                    badLine = True
+            if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
+    except: ## Profanity Engine Dictionary Failed to Load
+        profanityEngineDefinitions = "Failed"
+        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
+        for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
+    ## Update Profanity Engine Text
+    if lyrics != None and profanityEngineDefinitions != "Failed":
+        MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
+        if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
+    elif lyrics != None and profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+
+def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile):
+    import eyed3
+    try:
+        audiofile, lyricsText = eyed3.load(audioSavedPath), "" ## Load MP3
+        audiofile.initTag(version=(2, 3, 0)) ## Version is Important
         for i in range(len(lyricsListFinal)): ## Get Lyrics
             if len(lyricsListFinal[i]) == 0: lyricsText += "\n"
             else: lyricsText += lyricsListFinal[i] + "\n"
-        audiofile = eyed3.load(audioSavedPath) ## Load MP3
-        audiofile.initTag(version=(2, 3, 0)) ## Version is Important
-        audiofile.tag.artist = geniusMusicSearchArtists ## Artist
-        audiofile.tag.album_artist = geniusMusicSearchPrimeArtist ## Album's Artists
-        audiofile.tag.title = geniusMusicSearchSongNameInfo ## Title
+        if lyrics != None: audiofile.tag.lyrics.set(lyricsText) ## Save Lyrics
+        if burnLyricsOnly:
+            audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
+            audiofile.tag.save() ## Save File
+            popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
+            return
+        audiofile.tag.artist = extendedSongInfo[1] ## Artist
+        if multipleArtists: audiofile.tag.album_artist = "Various Artists" ## Album's Artists (Various Artists)
+        else: audiofile.tag.album_artist = geniusMusicSearchPrimeArtist ## Album's Artists
+        audiofile.tag.title = extendedSongInfo[0] ## Title
         if geniusMusicSearchDate != None and geniusMusicSearchDate != "Unknown Release Date": audiofile.tag.recording_date = geniusMusicSearchDate[-4:] ## Year
         audiofile.tag.genre = geniusMusicSearchGenre ## Genre
-        audiofile.tag.album = geniusMusicSearchAlbum ## Album
+        audiofile.tag.album = extendedSongInfo[2] ## Album
         if geniusMusicSearchLabels != None: audiofile.tag.publisher = geniusMusicSearchLabels[0].replace("[", "").replace("]", "").replace("'", "") ## Label
         if geniusMusicSearchAlbumCurrent != None: audiofile.tag.track_num = geniusMusicSearchAlbumCurrent ## Curent Song Position
         if geniusMusicSearchAlbumLength != None: audiofile.tag.track_total = geniusMusicSearchAlbumLength ## Album length
         for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/png") ## Artwork - Basic
         for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/jpeg", "cover") ## Artwork - Higher Quality
-        if lyrics != None: audiofile.tag.lyrics.set(lyricsText) ## Save Lyrics
         audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
         audiofile.tag.save() ## Save File
         ## Change the audio file's name
-        try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + geniusMusicSearchSongNameInfo + "." + audioSavedPath.rsplit('.', 1)[1]) ## Raname MP3 to Song Name
-        except: pass
-    except: popupMessage("Metadata Burner", "The Burner failed.", "error")
+        if renameFile != False:
+            try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('/', 1)[1], "") + "\\" + renameFile + ".mp3") ## Raname MP3 to Song Name
+            except: pass
+        popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
+    except: popupMessage("Metadata Burner", "The burner failed.", "error")
 
 def loadGeniusMusicList(userInput):
     from PIL import Image
