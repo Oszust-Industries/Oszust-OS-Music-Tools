@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 3-06-23
-softwareVersion = "v1.0.0.000 (03.06.23.1)"
+## Created on: 1-02-23 - Last update: 3-26-23
+softwareVersion = "v1.0.0.000 (03.26.23.1)"
 import ctypes, datetime, json, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -205,8 +205,8 @@ def homeScreen():
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
-            if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'].lower().replace(" by ", "-").replace(" ","-"), False) ## Music Search
-            elif event == 'musicSearchPanel_listSongSearchButton' and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput'].lower().replace(" by ", "-").replace(" ","-")) ## Music Search All Results
+            if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
+            elif event == 'musicSearchPanel_listSongSearchButton' and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput']) ## Music Search All Results
             elif event == 'musicSearchPanel_clearSongSearchInputButton': HomeWindow.Element('musicSearchPanel_songSearchInput').Update("") ## Clear Music Search Input
             elif event == 'musicSearchPanel_billboardTopSongsList' and values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('musicSearchPanel_songSearchInput').Update(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
             elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
@@ -351,46 +351,47 @@ def loadGeniusMusic(userInput, forceResult):
     global geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, hitsFound, loadingAction, lyrics, lyricsListFinal, png_data
     artistSearch, goodResult, hitsFound, resultCount = False, False, 1, 0
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
-    if "/songs/" in userInput: resp = requests.get("https://genius.p.rapidapi.com" + userInput, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"}) ## Song ID Search
-    else: resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
-    content = json.loads((resp.content).decode('utf8'))
-    try: ## Test if bad API key
-        if 'You are not subscribed to this API' in content['message']:
-            loadingAction = "Genius_Page_Down"
-            return
-    except: pass
-    if "/songs/" not in userInput: ## Check if Result Found
-        hitsFound = len(content["response"]["hits"])
-        if hitsFound == 0: ## No Results Found
-            loadingAction = "No_Result_Found"
-            return
-    if "/songs/" in userInput: musicSearchJsonContent = content["response"]["song"]
-    else: musicSearchJsonContent = content["response"]["hits"][resultCount]["result"]
+    if "/songs/" in userInput: request = urllib.request.Request("http://api.genius.com" + userInput) ## Song ID Search
+    else: request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(userInput.lower().replace(" by ", "-").split("-featuring")[0]) + "&page=1")
+    request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
+    request.add_header("User-Agent", "curl/7.9.8 (i686-pc-linux-gnu) libcurl 7.9.8 (OpenSSL 0.9.6b) (ipv6 enabled)")
+    try: raw = (urllib.request.urlopen(request, timeout=10)).read()
+    except Exception as Argument:
+        loadingAction = "Genius_Page_Down:" + str(Argument)
+        return
+    try:
+        musicSearchApiBody = json.loads(raw)["response"]["hits"]
+        if len(musicSearchApiBody) > 0: musicSearchApiBodyPath = musicSearchApiBody[0]["result"]
+    except: musicSearchApiBody, musicSearchApiBodyPath = json.loads(raw)["response"]["song"], json.loads(raw)["response"]["song"]
+    hitsFound = len(musicSearchApiBody)
+    if hitsFound == 0: ## Check if Result Found
+        loadingAction = "No_Result_Found"
+        return
     while goodResult == False:
         lyricsList, lyricsListFinal = [], []
-        if artistSearch == False or str(musicSearchJsonContent["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
-            if forceResult == False and str(musicSearchJsonContent["artist_names"]).replace(" ", "-").lower() == userInput: ## Change to Artist Search
+        if artistSearch == False or str(musicSearchApiBodyPath["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
+            if forceResult == False and str(musicSearchApiBodyPath["artist_names"]).replace(" ", "-").lower() == userInput: ## Change to Artist Search
                 loadingAction = "Artist_Search"
                 return
             ## Finish Normal Search
-            try: geniusMusicSearchArtists = str(musicSearchJsonContent["artist_names"]).replace("(Rock)", "") ## Song Artists
+            try: geniusMusicSearchArtists = str(musicSearchApiBodyPath["artist_names"]).replace("(Rock)", "") ## Song Artists
             except: ## No Results Left
                 loadingAction = "No_Result_Found"
                 return
-            geniusMusicSearchPrimeArtist = str(musicSearchJsonContent["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
-            geniusMusicSearchDate = str(musicSearchJsonContent["release_date_for_display"]) ## Song Release Date
+            geniusMusicSearchPrimeArtist = str(musicSearchApiBodyPath["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
+            geniusMusicSearchDate = str(musicSearchApiBodyPath["release_date_for_display"]) ## Song Release Date
             if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
-            geniusMusicSearchSongNameInfo = str(musicSearchJsonContent["title_with_featured"]) ## Song Full Title
-            geniusMusicSearchArtistURL = str(musicSearchJsonContent["primary_artist"]["url"])
-            geniusMusicSearchGeniusURL = str(musicSearchJsonContent["url"]) ## Song Genius URL
-            geniusMusicSearchSongName = str(musicSearchJsonContent["title"]) ## Song Title
+            geniusMusicSearchSongNameInfo = str(musicSearchApiBodyPath["title_with_featured"]) ## Song Full Title
+            geniusMusicSearchArtistURL = str(musicSearchApiBodyPath["primary_artist"]["url"])
+            geniusMusicSearchGeniusURL = str(musicSearchApiBodyPath["url"]) ## Song Genius URL
+            geniusMusicSearchSongName = str(musicSearchApiBodyPath["title"]) ## Song Title
             ## Song Artwork
             try:
-                geniusMusicSearchArtworkURL = str(musicSearchJsonContent["song_art_image_url"])
+                geniusMusicSearchArtworkURL = str(musicSearchApiBodyPath["song_art_image_url"])
                 if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
                 else:
                     try: ## Look in Cache for Artwork
-                        pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\Artworks\\" + str(musicSearchJsonContent["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
+                        pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
                         png_bio = io.BytesIO()
                         pil_image.save(png_bio, format="PNG")
                         png_data = png_bio.getvalue()
@@ -402,7 +403,7 @@ def loadGeniusMusic(userInput, forceResult):
                         pil_image.save(png_bio, format="PNG")
                         try: ## Save Artwork to Cache
                             pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\Artworks").mkdir(parents=True, exist_ok=True) ## Create Music Artwork Cache Folder
-                            png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\Artworks\\" + str(musicSearchJsonContent["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
+                            png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
                         except: pass
                         png_data = png_bio.getvalue()
             except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
@@ -442,7 +443,7 @@ def loadGeniusMusic(userInput, forceResult):
                 if len(geniusMusicSearchLabels) > 3: geniusMusicSearchLabels = geniusMusicSearchLabels[:3] ## Shorten Labels List
             except: geniusMusicSearchLabels = None
             ## Song Lyrics
-            if str(musicSearchJsonContent["lyrics_state"]).lower() == "complete":
+            if str(musicSearchApiBodyPath["lyrics_state"]).lower() == "complete":
                 try:
                     lyrics, count = html.select("div[class*=Lyrics__Container]"), 1
                     lyricsList = str(lyrics).split('<br/>')
@@ -488,6 +489,10 @@ def geniusMusicSearch(userInput, forceResult):
         elif loadingAction == "No_Result_Found": ## No Music Search Result Found
             loadingPopup.close() ## Close Loading Popup
             popupMessage("No Search Result", "", "fail")
+            return
+        elif "Genius_Page_Down:" in loadingAction: ## Genius's Service is Down
+            loadingPopup.close() ## Close Loading Popup
+            popupMessage("Music Search Error", loadingAction.split("Genius_Page_Down:",1)[1] + "\t\t\t\t\tPlease try again a little later.", "error")
             return
         elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
@@ -755,32 +760,32 @@ def loadGeniusMusicList(userInput):
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
     artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInput.replace("-", " "), do_not_clear=True, size=(40,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], 0, [], [], []
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
-    resp = requests.get("https://genius.p.rapidapi.com/search", params={'q': userInput.split("-featuring")[0]}, headers={'x-rapidapi-key':"a7197c62b1msh4b44e18fc9bc9dfp1421b0jsn91a22a0b0e9a",'x-rapidapi-host':"genius.p.rapidapi.com"})
-    content = json.loads((resp.content).decode('utf8'))
-    try: ## Test if bad API key
-        if 'You are not subscribed to this API' in content['message']:
-           loadingAction = "Genius_Page_Down"
-           return
-    except: pass
-    ## No Song Found
-    if len(content["response"]["hits"]) == 0:
-        loadingAction = "No_Result_Found"
+    request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(userInput.lower().replace(" by ", "-")) + "&page=1")
+    request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
+    request.add_header("User-Agent", "curl/7.9.8 (i686-pc-linux-gnu) libcurl 7.9.8 (OpenSSL 0.9.6b) (ipv6 enabled)")
+    try: raw = (urllib.request.urlopen(request, timeout=10)).read()
+    except Exception as Argument:
+        loadingAction = "Genius_Page_Down:" + str(Argument)
         return
     ## Find Number of Hits
-    if len(content["response"]["hits"]) <= 8: hitCount = len(content["response"]["hits"]) ## Set Max to Max Results
-    else: hitCount = 8 ## Set Max to 8 if More Than 8 Results Returned
-    while hitCount > 0 and resultNumber < 10:
-        geniusMusicSearchArtists = str(content["response"]["hits"][resultNumber]["result"]["artist_names"]).replace("(Rock)", "") ## Song Artists
+    musicSearchApiBody = json.loads(raw)["response"]["hits"]
+    hitsFound = len(musicSearchApiBody)
+    if hitsFound == 0: ## Check if Result Found
+        loadingAction = "No_Result_Found"
+        return
+    if hitsFound > 8: hitsFound = 8 ## Set Max to 8 if More Than 8 Results Returned
+    while hitsFound > 0 and resultNumber < 10:
+        geniusMusicSearchArtists = str(musicSearchApiBody[resultNumber]["result"]["artist_names"]).replace("(Rock)", "") ## Song Artists
         songArtists.append(geniusMusicSearchArtists) ## Add Artists to List 
-        geniusMusicSearchPrimeArtist = str(content["response"]["hits"][resultNumber]["result"]["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
-        if str(content["response"]["hits"][0]["result"]["artist_names"]).replace(" ", "-").lower() == userInput: artistSearch = True ## Find if Search is an Artist
-        geniusMusicSearchDate = str(content["response"]["hits"][resultNumber]["result"]["release_date_for_display"]) ## Result Release Date
+        geniusMusicSearchPrimeArtist = str(musicSearchApiBody[resultNumber]["result"]["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
+        if str(musicSearchApiBody[0]["result"]["artist_names"]).replace(" ", "-").lower() == userInput: artistSearch = True ## Find if Search is an Artist
+        geniusMusicSearchDate = str(musicSearchApiBody[resultNumber]["result"]["release_date_for_display"]) ## Result Release Date
         if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
-        geniusMusicSearchSongNameInfo = str(content["response"]["hits"][resultNumber]["result"]["title_with_featured"]) ## Result Full Title
+        geniusMusicSearchSongNameInfo = str(musicSearchApiBody[resultNumber]["result"]["title_with_featured"]) ## Result Full Title
         songNames.append(geniusMusicSearchSongNameInfo) ## Add Song Full Title to List
-        geniusMusicSearchGeniusURL = str(content["response"]["hits"][resultNumber]["result"]["url"]) ## Result Genius URL
+        geniusMusicSearchGeniusURL = str(musicSearchApiBody[resultNumber]["result"]["url"]) ## Result Genius URL
         geniusURLs.append(geniusMusicSearchGeniusURL) ## Add Genius URL to List
-        geniusMusicSearchGeniusSongID = str(content["response"]["hits"][resultNumber]["result"]["api_path"]) ## Song ID
+        geniusMusicSearchGeniusSongID = str(musicSearchApiBody[resultNumber]["result"]["api_path"]) ## Song ID
         geniusSongIDs.append(geniusMusicSearchGeniusSongID) ## Add Song ID to List
         ## Shorten Results
         longSongNameInfo = geniusMusicSearchSongNameInfo
@@ -789,11 +794,11 @@ def loadGeniusMusicList(userInput):
         if len(geniusMusicSearchArtists) > 30: geniusMusicSearchArtists = geniusMusicSearchArtists[:29] + "..." ## Shorten Artists Names
         ## Song Artwork
         try:
-            geniusMusicSearchArtworkURL = str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"])
+            geniusMusicSearchArtworkURL = str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"])
             if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
             else:
                 try: ## Look in Cache for Artwork
-                    pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png") ## Open Artwork from Cache
+                    pil_image = Image.open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png") ## Open Artwork from Cache
                     png_bio = io.BytesIO()
                     pil_image.save(png_bio, format="PNG")
                     png_data = png_bio.getvalue()
@@ -805,26 +810,24 @@ def loadGeniusMusicList(userInput):
                     pil_image.save(png_bio, format="PNG")
                     try: ## Save Artwork to Cache
                         pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search").mkdir(parents=True, exist_ok=True) ## Create Music Search Cache Folder
-                        png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(content["response"]["hits"][resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png")
+                        png_data = pil_image.save(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Music Search\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png")
                     except: pass
                     png_data = png_bio.getvalue()
         except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png" ## Default Artwork if Retrieval Fails
         ## Song Lyrics
-        geniusMusicSearchLyricsState = str(content["response"]["hits"][resultNumber]["result"]["lyrics_state"]) ## Result Song Lyrics
+        geniusMusicSearchLyricsState = str(musicSearchApiBody[resultNumber]["result"]["lyrics_state"]) ## Result Song Lyrics
         if geniusMusicSearchLyricsState.lower() == "complete": lyricsImage, lyricsHoverMessage = "checked", "Lyrics Found" ## Lyrics Found
         else: lyricsImage, lyricsHoverMessage = "checkFailed", "Lyrics Not Found" ## No Lyrics Found
         ## Music Service
         if musicSub == "Apple": musicServiceImage = "musicSearchListenApple" ## Set Listening Link to Apple
         elif musicSub == "Spotify": musicServiceImage = "musicSearchListenSpotify" ## Set Listening Link to Spotify
         ## Song Window
-        if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius"] and "genius" not in geniusMusicSearchArtists.lower():
+        if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius", "siriusxm the highway"] and "genius" not in geniusMusicSearchArtists.lower():
             if geniusMusicSearchDate != None: layout += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12', background_color='#2b475d')]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
             else: layout += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
             resultNumbers.append(resultNumber)
-        elif len(content["response"]["hits"]) > 8: hitCount += 1
-        else: hitCount -= 1
         resultNumber += 1
-        hitCount -= 1
+        hitsFound -= 1
     layout += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
     ## Check if Any Good Results Found
     if len(resultNumbers) == 0: loadingAction = "No_Result_Found"
