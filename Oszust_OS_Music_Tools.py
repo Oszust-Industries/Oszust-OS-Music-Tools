@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 3-31-23
-softwareVersion = "v1.0.0.000 (03.31.23.1)"
+## Created on: 1-02-23 - Last update: 4-01-23
+softwareVersion = "v1.0.0.000 BETA"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -121,7 +121,7 @@ def loadProfanityEngineDefinitions(downloadList):
 def homeScreenAppPanels():
     ## Extra Apps Panel Creator
     global toolPanelApps
-    toolsPanel, toolPanelAppLocation, toolPanelApps, toolsPanelRow = [[]], 0, ["Music Search", "Music Downloader", "Youtube Downloader"], [] #"Lyrics Checker", "Profanity Editor"
+    toolsPanel, toolPanelAppLocation, toolPanelApps, toolsPanelRow = [[]], 0, ["Music Search", "Music Downloader", "Youtube Downloader", "Lyrics Checker"], [] #"Profanity Editor"
     for toolsPanelRowNumber in range(math.ceil(len(toolPanelApps)/5)):
         try:
             for app in range(toolPanelAppLocation, 5*(toolsPanelRowNumber+1)): toolsPanelRow.append(toolPanelApps[app])
@@ -160,11 +160,15 @@ def homeScreenAppPanels():
     [sg.Column(toolsPanel, size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicToolsPanel'),
     ## Settings Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Settings:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
-    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='settingsPanel')
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='settingsPanel'),
+    ## Lyrics Checker Panel
+     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Checker:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Push(background_color='#2B475D'), sg.Multiline("", size=(63,18), font='Any 11', autoscroll=False, disabled=False, right_click_menu=['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']], key='lyricsCheckerPanel_lyricsInput'), sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clipboard_Small.png', border_width=0, button_color='#2B475D', key='lyricsCheckerPanel_pasteClipboardButton')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\clearInput.png', border_width=0, button_color='#2B475D', key='lyricsCheckerPanel_clearInputButton')], [sg.Text("", font='Any 14', background_color='#2B475D')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\checkInput.png', border_width=0, button_color='#2B475D', key='lyricsCheckerPanel_checkLyricsButton')]], vertical_alignment='b', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Push(background_color='#2B475D'), sg.Text("Profanity Engine: Not checked yet", font='Any 11', background_color='#2B475D', key='lyricsCheckerPanel_songUsableText'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='lyricsCheckerPanel'),
     ]]
 
 def homeScreen():
-    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, wifiStatus
+    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, wifiStatus
     ## Oszust OS Music Tools List
     if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader", "Music Tools"] ## "Music Search", "Music Downloader", "YouTube Downloader", "CD Burner", "Music Tools", "Settings"
     else: applist, apps = [[]], ["CD Burner", "Music Tools", "Settings"]
@@ -184,6 +188,8 @@ def homeScreen():
     ## YouTube Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName = False, True, False ## App Variables
     for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'audioDownloadCheckbox', 'videoDownloadCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['youtubeDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    ## Lyrics Checker: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
+    for key in ['pasteClipboardButton', 'clearInputButton', 'checkLyricsButton']: HomeWindow['lyricsCheckerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Main Window: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     for key in ['versionTextHomeBottom', 'creditsTextHomeBottom']: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
     if wifiStatus == False:
@@ -211,10 +217,12 @@ def homeScreen():
 ## Side Panel Apps (Buttons)
         elif "_AppSelector" in event and event.replace("_AppSelector", "") != appSelected:
             appSelected = event.replace("_AppSelector", "")
-            for app in apps:
+            for app in toolPanelApps:
                 if app.replace(" ", "_") == appSelected: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=True)
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
-            if appSelected == "Music_Downloader": ## Shows Terms of Service Popup
+            if appSelected == "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=True) ## Show Music Tools Window
+            elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window
+            elif appSelected == "Music_Downloader": ## Shows Terms of Service Popup
                 try: pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\contract.p", "rb"))
                 except:
                     popupMessage("Terms of Service", "Songs downloaded from Music Downloader can't be used in a public setting.\t\tUsing songs on the radio or anywhere public would be voilating YouTube's Terms of Service and FCC laws.", "announcement")
@@ -322,6 +330,18 @@ def homeScreen():
                     if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderPanel_changeNameInput']
                     loadingScreen("YouTube_Downloader", values['youtubeDownloaderPanel_youtubeUrlInput'], values['youtubeDownloaderPanel_downloadLocationInput'], youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
                     HomeWindow["youtubeDownloaderPanel_youtubeUrlInput"].update("")
+## Lyrics Checker (Buttons/Events)
+        elif appSelected == "Lyrics_Checker":
+            if event == 'lyricsCheckerPanel_pasteClipboardButton': ## Paste Clipboard in Lyrics Input
+                    win32clipboard.OpenClipboard()
+                    HomeWindow.Element('lyricsCheckerPanel_lyricsInput').Update(win32clipboard.GetClipboardData())
+                    win32clipboard.CloseClipboard()
+            elif event == 'lyricsCheckerPanel_clearInputButton': ## Clear Lyrics Input
+                HomeWindow.Element('lyricsCheckerPanel_lyricsInput').Update("")
+                HomeWindow.Element('lyricsCheckerPanel_songUsableText').Update("Profanity Engine: Not checked yet")
+            elif event == 'lyricsCheckerPanel_checkLyricsButton' and len(values['lyricsCheckerPanel_lyricsInput'].strip()) > 0:
+                lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
+                musicSearchPrintSongLyrics("lyricsCheck")
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
     global loadingStatus
@@ -620,7 +640,7 @@ def geniusMusicSearch(userInput, forceResult):
     else: layout += [[sg.Image(png_data)], [sg.Text(geniusMusicSearchSongNameInfo, font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=extendedSongInfo[0])], [sg.Text(geniusMusicSearchArtists, font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=extendedSongInfo[1])], [sg.Text(geniusMusicSearchGenre.upper(), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## No Album Name and No Release Date
     if lyrics != None: layout += [[sg.Multiline("", size=(55,20), font='Any 11', autoscroll=False, disabled=False, right_click_menu=lyricsRightClickMenu, key='MusicSearchSongWindowLyrics')]] ## Add Empty Lyrics Box
     else: layout += [[sg.Text("Lyrics couldn't be found on Genius.", font='Any 12 bold', background_color='#2B475D')]] ## No Lyrics Found Message
-    if lyrics != None: layout += [[sg.Text("Profanity Engine: Lyrics are 100% clean.", font='Any 11', background_color='#2B475D', key='songUsableText')]] ## Default Profanity Engine Text
+    if lyrics != None: layout += [[sg.Text("Profanity Engine: Not checked yet", font='Any 11', background_color='#2B475D', key='songUsableText')]] ## Default Profanity Engine Text
     if geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) > 1: layout += [[sg.Text("Labels: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Labels
     elif geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) == 1: layout += [[sg.Text("Label: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
     layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
@@ -769,10 +789,12 @@ def geniusMusicSearch(userInput, forceResult):
             if musicSub == "Apple": webbrowser.open("https://music.apple.com/us/search?term=" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
             elif musicSub == "Spotify": webbrowser.open("https://open.spotify.com/search/" + geniusMusicSearchPrimeArtist.replace(" ", "%20") + "%20" + geniusMusicSearchSongName.replace(" ", "%20"), new=2, autoraise=True)
 
-def musicSearchPrintSongLyrics():
+def musicSearchPrintSongLyrics(lyricsLocation="musicSearch"):
     global badWordCount, lyrics, lyricsListFinal, profanityEngineDefinitions
+    if lyricsLocation == "musicSearch": lyricsBox, lyricsText = MusicSearchSongWindow['MusicSearchSongWindowLyrics'], MusicSearchSongWindow['songUsableText']
+    elif lyricsLocation == "lyricsCheck": lyricsBox, lyricsText = HomeWindow['lyricsCheckerPanel_lyricsInput'], HomeWindow['lyricsCheckerPanel_songUsableText']
     try:
-        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
+        lyricsBox.update("", autoscroll=False)
         loadProfanityEngineDefinitions(True)
         ## Load Profanity Engine Dictionary
         for word in range(len(profanityEngineDefinitions)): profanityEngineDefinitions[word] = profanityEngineDefinitions[word].lower().replace("\n", "")
@@ -783,34 +805,34 @@ def musicSearchPrintSongLyrics():
                 searchPhaseWithTop = re.search(r"\b{}\b".format(phrase.replace("~", "")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
                 searchPhaseWithoutTop = re.search(r"\b{}\b".format(phrase.replace("~", "'")), lyricsListFinal[i].replace(",", ""), re.IGNORECASE)
                 if badLine == False and phrase[len(phrase)-1] == "~" and searchPhaseWithTop is not None: ## Check Words and Phrases for Bad Words, Ending with '
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                    try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
+                    lyricsBox.update(lyricsListFinal[i].split(searchPhaseWithTop.group())[0], autoscroll=False, append=True)
+                    lyricsBox.update(searchPhaseWithTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                    try: lyricsBox.update(lyricsListFinal[i].split(searchPhaseWithTop.group())[1], autoscroll=False, append=True)
                     except: pass
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
+                    lyricsBox.update("\n", autoscroll=False, append=True)
                     badWordCount += 1
                     badLine = True
                 elif badLine == False and phrase[len(phrase)-1] != "~" and searchPhaseWithoutTop is not None: ## Check Words and Phrases for Bad Words
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
-                    try: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
+                    lyricsBox.update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[0], autoscroll=False, append=True)
+                    lyricsBox.update(searchPhaseWithoutTop.group(), autoscroll=False, text_color_for_value='Red', append=True)
+                    try: lyricsBox.update(lyricsListFinal[i].split(searchPhaseWithoutTop.group())[1], autoscroll=False, append=True)
                     except: pass
-                    MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("\n", autoscroll=False, append=True)
+                    lyricsBox.update("\n", autoscroll=False, append=True)
                     badWordCount += 1
                     badLine = True
-            if badLine == False: MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False) ## Clean Line
+            if badLine == False: lyricsBox.print(lyricsListFinal[i], autoscroll=False) ## Clean Line
     except: ## Profanity Engine Dictionary Failed to Load
         profanityEngineDefinitions = "Failed"
-        MusicSearchSongWindow['MusicSearchSongWindowLyrics'].update("", autoscroll=False)
-        for i in range(len(lyricsListFinal)): MusicSearchSongWindow['MusicSearchSongWindowLyrics'].print(lyricsListFinal[i], autoscroll=False)
+        lyricsBox.update("", autoscroll=False)
+        for i in range(len(lyricsListFinal)): lyricsBox.print(lyricsListFinal[i], autoscroll=False)
     ## Update Profanity Engine Text
     if lyrics != None and profanityEngineDefinitions != "Failed":
-        MusicSearchSongWindow['songUsableText'].update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
-        if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: MusicSearchSongWindow['songUsableText'].update(text_color='#00C957')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: MusicSearchSongWindow['songUsableText'].update(text_color='#FFD700')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: MusicSearchSongWindow['songUsableText'].update(text_color='#FF6103')
-        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: MusicSearchSongWindow['songUsableText'].update(text_color='#DC143C')
-    elif lyrics != None and profanityEngineDefinitions == "Failed": MusicSearchSongWindow['songUsableText'].update("Profanity Engine failed to load.", font='Any 13 bold')
+        lyricsText.update("Profanity Engine: Lyrics are " + str(round((1 - (badWordCount/len(lyricsListFinal))) * 100)) + "% clean.")
+        if round((1 - (badWordCount/len(lyricsListFinal))) * 100) == 100: lyricsText.update(text_color='#00C957')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 95: lyricsText.update(text_color='#FFD700')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) >= 90: lyricsText.update(text_color='#FF6103')
+        elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: lyricsText.update(text_color='#DC143C')
+    elif lyrics != None and profanityEngineDefinitions == "Failed": lyricsText.update("Profanity Engine failed to load.", font='Any 13 bold')
 
 def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile):
     import eyed3
