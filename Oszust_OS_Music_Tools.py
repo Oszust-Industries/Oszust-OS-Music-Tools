@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 4-01-23
-softwareVersion = "v1.0.0.001 BETA"
+softwareVersion = "v1.0.0.002 BETA"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube

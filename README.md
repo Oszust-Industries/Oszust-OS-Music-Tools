@@ -1,6 +1,8 @@
 # Oszust OS Music Tools | [Oszust Industries](https://github.com/Oszust-Industries)
 
-Get unlimited music downloads with lyrics, artwork, and other data burned to the file. Search for any song or artist to find infomation about them. Burn metadata to any .mp3 file. Play your favorite songs in the media player. 
+Music Tools is an all-in-one solution for music enthusiasts who want to easily search, download, and manage their music. The app includes a powerful search system, allowing you to quickly search for your favorite songs, get song info and lyrics, and use a powerful profanity engine to ensure your music is free from unwanted language.
+
+In addition, Music Tools features a convenient YouTube downloader, so you can easily save your favorite music videos and listen to them offline. The software also allows you to download songs with all the metadata, making it easy to keep your music library organized.
 
 Release Date: TBA
 
@@ -22,12 +24,6 @@ NEW STEPS COMING SOON
 * Storage - 10 MB
 * Windows Device
 * An Internet Connection
-
-## Software Privacy:
-
-### Data Not Linked to You:
-The following data may be collected but is not linked to your identity
-* Diagnostics
 
 ## Additional Information:
 
