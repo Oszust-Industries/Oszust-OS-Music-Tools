@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 4-01-23
-softwareVersion = "v1.0.0.002 BETA"
+## Created on: 1-02-23 - Last update: 4-07-23
+softwareVersion = "v1.0.0.005 BETA"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -170,7 +170,7 @@ def homeScreenAppPanels():
 def homeScreen():
     global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, wifiStatus
     ## Oszust OS Music Tools List
-    if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "YouTube Downloader", "Music Tools"] ## "Music Search", "Music Downloader", "YouTube Downloader", "CD Burner", "Music Tools", "Settings"
+    if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Music Tools"] ## "Music Search", "Music Downloader", "YouTube Downloader", "CD Burner", "Music Tools", "Settings"
     else: applist, apps = [[]], ["CD Burner", "Music Tools", "Settings"]
     for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + app.lower().replace(" ", "") + ".png", button_color='#657076', border_width=0, key=app.replace(" ", "_") + '_AppSelector', tooltip='Open ' + app)]], pad=((5,5), (5, 5)), background_color='#657076')]] ## Add Apps to Side Panel
     ## Home Window
@@ -282,9 +282,10 @@ def homeScreen():
                 win32clipboard.CloseClipboard()
             elif event == 'musicDownloaderPanel_changeNameClearInput': HomeWindow.Element('musicDownloaderPanel_changeNameInput').Update("") ## Clear File Name Input
             elif event == 'musicDownloaderPanel_downloadButton' and "youtube.com" in values['musicDownloaderPanel_youtubeUrlInput'].lower(): ## Download Music Button
-                if youtubeDownloadName: youtubeDownloadName = values['musicDownloaderPanel_changeNameInput']
-                loadingScreen("Music_Downloader", values['musicDownloaderPanel_youtubeUrlInput'], values['musicDownloaderPanel_downloadLocationInput'], musicBurnLyrics, musicCompilationAlbum, musicDownloadName)
+                if musicDownloadName: musicDownloadName = values['musicDownloaderPanel_changeNameInput']
+                loadingScreen("Music_Downloader", values['musicDownloaderPanel_youtubeUrlInput'], values['musicDownloaderPanel_downloadLocationInput'].replace("/", "\\"), musicBurnLyrics, musicCompilationAlbum, musicDownloadName)
                 HomeWindow["musicDownloaderPanel_youtubeUrlInput"].update("")
+                if musicDownloadName != False: musicDownloadName = True
 ## YouTube Downloader (Buttons/Events)
         elif appSelected == "YouTube_Downloader":
             if event == 'youtubeDownloaderPanel_pasteClipboardButton': ## Paste Clipboard in YouTube Link Input
@@ -328,8 +329,9 @@ def homeScreen():
                 if youtubeAudioDownload == False and youtubeVideoDownload == False: popupMessage("YouTube Downloader", "You must select audio or video download.", "error", 5000)
                 else:
                     if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderPanel_changeNameInput']
-                    loadingScreen("YouTube_Downloader", values['youtubeDownloaderPanel_youtubeUrlInput'], values['youtubeDownloaderPanel_downloadLocationInput'], youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
+                    loadingScreen("YouTube_Downloader", values['youtubeDownloaderPanel_youtubeUrlInput'], values['youtubeDownloaderPanel_downloadLocationInput'].replace("/", "\\"), youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
                     HomeWindow["youtubeDownloaderPanel_youtubeUrlInput"].update("")
+                    if youtubeDownloadName != False: youtubeDownloadName = True
 ## Lyrics Checker (Buttons/Events)
         elif appSelected == "Lyrics_Checker":
             if event == 'lyricsCheckerPanel_openWebButton': webbrowser.open("google.com", new=2, autoraise=True) ## Open Web Browser
@@ -345,7 +347,7 @@ def homeScreen():
                 musicSearchPrintSongLyrics("lyricsCheck")
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
-    global loadingStatus
+    global loadingStatus, metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue
     if firstHomeLaunch == False:
         loadingPopup, loadingStatus = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')], [sg.Text("Loading...", font='Any 16', background_color='#1b2838', key='loadingScreenText')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
         loadingPopup.hide()
@@ -384,7 +386,11 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
         elif "Done" in loadingStatus:
             loadingPopup.close()
             if loadingStatus == "Done_YouTubeDownloader": popupMessage("YouTube Downloader", "Video downloaded successfully.", "success")
-            elif loadingStatus == "Done_MusicDownloader": popupMessage("Music Downloader", "Song downloaded successfully.", "success")
+            elif loadingStatus == "Done_MusicDownloader":
+                metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue = audioSavedPath, arg3, arg4, arg5
+                if metadataNameChangeValue == False: metadataNameChangeValue = youtubeTitle
+                geniusMusicSearchList(youtubeTitle, "downloader")
+                popupMessage("Music Downloader", "Song downloaded successfully.", "success")
             break
 
 def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTimer=0):
@@ -441,18 +447,19 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameF
 
 def downloadAudio(youtubeLink, downloadLocation):
     global audioSavedPath, loadingStatus, youtubeTitle
-    try: YouTube(youtubeLink).streams.filter(file_extension="mp4").get_highest_resolution().download(downloadLocation) ## Download Video
+    try:
+        YouTube(youtubeLink).streams.filter(file_extension="mp4").get_highest_resolution().download(downloadLocation) ## Download Video
+        youtubeTitle = (YouTube(youtubeLink).title).replace("|", "").replace("'", "").replace("/", "").replace("#", "").replace(".", "").replace(",", "") ## Downloaded File's Name
     except:
         loadingStatus = "Failed_MusicDownloaderYouTube"
         return
-    youtubeTitle = (YouTube(youtubeLink).title).replace("|", "").replace("'", "").replace("/", "").replace("#", "").replace(".", "") ## Downloaded File's Name
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
     FILETOCONVERT = AudioFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
     FILETOCONVERT.write_audiofile(audioSavedPath)
     FILETOCONVERT.close()
     os.remove(downloadLocation + "\\" + youtubeTitle + ".mp4") ## Delete video file
     ## Remove extra characters from YouTube title for Music Search
-    youtubeTitle = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", youtubeTitle)
+    youtubeTitle = (re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", youtubeTitle)).replace("()", "")
     loadingStatus = "Done_MusicDownloader"
 
 def loadGeniusMusic(userInput, forceResult):
@@ -541,6 +548,7 @@ def loadGeniusMusic(userInput, forceResult):
                 songScrapedInfo, albumList = str(html.select("div[class*=AlbumTracklist__Track]")).split('</a>'), [] ## Song's Album List
                 for song in songScrapedInfo:
                     if song.count('.') >= 4: geniusMusicSearchAlbumCurrent = len(albumList) + 1 ## Current Song Position
+                    else: geniusMusicSearchAlbumCurrent = 1
                     albumList.append(song)
                 geniusMusicSearchAlbumLength = len(albumList)
             except: geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength = None, None
@@ -584,8 +592,8 @@ def loadGeniusMusic(userInput, forceResult):
             else:loadingAction = "No_Result_Found" ## No Good Result Found
     loadingAction = "Search_Finished"
 
-def geniusMusicSearch(userInput, forceResult):
-    global extendedSongInfo, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, MusicSearchSongWindow, png_data
+def geniusMusicSearch(userInput, forceResult, searchType="search"):
+    global extendedSongInfo, geniusMusicSearchAlbum, geniusMusicSearchAlbumCurrent, geniusMusicSearchAlbumLength, geniusMusicSearchArtistURL, geniusMusicSearchArtists, geniusMusicSearchDate, geniusMusicSearchGeniusURL, geniusMusicSearchGenre, geniusMusicSearchLabels, geniusMusicSearchPrimeArtist, geniusMusicSearchSongName, geniusMusicSearchSongNameInfo, loadingAction, lyrics, metadataBurnLocation, metadataMultipleArtistsValue, metadataNameChangeValue, MusicSearchSongWindow, png_data
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
     loadingPopup.hide()
@@ -628,6 +636,12 @@ def geniusMusicSearch(userInput, forceResult):
     if geniusMusicSearchSongNameInfo != None and len(geniusMusicSearchSongNameInfo) > 42: geniusMusicSearchSongNameInfo = geniusMusicSearchSongNameInfo[:39] + "..." ## Shorten Song Name
     if geniusMusicSearchArtists != None and len(geniusMusicSearchArtists) > 45: geniusMusicSearchArtists = geniusMusicSearchArtists[:42] + "..." ## Shorten Artists Names
     if geniusMusicSearchAlbum != None and len(geniusMusicSearchAlbum) > 45: geniusMusicSearchAlbum = geniusMusicSearchAlbum[:42] + "..." ## Shorten Album Name
+    ## Music Downloader Burner
+    if searchType == "downloader":
+        if metadataBurnLyrics == False: lyrics = None ## Don't Burn Lyrics
+        if metadataNameChangeValue != False: burnAudioData(metadataBurnLocation, False, metadataMultipleArtistsValue, metadataNameChangeValue, False)
+        else: burnAudioData(metadataBurnLocation, False, metadataMultipleArtistsValue, extendedSongInfo[0], False)
+        return
     ## Song Window
     if lyrics != None: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']] ## Lyrics Right Click Menu - Profanity Engine
     else: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition']] ## Lyrics Right Click Menu - No Profanity Engine
@@ -781,8 +795,7 @@ def geniusMusicSearch(userInput, forceResult):
                     metadataChangeFileNameValue = True
                 elif event == 'burnMetadataInfo':
                     musicSearchMetadataWindow.close()
-                    if metadataChangeFileNameValue: burnAudioData(values['metadataBurnerFileChooserInput'], metadataBurnLyricsOnlyValue, metadataMultipleArtistsValue, extendedSongInfo[0]) ## Download Metadata to MP3 (File Name Change)
-                    else: burnAudioData(values['metadataBurnerFileChooserInput'], metadataBurnLyricsOnlyValue, metadataMultipleArtistsValue, extendedSongInfo[0]) ## Download Metadata to MP3
+                    burnAudioData(values['metadataBurnerFileChooserInput'], metadataBurnLyricsOnlyValue, metadataMultipleArtistsValue, extendedSongInfo[0]) ## Download Metadata to MP3
                     break
         elif event == 'musicSearchArtistButton' or (event == '_Home'): webbrowser.open(geniusMusicSearchArtistURL, new=2, autoraise=True)  ## Open Artist's Genius Page
         elif event == 'searchmusicSearchGenius' or (event == '_End'): webbrowser.open(geniusMusicSearchGeniusURL, new=2, autoraise=True) ## Open Genius Page
@@ -835,9 +848,9 @@ def musicSearchPrintSongLyrics(lyricsLocation="musicSearch"):
         elif round((1 - (badWordCount/len(lyricsListFinal))) * 100) < 90: lyricsText.update(text_color='#DC143C')
     elif lyrics != None and profanityEngineDefinitions == "Failed": lyricsText.update("Profanity Engine failed to load.", font='Any 13 bold')
 
-def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile):
+def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, displayMessage=True):
     import eyed3
-    try:
+    if True:
         audiofile, lyricsText = eyed3.load(audioSavedPath), "" ## Load MP3
         audiofile.initTag(version=(2, 3, 0)) ## Version is Important
         for i in range(len(lyricsListFinal)): ## Get Lyrics
@@ -865,16 +878,18 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile):
         audiofile.tag.save() ## Save File
         ## Change the audio file's name
         if renameFile != False:
-            try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('/', 1)[1], "") + "\\" + renameFile + ".mp3") ## Raname MP3 to Song Name
-            except: pass
-        popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
-    except: popupMessage("Metadata Burner", "The burner failed.", "error")
+            try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('/', 1)[1], "") + "\\" + renameFile.strip() + ".mp3") ## Raname MP3 to Song Name
+            except:
+                try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + renameFile.strip() + ".mp3") ## Raname MP3 to Song Name Fix
+                except: pass
+        if displayMessage: popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
+    if False: popupMessage("Metadata Burner", "The burner failed.", "error")
 
 def loadGeniusMusicList(userInput):
     from PIL import Image
     import cloudscraper, io
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
-    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInput.replace("-", " "), do_not_clear=True, size=(40,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], 0, [], [], []
+    artistSearch, geniusSongIDs, geniusURLs, layout, resultNumber, resultNumbers, songArtists, songNames = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInput, do_not_clear=True, size=(40,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], 0, [], [], []
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
     request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(userInput.lower().replace(" by ", "-")) + "&page=1")
     request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
@@ -954,7 +969,7 @@ def loadGeniusMusicList(userInput):
     elif len(resultNumbers) == 1: loadingAction = "Only_One_Result"
     else: loadingAction = "Search_Finished"
 
-def geniusMusicSearchList(userInput):
+def geniusMusicSearchList(userInput, searchType="search"):
     global geniusSongIDs, geniusURLs, layout, loadingAction, resultNumbers, songArtists, songNames
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
@@ -988,7 +1003,7 @@ def geniusMusicSearchList(userInput):
             return
         elif loadingAction == "Only_One_Result": ## Only One Result Found, Open It
             loadingPopup.close()
-            geniusMusicSearch(geniusSongIDs[0], True)
+            geniusMusicSearch(geniusSongIDs[0], True, searchType)
             return
         elif loadingAction == "Search_Finished": ## Show Music Search List Window
             loadingPopup.close()
@@ -1022,10 +1037,10 @@ def geniusMusicSearchList(userInput):
         elif 'searchMusicListOpenSong' in event: ## Open Song in Music Search
             HomeWindow.Element('musicSearchPanel_songSearchInput').Update(songNames[int(event.split("_")[-1])] + " - " + songArtists[int(event.split("_")[-1])])
             MusicSearchListWindow.close()
-            geniusMusicSearch(geniusSongIDs[int(event.split("_")[-1])], True)
+            geniusMusicSearch(geniusSongIDs[int(event.split("_")[-1])], True, searchType)
             break
 
 
 ## Start System
-try:softwareSetup()
+try: softwareSetup()
 except Exception as Argument: crashMessage("Error 00: " + str(Argument))
