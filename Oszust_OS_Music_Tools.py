@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 4-07-23
-softwareVersion = "v1.0.0.005 BETA"
+## Created on: 1-02-23 - Last update: 4-12-23
+softwareVersion = "v1.0.0.008 BETA"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -345,6 +345,57 @@ def homeScreen():
             elif event == 'lyricsCheckerPanel_checkLyricsButton' and len(values['lyricsCheckerPanel_lyricsInput'].strip()) > 0:
                 lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
                 musicSearchPrintSongLyrics("lyricsCheck")
+            elif event in ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']: ## Right Click Menu Actions
+                lyricsLine:sg.Multiline = HomeWindow['lyricsCheckerPanel_lyricsInput']
+                try:
+                    if event == 'Copy': ## Copy Lyrics Text
+                        try:
+                            HomeWindow.TKroot.clipboard_clear()
+                            HomeWindow.TKroot.clipboard_append(lyricsLine.Widget.selection_get())
+                        except: pass
+                    elif event == 'Lookup Definition': webbrowser.open("https://www.dictionary.com/browse/" + (lyricsLine.Widget.selection_get().split(" ")[0]).replace(",", "").replace(".", "").replace("?", "").replace("!", "").replace(" ", "-"), new=2, autoraise=True)
+                    elif event == 'Add to Profanity Engine': ## Add Text to Profanity Engine
+                        lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
+                        try:
+                            pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
+                            try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb")) ## Load Additions Cache
+                            except: additionProfanityEngineInfo = []
+                            try: removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb")) ## Load Removals Cache
+                            except: removalsProfanityEngineInfo = []
+                            additionProfanityEngineInfo.append(lyricsLine.Widget.selection_get().lower())
+                            pickle.dump(additionProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "wb"))
+                            try: ## Remove from the Removals Cache List
+                                removalsProfanityEngineInfo.remove(lyricsLine.Widget.selection_get().lower())
+                                pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
+                            except: pass
+                            musicSearchPrintSongLyrics("lyricsCheck") ## Reload Music Search's Lyrics
+                        except: popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
+                    elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
+                        lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
+                        try:
+                            profanityEngineMatches, selectedText = "", lyricsLine.Widget.selection_get()
+                            pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine").mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
+                            try: removalsProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "rb")) ## Load Removals Cache
+                            except: removalsProfanityEngineInfo = []
+                            try: additionProfanityEngineInfo = pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "rb")) ## Load Additions Cache
+                            except: additionProfanityEngineInfo = []
+                            loadProfanityEngineDefinitions(True)
+                            try:
+                                profanityEngineDefinitions.remove(selectedText.strip().replace("'", "~").lower().replace(",", "").replace(".", "").replace("?", "").replace("!", ""))
+                                profanityEngineMatches = selectedText.replace("'", "~")
+                            except: pass
+                            if len(profanityEngineMatches) > 0:
+                                removalsProfanityEngineInfo.append(profanityEngineMatches.lower())
+                                pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
+                                try: ## Remove from the Additions Cache List
+                                    additionProfanityEngineInfo.remove(profanityEngineMatches.lower())
+                                    pickle.dump(additionProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Additions.p", "wb"))
+                                except: pass
+                                musicSearchPrintSongLyrics("lyricsCheck") ## Reload Music Search's Lyrics
+                                popupMessage("Profanity Engine", '"' + str(profanityEngineMatches).replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("~", "'") + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
+                            else: popupMessage("Profanity Engine", "No words needed to be removed from Profanity Engine.", "success", 3000)
+                        except: popupMessage("Profanity Engine", 'Failed to remove "' + selectedText + '" from Profanity Engine.', "error", 3000) ## Show Error Message
+                except: pass
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
     global loadingStatus, metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue
@@ -723,8 +774,7 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
                             pickle.dump(removalsProfanityEngineInfo, open(str(pathlib.Path(__file__).resolve().parent) + "\\cache\\Profanity Engine\\Removals.p", "wb"))
                         except: pass
                         musicSearchPrintSongLyrics() ## Reload Music Search's Lyrics
-                    except:
-                        popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
+                    except: popupMessage("Profanity Engine", 'Failed to add "' + lyricsLine.Widget.selection_get() + '" to Profanity Engine.', "error", 3000) ## Show Error Message
                 elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
                     try:
                         profanityEngineMatches, selectedText = "", lyricsLine.Widget.selection_get()
