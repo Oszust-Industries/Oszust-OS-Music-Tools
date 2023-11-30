@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 11-29-23
-softwareVersion = "v1.0.0.008 BETA"
+softwareVersion = "v1.0.0.010 BETA"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
@@ -10,7 +10,7 @@ def softwareConfig():
     ## System Configuration
     global exitSystem, systemBuild, systemName, musicSub
     exitSystem, systemName, systemBuild = False, "Oszust OS Music Tools", "dev"
-    musicSub = "Apple"
+    musicSub = "Apple"  
 
 def getScaling():
     # Get Scaling Infomation
@@ -26,7 +26,7 @@ def softwareSetup():
     firstHomeLaunch, wifiStatus = True, True
     ## Fix Screen Size
     ctypes.windll.user32.SetProcessDPIAware(False) ## DPI Awareness
-    scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100 ## Get Windows Scale Factor
+    scaleFactor = (ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100) ## Get Windows Scale Factor
     screenWidth, screenHeight = sg.Window.get_screen_size() ## Get WxH of Pixels
     sg.set_options(scaling = (getScaling() * min(screenWidth / (screenWidth * scaleFactor), screenHeight / (1080 * scaleFactor)))) ## Apply Fix to Window
     ## Setup Commands
