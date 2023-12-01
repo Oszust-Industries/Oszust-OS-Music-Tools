@@ -15,13 +15,9 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 PICTURES COMING SOON
 
-## Installation:
-
-NEW STEPS COMING SOON
-
 ## Requirements:
 
-* Storage - 10 MB
+* Storage - 500 MB
 * Windows Device
 * An Internet Connection
 
