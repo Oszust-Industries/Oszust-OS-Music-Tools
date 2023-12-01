@@ -61,7 +61,7 @@ def setupInstall():
     resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/branches")
     content = json.loads((resp.content).decode('utf8'))
     for branch in range(len(content)):
-        if content[branch]["protected"] == False and content[branch]["name"].lower() not in ["dev", "devTesting", "main"]: availableBranches.append(content[branch]["name"])
+        if content[branch]["protected"] == False and content[branch]["name"].lower() not in ["devTesting", "main"]: availableBranches.append(content[branch]["name"])
     if len(availableBranches) < 1: ## Check for any public builds
         installationWindow = sg.Window("Installer - Error", [[sg.Text(systemName + " doesn't have any public builds.", font=("Helvetica", 14))], [sg.Button("Ok", button_color=('White', 'Green'), key='doneButton')]], size=(430, 120), resizable=False, finalize=True, element_justification='c')
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console

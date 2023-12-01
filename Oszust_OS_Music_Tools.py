@@ -1,10 +1,11 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 11-29-23
-softwareVersion = "v1.0.0.010 BETA"
+## Created on: 1-02-23 - Last update: 11-30-23
+softwareVersion = "v1.0.0"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
+import AutoUpdater
 
 def softwareConfig():
     ## System Configuration
@@ -48,6 +49,15 @@ def softwareSetup():
         if ProfanityEngineCache + datetime.timedelta(days=1) > datetime.datetime.now(): loadProfanityEngineDefinitions(False) ## Check if Cache is >= Day
         else: loadProfanityEngineDefinitions(True)
     except: loadProfanityEngineDefinitions(True)
+    ## AutoUpdater
+    appStart, localReleaseDate = False, datetime.datetime.strptime(str(datetime.datetime.fromtimestamp(os.path.getmtime(pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\" + systemName.replace(" ", "_") + ".py")))).split(".")[0], '%Y-%m-%d %H:%M:%S')
+    try:
+        appStart, serverReleaseDate = True, pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\releaseDate.p", "rb"))
+        if (localReleaseDate - datetime.datetime.strptime(serverReleaseDate, '%Y-%m-%d %H:%M:%S')).total_seconds() > 25 and systemBuild.lower() not in ["dev", "main"]:
+            AutoUpdater.setupUpdate(systemName, systemBuild, softwareVersion, True)
+            exitSystem = True
+        else: AutoUpdater.setupUpdate(systemName, systemBuild, softwareVersion, False)
+    except: AutoUpdater.setupUpdate(systemName, systemBuild, softwareVersion, True)
     ## Launch Default Home App
     homeScreen()
 
@@ -287,7 +297,7 @@ def homeScreen():
                 HomeWindow["musicDownloaderPanel_youtubeUrlInput"].update("")
                 if musicDownloadName != False: musicDownloadName = True
 ## YouTube Downloader (Buttons/Events)
-        elif appSelected == "YouTube_Downloader":
+        elif appSelected == "Youtube_Downloader":
             if event == 'youtubeDownloaderPanel_pasteClipboardButton': ## Paste Clipboard in YouTube Link Input
                 win32clipboard.OpenClipboard()
                 HomeWindow.Element('youtubeDownloaderPanel_youtubeUrlInput').Update(win32clipboard.GetClipboardData())
