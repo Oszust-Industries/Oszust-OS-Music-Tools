@@ -4,7 +4,7 @@ Music Tools is an all-in-one solution for music enthusiasts who want to easily s
 
 In addition, Music Tools features a convenient YouTube downloader, so you can easily save your favorite music videos and listen to them offline. The software also allows you to download songs with all the metadata, making it easy to keep your music library organized.
 
-Release Date: TBA
+Release Date: Summer 2024
 
 Category: Music and Entertainment
 
@@ -23,15 +23,15 @@ PICTURES COMING SOON
 
 ## Additional Information:
 
-### Supported Devices:
+#### Supported Devices:
 * Windows 10 & 11
 
-### Supported Languages:
+#### Supported Languages:
 * English
 
-### Permissions: 
-* Read/write files on your computer.
+#### Permissions: 
+* Read/write files on your device
 
 ##
 
-This software uses [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to display an interface.
+This software uses [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) for an interface.
