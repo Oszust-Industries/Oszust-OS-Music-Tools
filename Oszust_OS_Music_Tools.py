@@ -1,16 +1,16 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 11-30-23
+## Created on: 1-02-23 - Last update: 4-23-24
 softwareVersion = "v1.0.0"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
-import AutoUpdater
+##import AutoUpdater
 
 def softwareConfig():
     ## System Configuration
     global exitSystem, systemBuild, systemName, musicSub
-    exitSystem, systemName, systemBuild = False, "Oszust OS Music Tools", "dev"
+    exitSystem, systemName, systemBuild = False, "Oszust OS Music Tools", "dist"
     musicSub = "Apple"  
 
 def getScaling():
@@ -50,6 +50,7 @@ def softwareSetup():
         else: loadProfanityEngineDefinitions(True)
     except: loadProfanityEngineDefinitions(True)
     ## AutoUpdater
+    '''
     appStart, localReleaseDate = False, datetime.datetime.strptime(str(datetime.datetime.fromtimestamp(os.path.getmtime(pathlib.Path(str(pathlib.Path(__file__).resolve().parent) + "\\" + systemName.replace(" ", "_") + ".py")))).split(".")[0], '%Y-%m-%d %H:%M:%S')
     try:
         appStart, serverReleaseDate = True, pickle.load(open(str(pathlib.Path(__file__).resolve().parent) + "\\releaseDate.p", "rb"))
@@ -58,6 +59,7 @@ def softwareSetup():
             exitSystem = True
         else: AutoUpdater.setupUpdate(systemName, systemBuild, softwareVersion, False)
     except: AutoUpdater.setupUpdate(systemName, systemBuild, softwareVersion, True)
+    '''
     ## Launch Default Home App
     homeScreen()
 
@@ -464,7 +466,7 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
     messagePopup.force_focus()
     ## Window Shortcuts
     messagePopup.bind('<FocusOut>', '_FocusOut')        ## Window Focus Out
-    messagePopup.bind('<Delete>', '_Delete')           ## Close Window shortcut
+    messagePopup.bind('<Delete>', '_Delete')            ## Close Window shortcut
     messagePopup['messagePopupExitButton'].Widget.config(cursor="hand2") ## Hover icons
     while True:
         event, values = messagePopup.read(timeout=100)
