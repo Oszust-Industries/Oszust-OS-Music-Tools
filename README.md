@@ -23,6 +23,9 @@ PICTURES COMING SOON
 
 ## Additional Information:
 
+> [!NOTE]
+> Music Search doesn't work well with an VPN active
+
 #### Supported Devices:
 * Windows 10 & 11
 
