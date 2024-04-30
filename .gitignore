@@ -561,3 +561,5 @@ cython_debug/
 /cache
 /Oszust OS Music Tools.aip
 /Oszust OS Music Tools-cache
+/pyuac.stderr.tmp.txt
+/pyuac.stdout.tmp.txt
