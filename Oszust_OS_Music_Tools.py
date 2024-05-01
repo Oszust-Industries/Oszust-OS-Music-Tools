@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 5-01-24
-softwareVersion = "v1.0.0"
+softwareVersion = "v1.0.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard, pyuac
 from moviepy.editor import *
@@ -19,7 +19,7 @@ def softwareSetup():
     print("Loading...\nLaunching Interface...")
     firstHomeLaunch, wifiStatus = True, True
     ## Setup Commands
-    #ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
     softwareConfig() ## Get User's Configs
     ## Check WIFI
     try: urllib.request.urlopen("http://google.com", timeout=3)
@@ -39,7 +39,7 @@ def softwareSetup():
         else: loadProfanityEngineDefinitions(True)
     except: loadProfanityEngineDefinitions(True)
     ## AutoUpdater
-    try: AutoUpdaterDate = (open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDateDELETE.txt", "r")).read().split("\n")
+    try: AutoUpdaterDate = (open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDate.txt", "r")).read().split("\n")
     except: AutoUpdaterDate = [str(datetime.date.today() - datetime.timedelta(days=3)), "Missing File"]
     if datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"] and wifiStatus:
         newestVersion = ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest")).json())['tag_name']
