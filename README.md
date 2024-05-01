@@ -17,6 +17,10 @@ PICTURES COMING SOON
 
 ## Requirements:
 
+> [!NOTE]
+> Music Search doesn't work well with an VPN active
+#### Supported Devices:
+
 * Storage - 500 MB
 * Windows Device
 * An Internet Connection
