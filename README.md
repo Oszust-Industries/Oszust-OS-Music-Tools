@@ -1,6 +1,6 @@
 # Oszust OS Music Tools | [Oszust Industries](https://github.com/Oszust-Industries)
 
-Music Tools is an all-in-one solution for music enthusiasts who want to easily search, download, and manage their music. The app includes a powerful search system, allowing you to quickly search for your favorite songs, get song info and lyrics, and use a powerful profanity engine to ensure your music is free from unwanted language.
+Music Tools is an all-in-one solution for music enthusiasts who want to search, download, and manage their music easily. The app includes a powerful search system, allowing you to search for your favorite songs quickly, get song info and lyrics, and use a powerful profanity engine to ensure your music is free from unwanted language.
 
 In addition, Music Tools features a convenient YouTube downloader, so you can easily save your favorite music videos and listen to them offline. The software also allows you to download songs with all the metadata, making it easy to keep your music library organized.
 
@@ -18,24 +18,15 @@ PICTURES COMING SOON
 ## Requirements:
 
 > [!NOTE]
-> Music Search doesn't work well with an VPN active
+> Music Search doesn't work well with an active VPN
 #### Supported Devices:
 
 * Storage - 500 MB
-* Windows Device
-* An Internet Connection
+* Windows 10 & 11 Devices
 
 ## Additional Information:
 
-#### Supported Devices:
-* Windows 10 & 11
-
-#### Supported Languages:
-* English
-
 #### Permissions: 
 * Read/write files on your device
-
-##
 
 This software uses [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) for an interface.
