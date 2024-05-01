@@ -1,8 +1,8 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 4-29-24
-softwareVersion = "v1.0.0.000"
+## Created on: 1-02-23 - Last update: 5-01-24
+softwareVersion = "v1.0.0"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
-import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
+import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard, pyuac
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
@@ -14,12 +14,10 @@ def softwareConfig():
     musicSub = "Apple"  
 
 def softwareSetup():
-    import pyuac
     global firstHomeLaunch, topSongsList, wifiStatus
     ## Setup Software
     print("Loading...\nLaunching Interface...")
     firstHomeLaunch, wifiStatus = True, True
-    #ctypes.windll.user32.SetProcessDPIAware(False) ## DPI Awareness
     ## Setup Commands
     #ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
     softwareConfig() ## Get User's Configs
@@ -43,14 +41,22 @@ def softwareSetup():
     ## AutoUpdater
     try: AutoUpdaterDate = (open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDateDELETE.txt", "r")).read().split("\n")
     except: AutoUpdaterDate = [str(datetime.date.today() - datetime.timedelta(days=3)), "Missing File"]
-    if datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"]:
-        resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/commits/" + systemBuild)
-        content = json.loads((resp.content).decode('utf8'))
-        newestVersion = (content["commit"]["message"]).split(' (', 1)[0]
+    if datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"] and wifiStatus:
+        newestVersion = ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest")).json())['tag_name']
         if newestVersion != softwareVersion:
             if not pyuac.isUserAdmin():
-                popupMessage("New Update Available", newestVersion[:newestVersion.rfind('.')] + " is now available for " + systemName + ". Do you want to update now?", "downloaded")
-                pyuac.runAsAdmin()
+                response = popupMessage("New Update Available", newestVersion + " is now available for " + systemName + ". Do you want to update now?", "downloaded")
+                if response == True:
+                    try: pyuac.runAsAdmin()
+                    except: homeScreen()
+                else:
+                    try: ## Cache the Next Date
+                        with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDate.txt", "w") as AutoUpdaterDateFile: ## Create Cache File
+                            if response == "Week": AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=7)))
+                            else: AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
+                            AutoUpdaterDateFile.close()
+                    except: pass
+                    homeScreen()
             else: AutoUpdater.main(systemName, systemBuild, softwareVersion, newestVersion)
         else: ## On Newest Version
             try: ## Cache the Next Date
@@ -58,10 +64,8 @@ def softwareSetup():
                     AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
                     AutoUpdaterDateFile.close()
             except: pass
-            homeScreen() ## Launch Default Home App
-    else:
-        ## Launch Default Home App
-        homeScreen()
+            homeScreen()
+    else: homeScreen()
 
 def crashMessage(message):
     RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
@@ -484,7 +488,8 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
 def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTimer=0):
     wrapper = textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')
     popupMessageText = '\n'.join(wrapper.wrap(popupMessageText))
-    alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + popupMessageIcon + "_Popup.png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("OK", font=('Any 12'), button_color=('white','#5A6E80'), key='messagePopupExitButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
+    if "New Update Available" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + popupMessageIcon + "_Popup.png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("Yes", font=('Any 12'), button_color=('white','green'), key='messagePopupExitButton'), sg.Button("Remind Next Week", font=('Any 12'), button_color=('White','Orange'), key='messagePopupRemindButton'), sg.Button("No", font=('Any 12'), button_color=('White','Red'), key='messagePopupCancelButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
+    else: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + popupMessageIcon + "_Popup.png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("OK", font=('Any 12'), button_color=('white','#5A6E80'), key='messagePopupExitButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     messagePopup.hide()
     try: messagePopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - messagePopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - messagePopup.size[1] // 2)
     except: pass
@@ -501,7 +506,13 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
         if messagePopup.CurrentLocation()[1] < 200: messagePopup.move(messagePopup.CurrentLocation()[0], 100) ## Fix Over Top
         if event == sg.WIN_CLOSED or event == 'messagePopupExitButton' or (event == '_Delete') or (event == '_FocusOut' and popupTimer != 0 and timeOpened >= 100):
             messagePopup.close()
-            break
+            return True
+        elif event == 'messagePopupRemindButton':
+            messagePopup.close()
+            return "Week"
+        elif event == 'messagePopupCancelButton':
+            messagePopup.close()
+            return False
         elif popupTimer != 0 and timeOpened >= popupTimer: ## Fade Out Window (3000)
             for i in range(int(alpha*100),1,-1): ## Start Fade Out
                 try: messagePopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - messagePopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - messagePopup.size[1] // 2)
