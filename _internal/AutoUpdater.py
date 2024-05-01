@@ -1,5 +1,5 @@
 ## Oszust OS AutoUpdater - v4.0.0 (5.01.24) - Oszust Industries
-import json, os, pathlib, pickle, requests, shutil, threading, urllib.request, zipfile, webbrowser, subprocess
+import json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
 def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
@@ -55,7 +55,7 @@ def crashMessage(message, systemName):
             except: pass
 
 def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion):
-    global loadingStatus, loadingStep
+    global current, loadingStatus, loadingStep
     try: urllib.request.urlopen("http://google.com", timeout=3) ## Test Internet
     except:
         loadingStatus = "Error-No Internet."
@@ -82,14 +82,10 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
         ## Update Required Files
             loadingStatus, loadingStep = "Installing Update...", 5 
             try:
-                try: os.remove(current + "\\" + systemName.replace(" ", "_") + ".exe")
-                except: print("EXE")
-                try:
-                    os.remove(current + "\\_internal\\AutoUpdater.py")
-                    os.remove(current + "\\_internal\\" + systemName.replace(" ", "_") + ".py")
-                    shutil.rmtree(current + "\\_internal\\data")
-                except: pass
-            except Exception as Argument:
+                os.remove(current + "\\_internal\\AutoUpdater.py")
+                os.remove(current + "\\_internal\\" + systemName.replace(" ", "_") + ".py")
+                shutil.rmtree(current + "\\_internal\\data")
+            except:
                 loadingStatus = "Error-Unable to delete current files. You will have to remove them yourself."
                 return
             os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "2.exe")
@@ -102,7 +98,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             shutil.rmtree(tempDownloadFolder + "\\temp")
             try: ## Changelog File
                 releaseInfo = json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode())
-                pickle.dump(str(releaseInfo[:1][0]['body']), open(str(pathlib.Path(__file__).resolve().parent) + "\\" + releaseInfo[:1][0]['tag_name'] + "_changelog.p", "wb"))
+                pickle.dump(str(releaseInfo[:1][0]['body']), open(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + releaseInfo[:1][0]['tag_name'] + "_changelog.p", "wb"))
             except: pass
         loadingStatus, loadingStep = "Done", 7 ## Update done or not needed
     except Exception as Argument:
@@ -115,15 +111,29 @@ def copyFilesFolders(source_dir, dest_dir):
         dest_item = os.path.join(dest_dir, item)
         if os.path.isfile(source_item):
             try: shutil.copy2(source_item, dest_item)
-            except: print(dest_item)
+            except: pass
         elif os.path.isdir(source_item):
             if os.path.isdir(dest_item): copyFilesFolders(source_item, dest_item)
             else:
                 try: shutil.copytree(source_item, dest_item)
-                except: print(dest_item)
+                except: pass
+
+def createBatFile(systemName):
+    commands = [
+        'timeout 1',
+        'del "' + current +'\\' + systemName.replace(" ", "_") + '.exe"',
+        'cd "' + current + '"',
+        'ren "' + systemName.replace(" ", "_") + '2.exe" "' + systemName.replace(" ", "_") + '.exe"'
+    ]
+    with open('commands.bat', 'w') as f:
+        f.write('@echo off\n')
+        for command in commands:
+            f.write(command + '\n')
+    subprocess.Popen(['cmd', '/k', current + '\\commands.bat'], shell=True)
 
 
 ## Start System
 def main(systemName, systemBuild, softwareVersion, newestVersion):
     try: setupUpdate(systemName, systemBuild, softwareVersion, newestVersion)
     except Exception as Argument: print("AutoUpdater Error: " + str(Argument))
+    createBatFile(systemName)
