@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 4-29-24
-softwareVersion = "v1.0.1.000"
+softwareVersion = "v1.0.0.000"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
@@ -26,6 +26,7 @@ def softwareSetup():
     ## Check WIFI
     try: urllib.request.urlopen("http://google.com", timeout=3)
     except: wifiStatus = False
+    pathlib.Path(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache").mkdir(parents=True, exist_ok=True) ## Create Cache Folder
     ## Billboard Top 100 Hits from Cache
     try:
         billboardCache, topSongsList = (open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Billboard.txt", "r")).read().split("\n"), []
@@ -40,27 +41,27 @@ def softwareSetup():
         else: loadProfanityEngineDefinitions(True)
     except: loadProfanityEngineDefinitions(True)
     ## AutoUpdater
-    if systemBuild.lower() in ["dev", "main"]:
-        #resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/commits/" + systemBuild)
-        resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/commits/" + "dist")
+    try: AutoUpdaterDate = (open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDateDELETE.txt", "r")).read().split("\n")
+    except: AutoUpdaterDate = [str(datetime.date.today() - datetime.timedelta(days=3)), "Missing File"]
+    if datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"]:
+        resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/commits/" + systemBuild)
         content = json.loads((resp.content).decode('utf8'))
         newestVersion = (content["commit"]["message"]).split(' (', 1)[0]
-        if newestVersion[0] != "v" and "pull request" not in newestVersion:
-            updateStatus = -4
-            return "Invalid Commit Name"
-        elif "pull request" in newestVersion:
-            newestVersion = newestVersion.rsplit('\n', 1)[1] ## Remove Pull Request Text
-            if newestVersion[0] != "v":
-                updateStatus = -4
-                return "Invalid Commit Name"
-        elif newestVersion != softwareVersion:
+        if newestVersion != softwareVersion:
             if not pyuac.isUserAdmin():
-                popupMessage("New Update Available", "Update " + newestVersion + " is now availbe for Oszust OS Music Tools. Do you want to update now?", "error")
+                popupMessage("New Update Available", newestVersion[:newestVersion.rfind('.')] + " is now available for " + systemName + ". Do you want to update now?", "downloaded")
                 pyuac.runAsAdmin()
-            else: AutoUpdater.main(systemName, systemBuild, softwareVersion)
-        else:
-            ## Launch Default Home App
-            homeScreen()
+            else: AutoUpdater.main(systemName, systemBuild, softwareVersion, newestVersion)
+        else: ## On Newest Version
+            try: ## Cache the Next Date
+                with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDate.txt", "w") as AutoUpdaterDateFile: ## Create Cache File
+                    AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
+                    AutoUpdaterDateFile.close()
+            except: pass
+            homeScreen() ## Launch Default Home App
+    else:
+        ## Launch Default Home App
+        homeScreen()
 
 def crashMessage(message):
     RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
@@ -74,14 +75,14 @@ def crashMessage(message):
     while True:
         event, values = errorWindow.read()
         if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'):
-            if systemBuild.lower() in ["dev"]: exit()
+            if systemBuild.lower() not in ["dev"]: exit()
             else:
                 thisSystem = psutil.Process(os.getpid()) ## Close Program
                 thisSystem.terminate()
         elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
         elif event in RightClickMenu[1]: ## Right Click Menu Actions
             try:
-                if event == 'Copy': ## Copy Lyrics Text
+                if event == 'Copy': ## Copy Error Text
                     try:
                         errorWindow.TKroot.clipboard_clear()
                         errorWindow.TKroot.clipboard_append(errorLine.Widget.selection_get())
@@ -102,7 +103,6 @@ def downloadTop100Songs():
                 elif song.lastPos < song.rank: topSongsList.append(str(x+1) + ". " + song.title + " - " + song.artist + "   (" + str(song.weeks) + " weeks) v") ## Song Moved Down
             except: topSongsList.append(str(x+1) + ". Result Failed to Load") ## One Result Failed
         try: ## Cache the List
-            pathlib.Path(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache").mkdir(parents=True, exist_ok=True) ## Create Cache Folder
             with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Billboard.txt", "w") as billboardTextFile: ## Create Cache File
                 lastTuesday = datetime.date.today() - datetime.timedelta(days=(datetime.date.today().weekday() - 1) % 7) ## Data is Fresh on Tuesday
                 billboardTextFile.write(str(lastTuesday))

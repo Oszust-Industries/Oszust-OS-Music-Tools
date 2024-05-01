@@ -1,18 +1,57 @@
 ## Oszust OS AutoUpdater - v4.0.0 (4.30.24) - Oszust Industries
-import datetime, json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, win32com.client, zipfile
+import datetime, json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, zipfile, webbrowser
+import PySimpleGUI as sg
 
-def setupUpdate(updaterSystemName, updaterSystemBuild, updaterSystemVersion):
-    global appVersion, availableBranches, forceReinstallation, systemBuild, systemName, updateStatus
-    appVersion, availableBranches, systemBuild, systemName, updateStatus = updaterSystemVersion, [], updaterSystemBuild, updaterSystemName, -1
+def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
     if systemBuild.lower() in ["dev", "main"]: return ## STOPS THE UPDATER
     if os.name not in ["nt"]: return "Update Failed: (Not supported platform)" ## Platform isn't Windows
     ## Setup Thread and Return to Main App
-    OszustOSAutoUpdaterThread = threading.Thread(name="OszustOSAutoUpdater", target=OszustOSAutoUpdater)
-    OszustOSAutoUpdaterThread.start()
-    return "Running Updater"
+    global loadingStatus, loadingStep
+    loadingPopup, loadingStatus, loadingStep = sg.Window("", [[sg.Text("Installing " + systemName, font='Any 16', background_color='#1b2838', key='updaterTitleText')], [sg.Text(newestVersion, font='Any 16', background_color='#1b2838', key='updaterVersionText')], [sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='updaterGIFImage')], [sg.Text("Starting Updater...", font='Any 16', background_color='#1b2838', key='updaterText')], [sg.Text("Step 0 of 6", font='Any 14', background_color='#1b2838', key='updaterStepText')], [sg.Button("Ok", font='Any 16', visible=False, key='doneButton')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Starting Updater...", 0
+    loadingPopup["updaterGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=10) ## Load Loading GIF
+    while True:
+        event, values = loadingPopup.read(timeout=10)
+        try: loadingPopup["updaterGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
+        except: pass
+        loadingPopup["updaterText"].update(loadingStatus)
+        loadingPopup["updaterStepText"].update("Step " + str(loadingStep) + " of 6")
+        if event == sg.WIN_CLOSED: exit()
+        elif loadingStatus == "Starting Updater...":
+                OszustOSAutoUpdaterThread = threading.Thread(name="OszustOSAutoUpdater", target=OszustOSAutoUpdater, args=(systemName, systemBuild, softwareVersion, newestVersion,))
+                OszustOSAutoUpdaterThread.start()
+                "Checking Internet..." 
+        elif loadingStatus == "Done": loadingPopup['doneButton'].update(visible=True)
+        elif event == 'doneButton':
+            loadingPopup.close()
+            break
 
-def OszustOSAutoUpdater():
+def crashMessage(message):
+    RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
+    errorWindow = sg.Window(message.split(':')[0], [[sg.Text(systemName + " has crashed.", font=("Any", 13))], [sg.Multiline(message, size=(50,5), font=("Any", 13), disabled=True, autoscroll=False, right_click_menu=RightClickMenu, key='crashMessageErrorCodeText')], [sg.Button("Report Error", button_color=("White", "Blue"), key='Report'), sg.Button("Quit", button_color=("White", "Red"), key='Quit')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
+    errorLine:sg.Multiline = errorWindow['crashMessageErrorCodeText']
+    ## Window Shortcuts
+    errorWindow.bind('<Insert>', '_Insert')  ## Report Error shortcut
+    errorWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
+    ## Mouse Icon Changes
+    for key in ['Report', 'Quit']: errorWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    while True:
+        event, values = errorWindow.read()
+        if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'): exit()
+        elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
+        elif event in RightClickMenu[1]: ## Right Click Menu Actions
+            try:
+                if event == 'Copy': ## Copy Lyrics Text
+                    try:
+                        errorWindow.TKroot.clipboard_clear()
+                        errorWindow.TKroot.clipboard_append(errorLine.Widget.selection_get())
+                    except: pass
+            except: pass
+
+def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion):
     global updateStatus
+    
+    return
+
     ## Update Statuses: -5 - API Limit, -4 - Invalid Commit Name, -3 - No AppBuild, -2 - No Internet, 0 - None, 1 - Normal Update, 2 - Hotfix, 3 - Emergency
     try: urllib.request.urlopen("http://google.com", timeout=3) ## Test Internet
     except:
@@ -83,7 +122,7 @@ def OszustOSAutoUpdater():
 
 
 ## Start System
-def main(systemName, systemBuild, softwareVersion):
-    try: setupUpdate(systemName, systemBuild, softwareVersion)
+def main(systemName, systemBuild, softwareVersion, newestVersion):
+    try: setupUpdate(systemName, systemBuild, softwareVersion, newestVersion)
     except Exception as Argument: print("Error 00: " + str(Argument))
     input("Press enter to close the window. >")
