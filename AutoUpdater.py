@@ -29,6 +29,7 @@ def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
             loadingPopup['doneButton'].update(visible=True)
             loadingStatus = "Finished"
         elif event == 'doneButton':
+            createBatFile(systemName)
             loadingPopup.close()
             break
 
@@ -136,4 +137,3 @@ def createBatFile(systemName):
 def main(systemName, systemBuild, softwareVersion, newestVersion):
     try: setupUpdate(systemName, systemBuild, softwareVersion, newestVersion)
     except Exception as Argument: print("AutoUpdater Error: " + str(Argument))
-    createBatFile(systemName)

@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 5-01-24
-softwareVersion = "v1.0.1"
+softwareVersion = "v1.1.0"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard, pyuac
 from moviepy.editor import *
