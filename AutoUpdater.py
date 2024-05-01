@@ -1,10 +1,9 @@
-## Oszust OS AutoUpdater - v3.0.0 (11.30.23) - Oszust Industries
-from pycrosskit.shortcuts import Shortcut
+## Oszust OS AutoUpdater - v4.0.0 (4.30.24) - Oszust Industries
 import datetime, json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, win32com.client, zipfile
 
-def setupUpdate(updaterSystemName, updaterSystemBuild, updaterSystemVersion, reinstallation):
+def setupUpdate(updaterSystemName, updaterSystemBuild, updaterSystemVersion):
     global appVersion, availableBranches, forceReinstallation, systemBuild, systemName, updateStatus
-    appVersion, availableBranches, forceReinstallation, systemBuild, systemName, updateStatus = updaterSystemVersion, [], reinstallation, updaterSystemBuild, updaterSystemName, -1
+    appVersion, availableBranches, systemBuild, systemName, updateStatus = updaterSystemVersion, [], updaterSystemBuild, updaterSystemName, -1
     if systemBuild.lower() in ["dev", "main"]: return ## STOPS THE UPDATER
     if os.name not in ["nt"]: return "Update Failed: (Not supported platform)" ## Platform isn't Windows
     ## Setup Thread and Return to Main App
@@ -35,7 +34,7 @@ def OszustOSAutoUpdater():
             ## Get Newest Commit Name
             resp = requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/commits/" + systemBuild)
             content = json.loads((resp.content).decode('utf8'))
-            newestVersion = content["commit"]["message"]
+            newestVersion = (content["commit"]["message"]).split(' (', 1)[0]
             if newestVersion[0] != "v" and "pull request" not in newestVersion:
                 updateStatus = -4
                 return "Invalid Commit Name"
@@ -70,11 +69,6 @@ def OszustOSAutoUpdater():
                     try: os.remove(current + "\\" + i)
                     except: pass
                     shutil.move(tempDownloadFolder + "\\temp\\" + systemNameFile + "-Main\\" + i, current)
-        ## Create Updated Desktop Shortcut
-            try: Shortcut.delete(shortcut_name = systemName, desktop=True, start_menu=False) ## Delete Desktop Shortcut
-            except: pass
-            try: Shortcut(shortcut_name = systemName, exec_path = current + "\\" + systemName.replace(" ", "_") + ".py", description = "Oszust Industries - Radio Software", icon_path = current + "\\data\\" + systemName.replace(" ", "_") + ".ico", desktop=True, start_menu=False) ## Desktop Shortcut
-            except: pass
         ## Clean Update
             shutil.rmtree(tempDownloadFolder + "\\temp")
             try: pickle.dump(str(datetime.datetime.now()).split(".")[0], open(str(pathlib.Path(__file__).resolve().parent) + "\\releaseDate.p", "wb"))
@@ -83,8 +77,13 @@ def OszustOSAutoUpdater():
                 releaseInfo = json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode())
                 pickle.dump(str(releaseInfo[:1][0]['body']), open(str(pathlib.Path(__file__).resolve().parent) + "\\" + releaseInfo[:1][0]['tag_name'] + "_changelog.p", "wb"))
             except: pass
-            if "hotfix" in newestVersion.lower(): updateStatus = 2
-            elif "emergency" in newestVersion.lower() or forceReinstallation == True: updateStatus = 3
-            else: updateStatus = 1
+            updateStatus = 1
         else: updateStatus = 0
     except Exception as Argument: print("Update Failed: (" + str(Argument) + ")")
+
+
+## Start System
+def main(systemName, systemBuild, softwareVersion):
+    try: setupUpdate(systemName, systemBuild, softwareVersion)
+    except Exception as Argument: print("Error 00: " + str(Argument))
+    input("Press enter to close the window. >")
