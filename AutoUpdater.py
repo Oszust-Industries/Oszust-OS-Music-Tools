@@ -1,5 +1,5 @@
 ## Oszust OS AutoUpdater - v4.0.0 (5.01.24) - Oszust Industries
-import datetime, json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, zipfile, webbrowser
+import datetime, json, os, pathlib, pickle, requests, shutil, threading, urllib.request, zipfile, webbrowser
 import PySimpleGUI as sg
 
 def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
@@ -70,7 +70,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             urllib.request.urlretrieve("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/archive/refs/heads/" + systemBuild + ".zip", (tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "_") + ".zip"))
             with zipfile.ZipFile(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "_") + ".zip", 'r') as zip_ref: zip_ref.extractall(tempDownloadFolder + "\\temp")
             os.remove(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "_") + ".zip")
-            if systemBuild.lower() != "main": os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild, tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-Main")
+            if systemBuild.lower() != "main": os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild, tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + systemBuild)
         ## Update Required Files
             loadingStatus, loadingStep = "Installing Update...", 5 
             try: shutil.rmtree(current)
