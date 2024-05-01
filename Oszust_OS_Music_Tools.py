@@ -1138,6 +1138,27 @@ def geniusMusicSearchList(userInput, searchType="search"):
             geniusMusicSearch(geniusSongIDs[int(event.split("_")[-1])], True, searchType)
             break
 
+def burnMusicCD():
+    import subprocess
+    import tempfile
+    import os
+    import shutil
+
+    # Create a temporary directory to store the WAV files.
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        # Convert the MP3 files to WAV files.
+        for mp3_file in ['/path/to/mp3/file1.mp3', '/path/to/mp3/file2.mp3']:
+            if mp3_file.endswith('.mp3'):
+                wav_file = os.path.join(temp_dir, os.path.basename(mp3_file)[:-4] + '.wav')
+                subprocess.call(['ffmpeg', '-i', mp3_file, wav_file])
+
+        # Burn the WAV files to the CD.
+        subprocess.call(['wodim', '-v', '-e', '/dev/cdrom', temp_dir])
+    except Exception as e: print("An error occurred:", e)
+    finally: shutil.rmtree(temp_dir)
+
 
 ## Start System
 try: softwareSetup()
