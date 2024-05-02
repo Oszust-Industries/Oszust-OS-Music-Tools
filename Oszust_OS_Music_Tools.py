@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 5-01-24
-softwareVersion = "v1.1.0"
+softwareVersion = "v1.1.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard, pyuac
 from moviepy.editor import *
@@ -78,11 +78,7 @@ def crashMessage(message):
     for key in ['Report', 'Quit']: errorWindow[key].Widget.config(cursor="hand2") ## Hover icons
     while True:
         event, values = errorWindow.read()
-        if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'):
-            if systemBuild.lower() not in ["dev"]: exit()
-            else:
-                thisSystem = psutil.Process(os.getpid()) ## Close Program
-                thisSystem.terminate()
+        if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'): exit()
         elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
         elif event in RightClickMenu[1]: ## Right Click Menu Actions
             try:
@@ -480,7 +476,6 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
             if loadingStatus == "Done_YouTubeDownloader": popupMessage("YouTube Downloader", "Video downloaded successfully.", "success")
             elif loadingStatus == "Done_MusicDownloader":
                 metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue = audioSavedPath, arg3, arg4, arg5
-                if metadataNameChangeValue == False: metadataNameChangeValue = youtubeTitle
                 geniusMusicSearchList(youtubeTitle, "downloader")
                 popupMessage("Music Downloader", "Song downloaded successfully.", "success")
             break
@@ -974,6 +969,7 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
         if multipleArtists: audiofile.tag.album_artist = "Various Artists" ## Album's Artists (Various Artists)
         else: audiofile.tag.album_artist = geniusMusicSearchPrimeArtist ## Album's Artists
         audiofile.tag.title = extendedSongInfo[0] ## Title
+        print(extendedSongInfo[0])
         if geniusMusicSearchDate != None and geniusMusicSearchDate != "Unknown Release Date": audiofile.tag.recording_date = geniusMusicSearchDate[-4:] ## Year
         audiofile.tag.genre = geniusMusicSearchGenre ## Genre
         audiofile.tag.album = extendedSongInfo[2] ## Album
@@ -1134,17 +1130,17 @@ def geniusMusicSearchList(userInput, searchType="search"):
         event, values = MusicSearchListWindow.read()
         if event == sg.WIN_CLOSED or (event == '_Delete'): ## Window Closed
             MusicSearchListWindow.close()
-            break
         elif (event == 'geniusMusicListSearchButton' or (event == 'geniusMusicListSearchInput' + '_Enter')) and values['geniusMusicListSearchInput'].replace(" ", "-") != userInput: ## Change Search
             MusicSearchListWindow.close()
-            geniusMusicSearchList(values['geniusMusicListSearchInput'].lower().replace(" by ", "-").replace(" ","-"))
+            geniusMusicSearchList(values['geniusMusicListSearchInput'].lower().replace(" by ", "-").replace(" ","-"), searchType)
             break
         elif 'searchmusicListSearchGenius' in event: webbrowser.open(geniusURLs[int(event.split("_")[-1])], new=2, autoraise=True) ## Open Genius Page
         elif 'searchmusicListPlaySong_' in event: ## Play Song Online
             if musicSub == "Apple": webbrowser.open("https://music.apple.com/us/search?term=" + songArtists[int(event.split("_")[-1])].replace(" ", "%20") + "%20" + songNames[int(event.split("_")[-1])].replace(" ", "%20"), new=2, autoraise=True)
             elif musicSub == "Spotify": webbrowser.open("https://open.spotify.com/search/" + songArtists[int(event.split("_")[-1])].replace(" ", "%20") + "%20" + songNames[int(event.split("_")[-1])].replace(" ", "%20"), new=2, autoraise=True)
         elif 'searchMusicListOpenSong' in event: ## Open Song in Music Search
-            HomeWindow.Element('musicSearchPanel_songSearchInput').Update(songNames[int(event.split("_")[-1])] + " - " + songArtists[int(event.split("_")[-1])])
+            try: HomeWindow.Element('musicSearchPanel_songSearchInput').Update(songNames[int(event.split("_")[-1])] + " - " + songArtists[int(event.split("_")[-1])])
+            except: pass
             MusicSearchListWindow.close()
             geniusMusicSearch(geniusSongIDs[int(event.split("_")[-1])], True, searchType)
             break
