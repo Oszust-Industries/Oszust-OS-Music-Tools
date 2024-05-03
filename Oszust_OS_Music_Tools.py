@@ -19,8 +19,7 @@ def softwareSetup():
     print("Loading...\nLaunching Interface...")
     firstHomeLaunch, wifiStatus = True, True
     ## Setup Commands
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
-    sys.stdout = open('commands.log', 'w')
+    #ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
     softwareConfig() ## Get User's Configs
     ## Check WIFI
     try: urllib.request.urlopen("http://google.com", timeout=3)
