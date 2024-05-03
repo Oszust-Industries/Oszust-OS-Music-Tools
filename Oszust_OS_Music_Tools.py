@@ -1,7 +1,7 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 5-01-24
-softwareVersion = "v1.1.1"
-systemName, systemBuild = "Oszust OS Music Tools", "dist"
+softwareVersion = "v1.1.2"
+systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, re, requests, textwrap, threading, urllib.request, webbrowser, win32clipboard, pyuac
 from moviepy.editor import *
 from pytube import YouTube
@@ -20,6 +20,7 @@ def softwareSetup():
     firstHomeLaunch, wifiStatus = True, True
     ## Setup Commands
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
+    sys.stdout = open('commands.log', 'w')
     softwareConfig() ## Get User's Configs
     ## Check WIFI
     try: urllib.request.urlopen("http://google.com", timeout=3)
@@ -555,9 +556,11 @@ def downloadAudio(youtubeLink, downloadLocation):
         loadingStatus = "Failed_MusicDownloaderYouTube"
         return
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
-    FILETOCONVERT = AudioFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
-    FILETOCONVERT.write_audiofile(audioSavedPath)
-    FILETOCONVERT.close()
+    videoFile = VideoFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
+    AudioFile = videoFile.audio
+    AudioFile.write_audiofile(audioSavedPath)
+    AudioFile.close()
+    videoFile.close()
     os.remove(downloadLocation + "\\" + youtubeTitle + ".mp4") ## Delete video file
     ## Remove extra characters from YouTube title for Music Search
     youtubeTitle = (re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", youtubeTitle)).replace("()", "")
