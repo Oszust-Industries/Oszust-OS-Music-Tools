@@ -136,7 +136,12 @@ def checkAutoUpdater(command):
             if not pyuac.isUserAdmin():
                 response = popupMessage("New Update Available", newestVersion + " is now available for " + systemName + ". Do you want to update now?", "downloaded")
                 if response == True:
-                    try: pyuac.runAsAdmin()
+                    try:
+                        try:
+                            os.remove(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDate.txt")
+                            HomeWindow.close()
+                        except: pass
+                        pyuac.runAsAdmin()
                     except:
                         if command == "check": popupMessage("AutoUpdater", "Failed to launch the software as admin.", "error")
                         else: homeScreen()

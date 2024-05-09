@@ -89,8 +89,8 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             except:
                 loadingStatus = "Error-Unable to delete current files. You will have to remove them yourself."
                 return
-            os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "2.exe")
-            try: copyFilesFolders((tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild), current)
+            os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "2.exe")
+            try: copyFilesFolders((tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_")), current)
             except:
                 loadingStatus = "Error-Unable to copy update files. You will have to copy them yourself."
                 return
