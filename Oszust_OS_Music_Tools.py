@@ -358,7 +358,7 @@ def homeScreen():
                     win32clipboard.CloseClipboard()
                 except: pass
             elif event == 'musicDownloaderPanel_changeNameClearInput': HomeWindow.Element('musicDownloaderPanel_changeNameInput').Update("") ## Clear File Name Input
-            elif event == 'musicDownloaderPanel_downloadButton' and "youtube.com" in values['musicDownloaderPanel_youtubeUrlInput'].lower(): ## Download Music Button
+            elif event == 'musicDownloaderPanel_downloadButton' and ("youtube.com" in values['musicDownloaderPanel_youtubeUrlInput'].lower() or "youtu.be" in values['musicDownloaderPanel_youtubeUrlInput'].lower()): ## Download Music Button
                 if musicDownloadName: musicDownloadName = values['musicDownloaderPanel_changeNameInput']
                 loadingScreen("Music_Downloader", values['musicDownloaderPanel_youtubeUrlInput'], values['musicDownloaderPanel_downloadLocationInput'].replace("/", "\\"), musicBurnLyrics, musicCompilationAlbum, musicDownloadName)
                 HomeWindow["musicDownloaderPanel_youtubeUrlInput"].update("")
@@ -406,7 +406,7 @@ def homeScreen():
                     win32clipboard.CloseClipboard()
                 except: pass
             elif event == 'youtubeDownloaderPanel_changeNameClearInput': HomeWindow.Element('youtubeDownloaderPanel_changeNameInput').Update("") ## Clear File Name Input
-            elif event == 'youtubeDownloaderPanel_downloadButton' and "youtube.com" in values['youtubeDownloaderPanel_youtubeUrlInput'].lower(): ## Download YouTube Button
+            elif event == 'youtubeDownloaderPanel_downloadButton' and ("youtube.com" in values['youtubeDownloaderPanel_youtubeUrlInput'].lower() or "youtu.be" in values['youtubeDownloaderPanel_youtubeUrlInput'].lower()): ## Download YouTube Button
                 if youtubeAudioDownload == False and youtubeVideoDownload == False: popupMessage("YouTube Downloader", "You must select audio or video download.", "error", 5000)
                 else:
                     if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderPanel_changeNameInput']
@@ -638,12 +638,17 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFile, videoFile, renameF
     except:
         loadingStatus = "Failed_YouTubeDownloader"
         return
-    youtubeTitle = (YouTube(youtubeLink).title).replace("|", "").replace("'", "").replace("/", "").replace("#", "").replace(".", "") ## Downloaded File's Name
+    youtubeTitle = ''.join(char if char not in '<>:"/\\|?*.#' else '' for char in (YouTube(youtubeLink).title)) ## Downloaded File's Name
     if audioFile: ## Convert MP4 Video to MP3 Audio
         audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
-        FILETOCONVERT = AudioFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
-        FILETOCONVERT.write_audiofile(audioSavedPath)
-        FILETOCONVERT.close()
+        try: videoFile = VideoFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
+        except:
+            loadingStatus = "Failed_YouTubeDownloader"
+            return
+        AudioFile = videoFile.audio
+        AudioFile.write_audiofile(audioSavedPath)
+        AudioFile.close()
+        videoFile.close()
         if renameFile != False: ## Rename MP3 File
             loadingStatus = "Renaming Audio File..."
             try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + renameFile + "." + audioSavedPath.rsplit('.', 1)[1]) ## Raname MP3 to Chosen Name
@@ -660,12 +665,15 @@ def downloadAudio(youtubeLink, downloadLocation):
     global audioSavedPath, loadingStatus, youtubeTitle
     try:
         YouTube(youtubeLink).streams.filter(file_extension="mp4").get_highest_resolution().download(downloadLocation) ## Download Video
-        youtubeTitle = (YouTube(youtubeLink).title).replace("|", "").replace("'", "").replace("/", "").replace("#", "").replace(".", "").replace(",", "") ## Downloaded File's Name
+        youtubeTitle = ''.join(char if char not in '<>:"/\\|?*.#' else '' for char in (YouTube(youtubeLink).title)) ## Downloaded File's Name
     except:
         loadingStatus = "Failed_MusicDownloaderYouTube"
         return
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
-    videoFile = VideoFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
+    try: videoFile = VideoFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
+    except:
+        loadingStatus = "Failed_MusicDownloaderYouTube"
+        return
     AudioFile = videoFile.audio
     AudioFile.write_audiofile(audioSavedPath)
     AudioFile.close()
@@ -722,7 +730,7 @@ def loadGeniusMusic(userInput, forceResult):
             ## Song Artwork
             try:
                 geniusMusicSearchArtworkURL = str(musicSearchApiBodyPath["song_art_image_url"])
-                if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
+                if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
                 else:
                     try: ## Look in Cache for Artwork
                         pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
@@ -740,7 +748,7 @@ def loadGeniusMusic(userInput, forceResult):
                             png_data = pil_image.save(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
                         except: pass
                         png_data = png_bio.getvalue()
-            except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\defaultMusicArtwork.png"
+            except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
             ## Album, Album List, Genre, and Label
             try: html = bs4.BeautifulSoup((requests.get(geniusMusicSearchGeniusURL)).text, "html.parser") # Scrape the info from the HTML
             except:
@@ -873,7 +881,7 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     elif geniusMusicSearchLabels != None and len(geniusMusicSearchLabels) == 1: layout += [[sg.Text("Label: " + str(geniusMusicSearchLabels).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
     layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
     MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=True, finalize=True, keep_on_top=False, element_justification='c')
-    MusicSearchSongWindow.TKroot.minsize(610, 850)
+    MusicSearchSongWindow.TKroot.minsize(580, 710)
     MusicSearchSongWindow.hide()
     MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchSongWindow.size[1] // 2)
     if MusicSearchSongWindow.CurrentLocation()[1] < 200: MusicSearchSongWindow.move(MusicSearchSongWindow.CurrentLocation()[0], 100) ## Fix Over Top
@@ -1060,15 +1068,15 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
         if multipleArtists: audiofile.tag.album_artist = "Various Artists" ## Album's Artists (Various Artists)
         else: audiofile.tag.album_artist = geniusMusicSearchPrimeArtist ## Album's Artists
         audiofile.tag.title = extendedSongInfo[0] ## Title
-        print(extendedSongInfo[0])
         if geniusMusicSearchDate != None and geniusMusicSearchDate != "Unknown Release Date": audiofile.tag.recording_date = geniusMusicSearchDate[-4:] ## Year
-        audiofile.tag.genre = geniusMusicSearchGenre ## Genre
+        if geniusMusicSearchGenre != "Non-Music": audiofile.tag.genre = geniusMusicSearchGenre ## Genre
         audiofile.tag.album = extendedSongInfo[2] ## Album
         if geniusMusicSearchLabels != None: audiofile.tag.publisher = geniusMusicSearchLabels[0].replace("[", "").replace("]", "").replace("'", "") ## Label
         if geniusMusicSearchAlbumCurrent != None: audiofile.tag.track_num = geniusMusicSearchAlbumCurrent ## Curent Song Position
         if geniusMusicSearchAlbumLength != None: audiofile.tag.track_total = geniusMusicSearchAlbumLength ## Album length
-        for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/png") ## Artwork - Basic
-        for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/jpeg", "cover") ## Artwork - Higher Quality
+        if png_data != str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png": 
+            for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/png") ## Artwork - Basic
+            for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, png_data, "image/jpeg", "cover") ## Artwork - Higher Quality
         audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
         audiofile.tag.save() ## Save File
         ## Change the audio file's name
