@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 5-09-24
-softwareVersion = "v1.2.0"
+softwareVersion = "v1.2.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
@@ -10,13 +10,13 @@ import AutoUpdater
 
 def softwareConfig():
     ## System Configuration
-    global musicSub
+    global musicSub, firstSettings
     try:
-        with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data = json.load(file)
+        with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data, firstSettings = json.load(file), False
     except:
-        data = { ## Default Data
+        data, firstSettings = { ## Default Data
             "musicService": "Apple Music",
-        }
+        }, True
         with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'w') as file: json.dump(data, file)
     try: musicSub = data["musicService"]
     except: musicSub = "Apple Music"
@@ -205,11 +205,12 @@ def homeScreenAppPanels():
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("CD Burner:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdburnerPanel'),
     ## Extra Apps Panel
-    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("All Music Tools:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sidebar.png', border_width=0, button_color='#2B475D', key='musicToolsPanel_moveSidebarButton'), sg.Push(background_color='#2B475D'), sg.Text("All Music Tools:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Column(toolsPanel, size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicToolsPanel'),
     ## Settings Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Settings:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Frame("User Prefrences", [[sg.Push(background_color='#2B475D'), sg.Text("Music Service:", background_color='#2B475D'), sg.Combo(('Apple Music', 'Spotify'), readonly=True, default_value=musicSub, key='settingsPanel_musicServiceCombo'), sg.Push(background_color='#2B475D')]], size=(580, 60), background_color='#2B475D')],
+    [sg.Frame("Cache Management", [[sg.Push(background_color='#2B475D'), sg.Text(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB", background_color='#2B475D', key='settingsPanel_cacheStorageText'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clean.png', border_width=0, button_color='#2B475D', key='settingsPanel_cleanCacheButton', tooltip="Clean Cache Storage"), sg.Push(background_color='#2B475D')]], size=(580, 60), background_color='#2B475D')],
     [sg.Push(background_color='#2B475D'), sg.Button("Save Settings", button_color='#2B475D', key='settingsPanel_saveButton'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='settingsPanel'),
     ## Lyrics Checker Panel
@@ -219,7 +220,6 @@ def homeScreenAppPanels():
     ## Profanity Engine Editor Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Profanity Engine:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Frame("Profanity Engine Definitions", profanityEngineListBoxed, relief='flat', title_location='n', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Column([[
-     #sg.Frame("Editor Commands", [[sg.Push(background_color='#2B475D'), sg.Text("Search:", background_color='#2B475D'), sg.InputText(size=(35,1), font='Any 11', enable_events=True, key="profanityEnginePanel_searchInput"), sg.Push(background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sort.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_sortButton', tooltip="Sort List (A-Z)"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\undoOff.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_undoButton', tooltip="Undo Last Change"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\import.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_importButton', tooltip="Import New Definitions"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\download.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_exportButton', tooltip="Export Your List"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clear.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_clearButton', tooltip="Clear Entire List"), sg.Push(background_color='#2B475D')]], size=(350, 100), background_color='#2B475D')],
      sg.Frame("Editor Commands", [[sg.Push(background_color='#2B475D'), sg.Text("Search:", background_color='#2B475D'), sg.InputText(size=(28,1), font='Any 11', enable_events=True, key="profanityEnginePanel_searchInput"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clearInput.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_searchClearInput', tooltip="Clear Search"), sg.Push(background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sort.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_sortButton', tooltip="Sort List (A-Z)"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\import.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_importButton', tooltip="Import New Definitions"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\download.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_exportButton', tooltip="Export Your List"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clear.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_clearButton', tooltip="Clear Entire List"), sg.Push(background_color='#2B475D')]], size=(350, 100), background_color='#2B475D')],
     [sg.Frame("Add Predefined Categories", [[sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\swear.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_swearPredefinedWords', tooltip="Add Predefined Swear Langauge"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\drinking.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_alcoholPredefinedWords', tooltip="Add Predefined Drinking Langauge"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\drugs.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_drugsVapePredefinedWords', tooltip="Add Predefined Drugs & Vape Langauge"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sex.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_sexPredefinedWords', tooltip="Add Predefined Sexual Langauge"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\other.png', border_width=0, button_color='#2B475D', key='profanityEnginePanel_otherPredefinedWords', tooltip="Add Other Predefined Langauge"), sg.Push(background_color='#2B475D')]], size=(350, 80), background_color='#2B475D')],
     [sg.Frame("Add / Edit Words", [[sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\save.png', border_width=0, button_color='#2B475D', key="profanityEnginePanel_saveEditButton", tooltip="Save Word to List"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\trash.png', border_width=0, button_color='#2B475D', key="profanityEnginePanel_deleteWordButton", tooltip="Remove Word from List"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\newItem.png', border_width=0, button_color='#2B475D', key="profanityEnginePanel_newWordButton", tooltip="Create New Word for List")], [sg.Push(background_color='#2B475D'), sg.InputText(size=(40,8), font='Any 11', key="profanityEnginePanel_wordEditorInput"), sg.Push(background_color='#2B475D')]], size=(350, 100), background_color='#2B475D')]], background_color='#2B475D'),
@@ -227,10 +227,10 @@ def homeScreenAppPanels():
     ]]
 
 def homeScreen():
-    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, profanityEngineDefinitions, wifiStatus
+    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, musicSub, profanityEngineDefinitions, wifiStatus
     ## Oszust OS Music Tools List
     if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Profanity Engine", "Music Tools", "Settings"] #"CD Burner",
-    else: applist, apps = [[]], ["Music Tools", "Settings"] #"CD Burner",
+    else: applist, apps = [[]], ["Lyrics Checker", "Profanity Engine", "Music Tools", "Settings"]
     for app in apps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\App icons\\" + app.lower().replace(" ", "") + ".png", button_color='#657076', border_width=0, key=app.replace(" ", "_") + '_AppSelector', tooltip='Open ' + app)]], pad=((5,5), (5, 5)), background_color='#657076')]] ## Add Apps to Side Panel
     ## Home Window
     layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(homeScreenAppPanels(), size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
@@ -259,12 +259,18 @@ def homeScreen():
     for key in toolPanelApps: HomeWindow['musicTool_' + key.replace(" ", "_")].Widget.config(cursor="hand2") ## Hover icons
     ## Main Window: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     if wifiStatus == True:
+        appSelected, firstHomeLaunch = "Music_Search", False ## App Variables
         for key in ['versionTextHomeBottom', 'creditsTextHomeBottom']: HomeWindow[key].Widget.config(cursor="hand2") ## Hover icons
     else:
+        appSelected, firstHomeLaunch = "Music_Tools", False ## App Variables
         HomeWindow['musicToolsPanel'].update(visible=True)
         HomeWindow['musicSearchPanel'].update(visible=False)
+    if firstSettings: ## First Software Launch
+        appSelected, firstHomeLaunch = "Settings", False ## App Variables
+        HomeWindow['settingsPanel'].update(visible=True)
+        HomeWindow['musicSearchPanel'].update(visible=False)
+        popupMessage("Welcome to Music Tools!", "Discover main apps on the left bar. Blue buttons with question marks offer help. Find additional tools in the drawer by clicking the nine-square icon.", "help") ## Help Popup
     for app in apps: HomeWindow[app.replace(" ", "_") + "_AppSelector"].Widget.config(cursor="hand2") ## App Side Panel hover icons
-    appSelected, firstHomeLaunch = "Music_Search", False ## App Variables
     ## Reading Home Window
     while True:
         event, values = HomeWindow.read(timeout=10)
@@ -289,7 +295,8 @@ def homeScreen():
                 if app.replace(" ", "_") == appSelected: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=True)
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
             if appSelected == "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=True) ## Show Music Tools Window
-            elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window   
+            elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window
+            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB")
 ## Music Tools
         elif appSelected == "Music_Tools":
             if "musicTool_" in event:
@@ -300,14 +307,25 @@ def homeScreen():
                 HomeWindow["musicToolsPanel"].update(visible=False)
 ## Settings (Buttons/Events)
         elif appSelected == "Settings":
-            global musicSub
-            if (event == 'settingsPanel_saveButton'):
+            if event == 'settingsPanel_saveButton':
                 try:
                     musicSub = values['settingsPanel_musicServiceCombo']
                     with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data = json.load(file)
                     data['musicService'] = musicSub
                     with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'w') as file: json.dump(data, file)
                 except: popupMessage("Settings", "Settings were unable to be saved.", "error")
+            elif event == 'settingsPanel_cleanCacheButton':
+                try:
+                    try:
+                        for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks"):
+                            os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks", item))
+                        os.rmdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks")
+                    except: pass
+                    for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search"):
+                        os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search", item))
+                    HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB")
+                    popupMessage("Settings", "Cache was successfully cleaned.", "success")
+                except: popupMessage("Settings", "Cache couldn't be cleaned.", "error")
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
             if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
@@ -321,7 +339,7 @@ def homeScreen():
             except:
                 popupMessage("Terms of Service", "Songs downloaded from Music Downloader can't be used in a public setting.\t\tUsing songs on the radio or anywhere public would be voilating YouTube's Terms of Service and FCC laws.", "announcement")
                 pickle.dump(True, open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\contract.p", "wb"))
-            if event == 'musicDownloaderPanel_helpButton': popupMessage("Helper", "Enter a YouTube link, click 'Download'. Then a new window will apear, correct the song title if needed and search. When found, click 'Open' to add metadata to your download.", "help") ## Open YouTube Website
+            if event == 'musicDownloaderPanel_helpButton': popupMessage("Helper", "Enter a YouTube link, click 'Download'. Then a new window will apear, correct the song title if needed and search. When found, click 'Open' to add metadata to your download.", "help") ## Help Popup
             elif event == 'musicDownloaderPanel_pasteClipboardButton': ## Paste Clipboard in YouTube Link Input
                 try:
                     win32clipboard.OpenClipboard()
@@ -546,6 +564,14 @@ def saveProfanityEngine(profanityEngineDefinitions):
         with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Profanity Engine\\userDefinitions.txt", 'w') as file:
             for item in profanityEngineDefinitions: file.write(item.replace("'", "~") + '\n')
     except: pass
+
+def getDirSize(path):
+    total_size = 0
+    for dirpath, _, filenames in os.walk(path):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            total_size += os.path.getsize(filepath)
+    return total_size
 
 def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False, arg5=False):
     global loadingStatus, metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue
