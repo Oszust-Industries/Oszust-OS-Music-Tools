@@ -46,6 +46,6 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 Permission to copy, modify, and distribute this software and its associated documentation for personal and non-commercial purposes is denied without explicitly written permission from Oszust Industries.
 
-**_____________________________________________________**
+#### Credits:
 
 This software uses [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) for an interface.
