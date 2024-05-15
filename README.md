@@ -13,9 +13,37 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 ## Preview:
 
-![Screenshot of the home page of Oszust OS Music Tools.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+
+This will display the three images side by side if the images are not too wide.
+
+<p float="left">
+  <img src="/Screenshots/Home.png" width="500" style="vertical-align: top;"/>
+  <img src="/Screenshots/Music%20Downloader.png" width="500" style="vertical-align: top;"/> 
+  <img src="Screenshots/Music%20Tool%20apps.png" width="500" style="vertical-align: top;"/>
+</p>
+<p float="left">
+  <img src="/Screenshots/Music%20Search.png" width="500" style="vertical-align: top;"/> 
+  <img src="/Screenshots/Music%20List%20Search.png" width="500" style="vertical-align: top;"/>
+</p>
+
+<div style="display: flex; justify-content: center; align-items: flex-start;">
+  <div style="flex: 1; text-align: center;">
+    <img src="/Screenshots/Home.png" alt="Image 1" width="500" style="vertical-align: top;">
+    <img src="/Screenshots/Home.png" alt="Image 2" width="500" style="vertical-align: top;">
+  </div>
+  <div style="flex: 1; text-align: center;">
+    <img src="/Screenshots/Music%20Search.png" alt="Image 2" width="500" style="vertical-align: top;">
+    <img src="/Screenshots/Music%20List%20Search.png" alt="Image 2" width="500" style="vertical-align: top;">
+  </div>
+</div>
+
+
+
+
+
+![Screenshot of the home page of Oszust OS Music Tools.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png) ![Screenshot of the Music Downloader app.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Downloader.png)
 ![Screenshot of the Music Downloader app.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Downloader.png)
-![Screenshot of "Party in the USA" search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Search.png)
+![Screenshot of "Party in the USA" search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Search.png) ![Screenshot of "1985" list search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20List%20Search.png)
 ![Screenshot of "1985" list search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20List%20Search.png)
 ![Screenshot of the apps page.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Tool%20apps.png)
 
