@@ -13,7 +13,11 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 ## Preview:
 
-![Screenshot of a comment on a GitHub issue showing an image, added in the Markdown, of an Octocat smiling and raising a tentacle.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
 
 ## Requirements:
 
