@@ -2,7 +2,7 @@
 ## Created on: 1-02-23 - Last update: 5-15-24
 softwareVersion = "v1.2.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
-import ctypes, datetime, json, math, os, pathlib, pickle, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
+import ctypes, datetime, json, math, os, pathlib, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
 from moviepy.editor import *
 from pytube import YouTube
 import PySimpleGUI as sg
@@ -10,16 +10,19 @@ import AutoUpdater
 
 def softwareConfig():
     ## System Configuration
-    global musicSub, firstSettings
+    global firstSettings, musicSub, musicSearchContract
     try:
         with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data, firstSettings = json.load(file), False
     except:
         data, firstSettings = { ## Default Data
+            "musicSearchContract": False,
             "musicService": "Apple Music",
         }, True
         with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'w') as file: json.dump(data, file)
     try: musicSub = data["musicService"]
     except: musicSub = "Apple Music"
+    try: musicSearchContract = data["musicSearchContract"]
+    except: musicSearchContract = False
 
 def softwareSetup():
     global firstHomeLaunch, topSongsList
@@ -134,7 +137,7 @@ def checkAutoUpdater(command):
         newestVersion = ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest")).json())['tag_name']
         if newestVersion != softwareVersion:
             if not pyuac.isUserAdmin():
-                response = popupMessage("New Update Available", newestVersion + " is now available for " + systemName + ". Do you want to update now?", "downloaded")
+                response = popupMessage("New Update Available", "A new version " + newestVersion + " is now available for " + systemName + ". Would you like to update now?", "downloaded")
                 if response == True:
                     try:
                         try:
@@ -143,7 +146,7 @@ def checkAutoUpdater(command):
                         except: pass
                         pyuac.runAsAdmin()
                     except:
-                        if command == "check": popupMessage("AutoUpdater", "Failed to launch the software as administrator.", "error")
+                        if command == "check": popupMessage("AutoUpdater", "Failed to launch the software with administrator privileges.", "error")
                         else: homeScreen()
                 else:
                     try: ## Cache the Next Date
@@ -161,7 +164,7 @@ def checkAutoUpdater(command):
                     AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
                     AutoUpdaterDateFile.close()
             except: pass
-            if command == "check": popupMessage("AutoUpdater", "You are on the newest version of " + systemName + " already.", "success")
+            if command == "check": popupMessage("AutoUpdater", "You are already using the latest version of " + systemName + ".", "success")
             else: homeScreen()
     else: homeScreen()
 
@@ -228,7 +231,7 @@ def homeScreenAppPanels():
     ]]
 
 def homeScreen():
-    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, musicSub, profanityEngineDefinitions, wifiStatus
+    global firstHomeLaunch, HomeWindow, homeWindowLocationX, homeWindowLocationY, lyrics, lyricsListFinal, musicSub, musicSearchContract, profanityEngineDefinitions, wifiStatus
     ## Oszust OS Music Tools List
     if wifiStatus: applist, apps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Profanity Engine", "Music Tools", "Settings"] #"CD Burner",
     else: applist, apps = [[]], ["Lyrics Checker", "Profanity Engine", "Music Tools", "Settings"]
@@ -270,7 +273,7 @@ def homeScreen():
         appSelected, firstHomeLaunch = "Settings", False ## App Variables
         HomeWindow['settingsPanel'].update(visible=True)
         HomeWindow['musicSearchPanel'].update(visible=False)
-        popupMessage("Welcome to Music Tools!", "Discover main apps on the left bar. Blue buttons with question marks offer help. Find additional tools in the drawer by clicking the nine-square icon.", "help") ## Help Popup
+        popupMessage("Welcome to Music Tools!", "Explore the pinned apps on the left sidebar. Look for blue buttons marked with question marks for assistance. Access more tools in the drawer by clicking the nine-square icon.", "help") ## Help Popup
     for app in apps: HomeWindow[app.replace(" ", "_") + "_AppSelector"].Widget.config(cursor="hand2") ## App Side Panel hover icons
     ## Reading Home Window
     while True:
@@ -309,24 +312,21 @@ def homeScreen():
 ## Settings (Buttons/Events)
         elif appSelected == "Settings":
             if event == 'settingsPanel_saveButton':
-                try:
-                    musicSub = values['settingsPanel_musicServiceCombo']
-                    with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data = json.load(file)
-                    data['musicService'] = musicSub
-                    with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'w') as file: json.dump(data, file)
-                except: popupMessage("Settings", "Settings were unable to be saved.", "error")
+                musicSub = values['settingsPanel_musicServiceCombo']
+                savingSettings("musicSub", values['settingsPanel_musicServiceCombo'])
             elif event == 'settingsPanel_cleanCacheButton':
-                try:
+                if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software cache?", "confirmation"):
                     try:
-                        for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks"):
-                            os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks", item))
-                        os.rmdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks")
-                    except: pass
-                    for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search"):
-                        os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search", item))
-                    HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB")
-                    popupMessage("Settings", "Cache was successfully cleaned.", "success")
-                except: popupMessage("Settings", "Cache couldn't be cleaned.", "error")
+                        try:
+                            for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks"):
+                                os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks", item))
+                            os.rmdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search\\Artworks")
+                        except: pass
+                        for item in os.listdir(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search"):
+                            os.remove(os.path.join(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\Music Search", item))
+                        HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB")
+                        popupMessage("Settings", "Cache has been successfully cleaned.", "success")
+                    except: popupMessage("Settings", "Unable to clean the cache.", "error")
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
             if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
@@ -336,11 +336,11 @@ def homeScreen():
             elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
 ## Music Downloader (Buttons/Events)
         elif appSelected == "Music_Downloader":
-            try: pickle.load(open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\contract.p", "rb")) ## Shows Terms of Service Popup
-            except:
-                popupMessage("Terms of Service", "Songs downloaded from Music Downloader can't be used in a public setting.\t\tUsing songs on the radio or anywhere public would be violating YouTube's Terms of Service and FCC laws.", "announcement")
-                pickle.dump(True, open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\contract.p", "wb"))
-            if event == 'musicDownloaderPanel_helpButton': popupMessage("Helper", "Enter a YouTube link, click 'Download'. Then a new window will appear, correct the song title if needed and search. When found, click 'Open' to add metadata to your download.", "help") ## Help Popup
+            if not musicSearchContract:
+                popupMessage("Terms of Service", "Songs downloaded from Music Downloader cannot be used in public settings. Using songs on the radio or in any public context would violate YouTube's Terms of Service and FCC regulations.", "announcement")
+                musicSearchContract = True
+                savingSettings("musicSearchContract", True)
+            if event == 'musicDownloaderPanel_helpButton': popupMessage("Helper", "To download a song, enter a YouTube link and click 'Download'. Next, a new window will appear, correct the song title if needed and search. Once found, click 'Open' to add metadata to your download.", "help") ## Help Popup
             elif event == 'musicDownloaderPanel_pasteClipboardButton': ## Paste Clipboard in YouTube Link Input
                 try:
                     win32clipboard.OpenClipboard()
@@ -431,7 +431,7 @@ def homeScreen():
                 except: pass
             elif event == 'youtubeDownloaderPanel_changeNameClearInput': HomeWindow.Element('youtubeDownloaderPanel_changeNameInput').Update("") ## Clear File Name Input
             elif event == 'youtubeDownloaderPanel_downloadButton' and ("youtube.com" in values['youtubeDownloaderPanel_youtubeUrlInput'].lower() or "youtu.be" in values['youtubeDownloaderPanel_youtubeUrlInput'].lower()): ## Download YouTube Button
-                if youtubeAudioDownload == False and youtubeVideoDownload == False: popupMessage("YouTube Downloader", "You must select audio or video download.", "error", 5000)
+                if youtubeAudioDownload == False and youtubeVideoDownload == False: popupMessage("YouTube Downloader", "Please select either audio or video download.", "error", 5000)
                 else:
                     if youtubeDownloadName: youtubeDownloadName = values['youtubeDownloaderPanel_changeNameInput']
                     loadingScreen("YouTube_Downloader", values['youtubeDownloaderPanel_youtubeUrlInput'], values['youtubeDownloaderPanel_downloadLocationInput'].replace("/", "\\"), youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName)
@@ -469,8 +469,8 @@ def homeScreen():
                             saveProfanityEngine(profanityEngineDefinitions)
                             lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
                             musicSearchPrintSongLyrics("lyricsCheck")
-                            popupMessage("Profanity Engine", '"' + wordToAdd + '" was successfully added to Profanity Engine.', "saved", 3000) ## Show Success Message
-                        except: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to Profanity Engine.', "error", 3000) ## Show Error Message
+                            popupMessage("Profanity Engine", '"' + wordToAdd + '"  has been successfully added to the Profanity Engine.', "saved", 3000) ## Show Success Message
+                        except: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
                     elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
                         try:
                             wordToRemove = re.sub(r'[\'"\.,!?;:]', '', (lyricsLine.Widget.selection_get()).strip().lower())
@@ -479,9 +479,9 @@ def homeScreen():
                                 saveProfanityEngine(profanityEngineDefinitions)
                                 lyrics, lyricsListFinal = "userInputed", values['lyricsCheckerPanel_lyricsInput'].splitlines()
                                 musicSearchPrintSongLyrics("lyricsCheck")
-                                popupMessage("Profanity Engine", '"' + wordToRemove + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
-                            except: popupMessage("Profanity Engine", '"' + wordToRemove + '" was not in Profanity Engine.', "fail", 3000) ## Show Fail Message
-                        except: popupMessage("Profanity Engine", 'Failed to remove "' + wordToRemove + '" from Profanity Engine.', "error", 3000) ## Show Error Message
+                                popupMessage("Profanity Engine", '"' + wordToRemove + '"  has been successfully added to the Profanity Engine.', "saved", 3000) ## Show Success Message
+                            except: popupMessage("Profanity Engine", '"' + wordToRemove + '" is not in the Profanity Engine.', "fail", 3000) ## Show Fail Message
+                        except: popupMessage("Profanity Engine", 'Failed to add "' + wordToRemove + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
                 except: pass
 ## Profanity Engine Editor (Buttons/Events)
         elif appSelected == "Profanity_Engine":
@@ -514,11 +514,12 @@ def homeScreen():
                 try:
                     with open(str(pathlib.Path.home() / "Downloads") + "\\ExportedProfanityEngine" + str((datetime.datetime.now()).strftime("%d-%m-%Y-%H-%M-%S")) + ".txt", 'w') as file:
                         for item in profanityEngineDefinitions: file.write(item + '\n')
-                    popupMessage("Profanity Engine", "Exported your Profanity Engine definitions to your downloads folder.", "success", 3000) ## Show Error Message
-                except: popupMessage("Profanity Engine", "Failed to export Profanity Engine definitions", "error", 3000) ## Show Error Message
+                    popupMessage("Profanity Engine", "Your Profanity Engine definitions have been successfully exported to your downloads folder.", "success", 3000) ## Show Error Message
+                except: popupMessage("Profanity Engine", "Failed to export Profanity Engine definitions.", "error", 3000) ## Show Error Message
             elif event == 'profanityEnginePanel_clearButton': ## Clear Entire List
-                profanityEngineDefinitions = []
-                saveProfanityEngine(profanityEngineDefinitions)
+                if popupMessage("Profanity Engine Confirmation", "Are you sure you want to delete the entire Profanity Engine definitions list?", "confirmation"):
+                    profanityEngineDefinitions = []
+                    saveProfanityEngine(profanityEngineDefinitions)
             elif event == 'profanityEnginePanel_saveEditButton' and values['profanityEnginePanel_wordEditorInput'].strip() not in [""]: ## Save Editor Word to List
                 profanityEngineDefinitions.append(values['profanityEnginePanel_wordEditorInput'].strip().replace("'", "~"))
                 saveProfanityEngine(profanityEngineDefinitions)
@@ -545,6 +546,13 @@ def saveProfanityEngine(profanityEngineDefinitions):
         with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Profanity Engine\\userDefinitions.txt", 'w') as file:
             for item in profanityEngineDefinitions: file.write(item.replace("'", "~") + '\n')
     except: pass
+
+def savingSettings(setting, argument):
+    try:
+        with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'r') as file: data = json.load(file)
+        data[setting] = argument
+        with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Settings.json", 'w') as file: json.dump(data, file)
+    except: popupMessage("Settings", "Unable to save settings.", "error")
 
 def getDirSize(path):
     total_size = 0
@@ -587,25 +595,26 @@ def loadingScreen(functionLoader, agr1=False, arg2=False, arg3=False, arg4=False
                 loadingStatus = "Downloading Song..."
         elif loadingStatus == "Failed_YouTubeDownloader": ## YouTube Downloader Failed
             loadingPopup.close()
-            popupMessage("YouTube Downloader", "The download of the video failed.\t\t\tPlease try again a little later.", "error")
+            popupMessage("YouTube Downloader", "The video download failed.\t\t\tPlease try again later.", "error")
             break
         elif loadingStatus == "Failed_MusicDownloaderYouTube": ## Music Downloader (YouTube Download) Failed
             loadingPopup.close()
-            popupMessage("Music Downloader", "The download of the song failed.\t\t\tPlease try again a little later.", "error")
+            popupMessage("Music Downloader", "The audio download failed.\t\t\tPlease try again later.", "error")
             break
         elif "Done" in loadingStatus:
             loadingPopup.close()
-            if loadingStatus == "Done_YouTubeDownloader": popupMessage("YouTube Downloader", "Video downloaded successfully.", "success")
+            if loadingStatus == "Done_YouTubeDownloader": popupMessage("YouTube Downloader", "The video has been downloadeded successfully.", "success")
             elif loadingStatus == "Done_MusicDownloader":
                 metadataBurnLocation, metadataBurnLyrics, metadataMultipleArtistsValue, metadataNameChangeValue = audioSavedPath, arg3, arg4, arg5
                 geniusMusicSearchList(youtubeTitle, "downloader")
-                popupMessage("Music Downloader", "Song downloaded successfully.", "success")
+                popupMessage("Music Downloader", "The song has been downloadeded successfully.", "success")
             break
 
 def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTimer=0):
     wrapper = textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')
     popupMessageText = '\n'.join(wrapper.wrap(popupMessageText))
-    if "New Update Available" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("Yes", font=('Any 12'), button_color=('white','green'), key='messagePopupExitButton'), sg.Button("Remind Next Week", font=('Any 12'), button_color=('White','Orange'), key='messagePopupRemindButton'), sg.Button("No", font=('Any 12'), button_color=('White','Red'), key='messagePopupCancelButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
+    if "New Update Available" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#2B475D', key='messagePopupExitButton', tooltip="Install Update Now"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\nextWeek.png', border_width=0, button_color='#2B475D', key='messagePopupRemindButton', tooltip="Install Update Next Week"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#2B475D', key='messagePopupCancelButton', tooltip="Don't Install Update")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
+    elif "Confirmation" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#2B475D', key='messagePopupExitButton', tooltip="Accept"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#2B475D', key='messagePopupCancelButton', tooltip="Cancel")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     else: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("OK", font=('Any 12'), button_color=('white','#5A6E80'), key='messagePopupExitButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     messagePopup.hide()
     try: messagePopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - messagePopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - messagePopup.size[1] // 2)
@@ -847,15 +856,15 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             return
         elif "Genius_Page_Down:" in loadingAction: ## Genius's Service is Down (Special Error)
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", loadingAction.split("Genius_Page_Down:",1)[1] + "\t\t\t\t\tPlease try again a little later.", "error")
+            popupMessage("Music Search Error", loadingAction.split("Genius_Page_Down:",1)[1] + "\t\t\t\t\tPlease try again later.", "error")
             return
         elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", "Genius is down.\t\t\t\t\tPlease try again a little later.", "error")
+            popupMessage("Music Search Error", "Genius is currently unavailable.\t\t\t\t\tPlease try again later.", "error")
             return
         elif loadingAction == "Genius_Robot_Check": ## Genius is Checking Robot
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", "Genius thinks you're a robot.\t\t\t\t\tPlease disable your VPN.", "error")
+            popupMessage("Music Search Error", "Genius suspects automated activity.\t\t\t\t\tPlease disable your VPN.", "error")
             return
         elif loadingAction == "Artist_Search": ## Start Artist Search
             loadingPopup.close()
@@ -951,8 +960,8 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
                         profanityEngineDefinitions.append(wordToAdd.replace("'", "~"))
                         saveProfanityEngine(profanityEngineDefinitions)
                         musicSearchPrintSongLyrics() ## Reload Music Search's Lyrics
-                        popupMessage("Profanity Engine", '"' + wordToAdd + '" was successfully added to Profanity Engine.', "saved", 3000) ## Show Success Message
-                    except: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to Profanity Engine.', "error", 3000) ## Show Error Message
+                        popupMessage("Profanity Engine", '"' + wordToAdd + '"  has been successfully added to the Profanity Engine.', "saved", 3000) ## Show Success Message
+                    except: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
                 elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
                     try:
                         wordToRemove = re.sub(r'[\'"\.,!?;:]', '', (lyricsLine.Widget.selection_get()).strip().lower())
@@ -960,9 +969,9 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
                             profanityEngineDefinitions.remove(wordToRemove.replace("'", "~"))
                             saveProfanityEngine(profanityEngineDefinitions)
                             musicSearchPrintSongLyrics() ## Reload Music Search's Lyrics
-                            popupMessage("Profanity Engine", '"' + wordToRemove + '" was successfully removed from Profanity Engine.', "saved", 3000) ## Show Success Message
-                        except: popupMessage("Profanity Engine", '"' + wordToRemove + '" was not in Profanity Engine.', "fail", 3000) ## Show Fail Message
-                    except: popupMessage("Profanity Engine", 'Failed to remove "' + wordToRemove + '" from Profanity Engine.', "error", 3000) ## Show Error Message
+                            popupMessage("Profanity Engine", '"' + wordToRemove + '"  has been successfully added to the Profanity Engine.', "saved", 3000) ## Show Success Message
+                        except: popupMessage("Profanity Engine", '"' + wordToRemove + '" is not in the Profanity Engine.', "fail", 3000) ## Show Fail Message
+                    except: popupMessage("Profanity Engine", 'Failed to add "' + wordToRemove + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
             except: pass
         elif event == 'musicSearchResultsMenu' or (event == '_PageUp'): ## Move Song to List Results
             MusicSearchSongWindow.close()
@@ -1062,7 +1071,7 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
         if burnLyricsOnly:
             audiofile.tag.comments.set(u"Metadata: Oszust Industries") ## Comment
             audiofile.tag.save() ## Save File
-            popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
+            popupMessage("Metadata Burner", "Metadata has been successfully saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
             return
         audiofile.tag.artist = extendedSongInfo[1] ## Artist
         if multipleArtists: audiofile.tag.album_artist = "Various Artists" ## Album's Artists (Various Artists)
@@ -1085,8 +1094,8 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
             except:
                 try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + renameFile.strip() + ".mp3") ## Rename MP3 to Song Name Fix
                 except: pass
-        if displayMessage: popupMessage("Metadata Burner", "Metadata has been saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
-    if False: popupMessage("Metadata Burner", "The burner failed.", "error")
+        if displayMessage: popupMessage("Metadata Burner", "Metadata has been successfully saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
+    if False: popupMessage("Metadata Burner", "Failed to burn metadata.", "error")
 
 def loadGeniusMusicList(userInput):
     from PIL import Image
@@ -1194,15 +1203,15 @@ def geniusMusicSearchList(userInput, searchType="search"):
             return
         elif "Genius_Page_Down:" in loadingAction: ## Genius's Service is Down (Special Error)
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", loadingAction.split("Genius_Page_Down:",1)[1] + "\t\t\t\t\tPlease try again a little later.", "error")
+            popupMessage("Music Search Error", loadingAction.split("Genius_Page_Down:",1)[1] + "\t\t\t\t\tPlease try again later.", "error")
             return
         elif loadingAction == "Genius_Page_Down": ## Genius's Service is Down
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", "Genius is down.\t\t\t\t\tPlease try again a little later.", "error")
+            popupMessage("Music Search Error", "Genius is currently unavailable.\t\t\t\t\tPlease try again later.", "error")
             return
         elif loadingAction == "Genius_Robot_Check": ## Genius is Checking Robot
             loadingPopup.close() ## Close Loading Popup
-            popupMessage("Music Search Error", "Genius thinks you're a robot.\t\t\t\t\tPlease disable your VPN.", "error")
+            popupMessage("Music Search Error", "Genius suspects automated activity.\t\t\t\t\tPlease disable your VPN.", "error")
             return
         elif loadingAction == "Only_One_Result": ## Only One Result Found, Open It
             loadingPopup.close()
