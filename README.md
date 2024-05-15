@@ -13,11 +13,11 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 ## Preview:
 
-![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
-![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
-![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
-![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
-![Screenshot of the home page of Oszust OS Music Tools](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the home page of Oszust OS Music Tools.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
+![Screenshot of the Music Downloader app.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Downloader.png)
+![Screenshot of "Party in the USA" search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Search.png)
+![Screenshot of "1985" list search in Music Search.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20List%20Search.png)
+![Screenshot of the apps page.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Music%20Tool%20apps.png)
 
 ## Requirements:
 
