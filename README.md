@@ -13,7 +13,7 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 ## Preview:
 
-PICTURES COMING SOON
+![Screenshot of a comment on a GitHub issue showing an image, added in the Markdown, of an Octocat smiling and raising a tentacle.](https://github.com/Oszust-Industries/Oszust-OS-Music-Tools/blob/main/Screenshots/Home.png)
 
 ## Requirements:
 
