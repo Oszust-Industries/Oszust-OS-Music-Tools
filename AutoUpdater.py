@@ -1,4 +1,4 @@
-## Oszust OS AutoUpdater - v4.0.0 (5.01.24) - Oszust Industries
+## Oszust OS AutoUpdater - v4.0.1 (5.15.24) - Oszust Industries
 import json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
@@ -89,7 +89,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             except:
                 loadingStatus = "Error-Unable to delete current files. You will have to remove them yourself."
                 return
-            os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "2.exe")
+            os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + "2.exe")
             try: copyFilesFolders((tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_")), current)
             except:
                 loadingStatus = "Error-Unable to copy update files. You will have to copy them yourself."
@@ -108,6 +108,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
 
 def copyFilesFolders(source_dir, dest_dir):
     for item in os.listdir(source_dir):
+        print(item)
         source_item = os.path.join(source_dir, item)
         dest_item = os.path.join(dest_dir, item)
         if os.path.isfile(source_item):
