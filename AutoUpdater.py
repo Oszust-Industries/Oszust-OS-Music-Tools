@@ -1,18 +1,15 @@
-## Oszust OS AutoUpdater - v4.0.1 (5.15.24) - Oszust Industries
-import json, os, pathlib, pickle, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
+## Oszust OS AutoUpdater - v4.1.0 (5.15.24) - Oszust Industries
+import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
 def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
     if systemBuild.lower() in ["dev", "main"]: return ## STOPS THE UPDATER
-    if os.name not in ["nt"]: return "Update Failed: (Not supported platform)" ## Platform isn't Windows
     ## Setup Thread and Return to Main App
     global loadingStatus, loadingStep
     loadingPopup, loadingStatus, loadingStep = sg.Window("", [[sg.Text("Installing " + systemName, font='Any 16', background_color='#1b2838', key='updaterTitleText')], [sg.Text(newestVersion, font='Any 16', background_color='#1b2838', key='updaterVersionText')], [sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='updaterGIFImage')], [sg.Text("Starting Updater...", font='Any 16', background_color='#1b2838', key='updaterText')], [sg.Text("Step 0 of 7", font='Any 14', background_color='#1b2838', key='updaterStepText')], [sg.Button("Ok", font='Any 16', visible=False, key='doneButton')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True), "Starting Updater...", 0
-    loadingPopup["updaterGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=10) ## Load Loading GIF
     while True:
         event, values = loadingPopup.read(timeout=10)
-        try: loadingPopup["updaterGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
-        except: pass
+        loadingPopup["updaterGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
         loadingPopup["updaterText"].update(loadingStatus)
         loadingPopup["updaterStepText"].update("Step " + str(loadingStep) + " of 7")
         if event == sg.WIN_CLOSED: exit()
@@ -97,10 +94,6 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
         ## Clean Update
             loadingStatus, loadingStep = "Cleaning Update...", 6
             shutil.rmtree(tempDownloadFolder + "\\temp")
-            try: ## Changelog File
-                releaseInfo = json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode())
-                pickle.dump(str(releaseInfo[:1][0]['body']), open(str(pathlib.Path(__file__).resolve().parent) + "\\data\\" + releaseInfo[:1][0]['tag_name'] + "_changelog.p", "wb"))
-            except: pass
         loadingStatus, loadingStep = "Done", 7 ## Update done or not needed
     except Exception as Argument:
         loadingStatus = "Error-" + str(Argument)
@@ -121,7 +114,11 @@ def copyFilesFolders(source_dir, dest_dir):
                 except: pass
 
 def createBatFile(systemName):
+    try: os.remove(current + '\\commands.bat') ## Remove Old .bat File
+    except: pass
     commands = [
+        'timeout 1',
+        'taskkill /f /im ' + systemName.replace(" ", "_") + '.exe"',
         'timeout 1',
         'del "' + current +'\\' + systemName.replace(" ", "_") + '.exe"',
         'cd "' + current + '"',

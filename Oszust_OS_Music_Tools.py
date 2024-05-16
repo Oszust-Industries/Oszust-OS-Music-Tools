@@ -30,12 +30,12 @@ def softwareSetup():
     print("Loading...\nLaunching Interface...")
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hide Console
     pathlib.Path(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache").mkdir(parents=True, exist_ok=True) ## Create Cache Folder
-    #if systemBuild != "dev": ## Redirect Output to Log File
-    #    try: os.remove(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\outputLog.txt")
-    #    except: pass
-    #    output = open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\outputLog.txt", "wt")
-    #    sys.stdout = output
-    #    sys.stderr = output
+    if systemBuild != "dev": ## Redirect Output to Log File
+        try: os.remove(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\outputLog.txt")
+        except: pass
+        output = open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\outputLog.txt", "wt")
+        sys.stdout = output
+        sys.stderr = output
     softwareConfig() ## Get User's Configs
     ## Check WIFI
     checkInternetstatusThread, firstHomeLaunch = threading.Thread(name="checkInternetstatus", target=checkInternetstatus), True
@@ -157,7 +157,8 @@ def checkAutoUpdater(command):
                     except: pass
                     if command == "check": pass
                     else: homeScreen()
-            else: AutoUpdater.main(systemName, systemBuild, softwareVersion, newestVersion)
+            else:
+                AutoUpdater.main(systemName, systemBuild, softwareVersion, newestVersion)
         else: ## On Newest Version
             try: ## Cache the Next Date
                 with open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\AutoUpdaterDate.txt", "w") as AutoUpdaterDateFile: ## Create Cache File
@@ -283,6 +284,7 @@ def homeScreen():
             HomeWindow.close()
             thisSystem = psutil.Process(os.getpid()) ## Close Program
             thisSystem.terminate()
+            break
 ## Home Screen Bottom Text
         elif event == 'versionTextHomeBottom' and wifiStatus: ## Home Screen: Version Text
             webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases", new=2, autoraise=True)
@@ -534,6 +536,8 @@ def homeScreen():
                 with open(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Default data\\profanityEngineDefaults.json", 'r') as file: data = json.load(file)
                 profanityEngineDefinitions.extend(data['categories'][event.replace("profanityEnginePanel_", "").replace("PredefinedWords", "")])
                 saveProfanityEngine(profanityEngineDefinitions)
+
+## Software Tools
 
 def saveProfanityEngine(profanityEngineDefinitions):
     HomeWindow.Element('profanityEnginePanel_searchInput').Update("") ## Clear Search
