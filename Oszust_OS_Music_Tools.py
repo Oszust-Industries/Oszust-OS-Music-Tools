@@ -14,6 +14,7 @@ def softwareConfig():
     global userSettingsData
     try: ## Try opening exisiting setting file
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'r') as file: userSettingsData = json.load(file)
+        if userSettingsData["firstSoftwareUse"] != None: pass
     except: ## Create new file and assign default values
         userSettingsData = { ## Default Data
             "firstSoftwareUse": True, ## First use of Music Tools
@@ -43,6 +44,7 @@ def softwareSetup():
     try:
         billboardCache, index, topSongsList = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Billboard.txt"), "r")).read().split("\n"), 1, []
         if datetime.datetime.strptime(billboardCache[0], '%Y-%m-%d') + datetime.timedelta(days=7) >= datetime.datetime.now(): ## Check if cache is >= week
+            if billboardCache[2] == "NEW": loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
             while index < len(billboardCache):
                 if index + 1 < len(billboardCache):
                     topSongsList.append([billboardCache[index].strip(), billboardCache[index + 1].strip()])
