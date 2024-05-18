@@ -40,7 +40,7 @@ def crashMessage(message, systemName):
     ## Mouse Icon Changes
     for key in ['Report', 'Quit']: errorWindow[key].Widget.config(cursor="hand2") ## Hover icons
     while True:
-        event, values = errorWindow.read()
+        event, values = errorWindow.read(timeout=10)
         if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'): return
         elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
         elif event in RightClickMenu[1]: ## Right Click Menu Actions
@@ -59,7 +59,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
         loadingStatus = "Error-No Internet."
         return
     try: ## Start Main Update System
-        current, loadingStatus, loadingStep, tempDownloadFolder = str(os.path.dirname(pathlib.Path(__file__).resolve().parent)), "Checking Newest Version...", 2, os.getenv('APPDATA') + "\\Oszust Industries"
+        current, loadingStatus, loadingStep, tempDownloadFolder = str(os.path.dirname(pathlib.Path(__file__).resolve().parent)), "Checking Newest Version...", 2, os.path.join(os.getenv('APPDATA'), "Oszust Industries")
         try: newestVersion = ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest")).json())['tag_name'] ## Get Newest Release Tag
         except:
             loadingStatus = "Error-Bad API call was made to GitHub's releases." ## Bad API Call
@@ -68,10 +68,10 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
         ## Create Temp Folder for Update in Appdata
             loadingStatus, loadingStep = "Creating Temp Folder...", 3    
             if os.path.exists(tempDownloadFolder) == False: os.mkdir(tempDownloadFolder)
-            if os.path.exists(tempDownloadFolder + "\\temp") == False: os.mkdir(tempDownloadFolder + "\\temp")
+            if os.path.exists(os.path.join(tempDownloadFolder, "temp")) == False: os.mkdir(os.path.join(tempDownloadFolder, "temp"))
             else:
-                shutil.rmtree(tempDownloadFolder + "\\temp")
-                os.mkdir(tempDownloadFolder + "\\temp")
+                shutil.rmtree(os.path.join(tempDownloadFolder, "temp"))
+                os.mkdir(os.path.join(tempDownloadFolder, "temp"))
         ## Download Update
             loadingStatus, loadingStep = "Downloading Update...", 4
             urllib.request.urlretrieve("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/archive/refs/heads/" + systemBuild + ".zip", (tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "_") + ".zip"))
@@ -80,9 +80,9 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
         ## Update Required Files
             loadingStatus, loadingStep = "Installing Update...", 5 
             try:
-                os.remove(current + "\\_internal\\AutoUpdater.py")
-                os.remove(current + "\\_internal\\" + systemName.replace(" ", "_") + ".py")
-                shutil.rmtree(current + "\\_internal\\data")
+                os.remove(os.path.join(current, "_internal", "AutoUpdater.py"))
+                os.remove(os.path.join(current, "_internal", systemName.replace(" ", "_") + ".py"))
+                shutil.rmtree(os.path.join(current, "_internal", "data"))
             except:
                 loadingStatus = "Error-Unable to delete current files. You will have to remove them yourself."
                 return
@@ -93,7 +93,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
                 return
         ## Clean Update
             loadingStatus, loadingStep = "Cleaning Update...", 6
-            shutil.rmtree(tempDownloadFolder + "\\temp")
+            shutil.rmtree(os.path.join(tempDownloadFolder, "temp"))
         loadingStatus, loadingStep = "Done", 7 ## Update done or not needed
     except Exception as Argument:
         loadingStatus = "Error-" + str(Argument)
