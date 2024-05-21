@@ -1,8 +1,26 @@
 # Oszust OS Music Tools | [Oszust Industries](https://github.com/Oszust-Industries)
 
-Music Tools is an all-in-one solution for music enthusiasts who want to search, download, and manage their music easily. The app includes a powerful search system, allowing you to search for your favorite songs quickly, get song info and lyrics, and use a powerful profanity engine to ensure your music is free from unwanted language.
+Music Tools is an all-in-one solution for music enthusiasts who want to search, download, and manage their music easily. The app suite includes several powerful tools designed to enhance your music experience.
 
-In addition, Music Tools features a convenient YouTube downloader, so you can easily save your favorite music videos and listen to them offline. The software also lets you download songs with all the metadata, making it easy to keep your music library organized.
+### Music Search
+Music Search allows you to search for your favorite songs quickly. It provides detailed song information and lyrics, making finding and learning more about the music you love easy.
+
+### Music Downloader
+With Music Downloader, you can easily download your favorite songs. It ensures that all downloaded tracks come with complete metadata, helping you keep your music library organized.
+
+### YouTube Downloader
+YouTube Downloader enables you to download audio and video files from YouTube. You can save these files for offline listening, ensuring you always have access to your favorite content.
+
+### Metadata Burner
+Metadata Burner allows you to add and edit metadata for your music files. This ensures that all your music is properly tagged and organized.
+
+### CD Burner
+CD Burner helps you burn your favorite tracks onto CDs. This is perfect for creating physical copies of your music for playing on CD players.
+
+### Lyrics Checker
+Lyrics Checker scans your lyrics for explicit language. It helps you ensure your music is free from unwanted language, providing a cleaner listening experience.
+
+<br /> 
 
 Release Date: April 23, 2024
 
