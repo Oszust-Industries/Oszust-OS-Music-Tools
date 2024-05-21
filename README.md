@@ -15,12 +15,12 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 
 <div style="display: flex; justify-content: center; align-items: flex-start;">
   <div style="flex: 1; text-align: center;">
-    <img src="/Screenshots/Home2.png" alt="Home image" width="400" style="vertical-align: top;">
+    <img src="/Screenshots/Home.png" alt="Home image" width="400" style="vertical-align: top;">
     <img src="/Screenshots/Music%20Tools.png" alt="Music Tools app image" width="400" style="vertical-align: top;">
   </div>
   <div style="flex: 1; text-align: center;">
-    <img src="/Screenshots/Music%20Downloader2.png" alt="Music Downloader image" width="400" style="vertical-align: top;">
-    <img src="/Screenshots/YouTube%20Downloader2.png" alt="YouTube Downloader image" width="400" style="vertical-align: top;">
+    <img src="/Screenshots/Music%20Downloader.png" alt="Music Downloader image" width="400" style="vertical-align: top;">
+    <img src="/Screenshots/YouTube%20Downloader.png" alt="YouTube Downloader image" width="400" style="vertical-align: top;">
   </div>
   <div style="flex: 1; text-align: center;">
     <img src="/Screenshots/Music%20Search.png" alt="Music Search image" width="400" height="750" style="vertical-align: top;">
