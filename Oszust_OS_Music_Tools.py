@@ -292,13 +292,13 @@ def homeScreen():
     except: billboardList = "hot 100"
     try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
     except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
-    applist, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader"]
+    applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
             toolPanelApps, pinnedApps = toolLayoutData["toolPanelApps"].copy(), toolLayoutData["pinnedApps"].copy()
     except:
-        toolLayoutData = {"toolPanelApps": ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "CD Burner", "Lyrics Checker", "Profanity Engine", "Settings"], "pinnedApps": ["Music Search", "Music Downloader", "Youtube Downloader", "CD Burner", "Music Tools", "Settings"]}
+        toolLayoutData = {"toolPanelApps": defaultToolPanelApps, "pinnedApps": defaultPinnedApps}
         toolPanelApps, pinnedApps = toolLayoutData["toolPanelApps"].copy(), toolLayoutData["pinnedApps"].copy()
     for app in []: ## Add apps not in user's save
         if app not in toolPanelApps: toolPanelApps.append(app)
@@ -447,10 +447,10 @@ def homeScreen():
                     pinnedApps.remove(selected_app[0])
                     HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
             elif event == 'desktopMoverPanel_allResetButton': ## Reset Normal
-                toolPanelApps = ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "CD Burner", "Lyrics Checker", "Profanity Engine", "Settings"]
+                toolPanelApps = defaultToolPanelApps
                 HomeWindow['desktopMoverPanel_allListbox'].update(values=toolPanelApps)
             elif event == 'desktopMoverPanel_pinnedResetButton': ## Reset Pinned
-                pinnedApps = ["Music Search", "Music Downloader", "Youtube Downloader", "CD Burner", "Music Tools", "Settings"]
+                pinnedApps = defaultPinnedApps
                 HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
             elif event == 'desktopMoverPanel_allUpButton': ## Normal Up
                 selected_app = values['desktopMoverPanel_allListbox']
@@ -502,6 +502,8 @@ def homeScreen():
                 ## Set Variables as Settings
                 billboardList = userSettingsData["billboardList"]
                 defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
+                HomeWindow['musicDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
+                HomeWindow['youtubeDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
             elif event == 'settingsPanel_cleanCacheButton':
                 if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software cache?", "confirmation"):
                     try:
