@@ -1,5 +1,5 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 5-21-24
+## Created on: 1-02-23 - Last update: 5-27-24
 softwareVersion = "v1.3.0"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
@@ -20,11 +20,13 @@ def softwareConfig():
             "firstSoftwareUse": True, ## First use of Music Tools
             "musicSearchContract": False, ## Has the user accepted the Music Downloader contract
             "musicService": "Apple Music", ## User's preferred music service
+            "billboardList": "hot 100", ## User's preferred music service
+            "defaultDownloadLocation": str(pathlib.Path.home() / "Downloads"), ## User's preferred music service
         }
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'w') as file: json.dump(userSettingsData, file)
 
 def softwareSetup():
-    global topSongsList
+    global appSelected, topSongsList, wifiStatus
     ## Setup Commands
     print("Loading...\nLaunching Interface...")
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hides the console
@@ -38,6 +40,7 @@ def softwareSetup():
     ## Get User's Configs
     softwareConfig() 
     ## Check WIFI
+    wifiStatus = True
     checkInternetstatusThread = threading.Thread(name="checkInternetstatus", target=checkInternetstatus)
     checkInternetstatusThread.start()
     ## Billboard Top 100 Hits from Cache
@@ -55,6 +58,7 @@ def softwareSetup():
     ## Retrieve Profanity Engine Definitions
     loadProfanityEngineDefinitions(False)
     ## AutoUpdater
+    appSelected = None
     checkAutoUpdater("setup")
 
 def crashMessage(message):
@@ -83,16 +87,19 @@ def checkInternetstatus():
     global wifiStatus
     while True:
         try:
-            wifiStatus = True
             urllib.request.urlopen("http://google.com", timeout=3)
+            wifiStatus = True
         except: wifiStatus = False
         time.sleep(10)
 
-def downloadTop100Songs():
+def downloadBillboardSongs():
     global loadingStatus, topSongsList
+    ## Set Local Variables
+    try: billboardList = userSettingsData["billboardList"]
+    except: billboardList = "hot 100"
     try:
         import billboard
-        chart, topSongsList = billboard.ChartData('hot-100', fetch=True, max_retries=3, timeout=25), []
+        chart, topSongsList = billboard.ChartData(billboardList.replace(" ", "-").lower(), fetch=True, max_retries=3, timeout=25), []
         for position, song in enumerate(chart):
             try:
                 if song.weeks == 1: topSongsList.append([f"{position + 1}. {song.title} - {song.artist}", "NEW"])
@@ -181,6 +188,10 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## Set Local Variables
     try: musicSub = userSettingsData["musicService"]
     except: musicSub = "Apple Music"
+    try: billboardList = userSettingsData["billboardList"]
+    except: billboardList = "hot 100"
+    try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
+    except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
     toolsPanel, toolPanelAppLocation, toolsPanelRow = [[]], 0, []
     for toolsPanelRowNumber in range(math.ceil(len(toolPanelApps)/6)):
         try:
@@ -195,11 +206,11 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## Music Search Panel [Default]
     return [[sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', justification='c', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Text("Search:", font='Any 16', background_color='#2B475D'), sg.Input(do_not_clear=True, size=(45,1), font='Any 11', enable_events=True, key='musicSearchPanel_songSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_normalSongSearchButton', tooltip="Search Music"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\listSearch.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_listSongSearchButton', tooltip="Music Search - All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clearInput.png', border_width=0, button_color='#2B475D', key='musicSearchPanel_clearSongSearchInputButton', tooltip="Clear Search")],
-    [sg.Frame("The Billboard Hot 100", topSongsListBoxed, relief='flat', background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=True, key='musicSearchPanel'),
+    [sg.Frame("The Billboard: " + billboardList, topSongsListBoxed, relief='flat', background_color='#2B475D', key='topSongsListFrame'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=True, key='musicSearchPanel'),
     ## Music Downloader Panel
      sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\help.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_helpButton'), sg.Push(background_color='#2B475D'), sg.Text("Music Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("", size=(5, 1), background_color='#2B475D')],
     [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='musicDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clipboard.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openYoutube.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
-    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='musicDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='musicDownloaderPanel_fileBrowseButton')],
+    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(defaultDownloadLocation, do_not_clear=True, size=(50,1), enable_events=True, key='musicDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='musicDownloaderPanel_fileBrowseButton')],
     [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\reset.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_resetSettings', tooltip="Reset Settings")],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\true.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_burnLyricsCheckbox'), sg.Text("Burn lyrics to the audio file", font='Any 14', background_color='#2B475D')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\false.png', border_width=0, button_color='#2B475D', key='musicDownloaderPanel_compilationCheckbox'), sg.Text("Song's album is a compilation by various artists", font='Any 14', background_color='#2B475D')],
@@ -208,7 +219,7 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## YouTube Downloader Panel
      sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("YouTube Downloader:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Text("YouTube Link:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(48,1), enable_events=True, key='youtubeDownloaderPanel_youtubeUrlInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clipboard.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_pasteClipboardButton', tooltip="Paste Link"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openYoutube.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_openYoutubeButton', tooltip="Open YouTube")],
-    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(str(pathlib.Path.home() / "Downloads"), do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='youtubeDownloaderPanel_fileBrowseButton')],
+    [sg.Text("Download Location:", font='Any 13', background_color='#2B475D'), sg.Input(defaultDownloadLocation, do_not_clear=True, size=(50,1), enable_events=True, key='youtubeDownloaderPanel_downloadLocationInput'), sg.FolderBrowse(key='youtubeDownloaderPanel_fileBrowseButton')],
     [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Downloader Settings:", font='Any 15', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\reset.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_resetSettings', tooltip="Reset Settings")],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\false.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_audioDownloadCheckbox'), sg.Text("Download audio file (.MP3) of the YouTube Video", font='Any 14', background_color='#2B475D')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\true.png', border_width=0, button_color='#2B475D', key='youtubeDownloaderPanel_videoDownloadCheckbox'), sg.Text("Download video file (.MP4) of the YouTube Video", font='Any 14', background_color='#2B475D')],
@@ -216,14 +227,14 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     [sg.HorizontalSeparator()], [sg.Text("", font='Any 4', background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Button("Download", button_color=("White", "Blue"), font='Any 15', size=(10, 1), key='youtubeDownloaderPanel_downloadButton'), sg.Push(background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='youtubeDownloaderPanel'),
     ## Metadata Burner Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Metadata Burner:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Song Location:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(50,1), enable_events=True, key='metadataBurnerPanel_songLocationInput'), sg.FileBrowse(key='metadataBurnerPanel_songLocationBrowser'), sg.Push(background_color='#2B475D')],
+    [sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Song Location:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(50,1), enable_events=True, key='metadataBurnerPanel_songLocationInput'), sg.FileBrowse(file_types=(("Music Files", "*.mp3;*.wav;"), ("All Files", "*.*")), key='metadataBurnerPanel_songLocationBrowser'), sg.Push(background_color='#2B475D')],
     [sg.HorizontalSeparator()], [sg.Text("Song Name:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(61,1), enable_events=True, key='metadataBurnerPanel_songNameInput')],
     [sg.Text("Artist:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(68,1), enable_events=True, key='metadataBurnerPanel_songArtistInput')],
     [sg.Text("Album:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(67,1), enable_events=True, key='metadataBurnerPanel_songAlbumInput')],
     [sg.Text("Year:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(16,1), enable_events=True, key='metadataBurnerPanel_songYearInput'), sg.Push(background_color='#2B475D'), sg.Text("Genre:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(20,1), enable_events=True, key='metadataBurnerPanel_songGenreInput')],
-    [sg.Push(background_color='#2B475D'), sg.Text("Track Number:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(12,1), enable_events=True, key='metadataBurnerPanel_albumCurrentLengthInput'), sg.Text("/", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(12,1), enable_events=True, key='metadataBurnerPanel_albumTotalLengthInput'), sg.Push(background_color='#2B475D')],
+    [sg.Push(background_color='#2B475D'), sg.Text("Track Number:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(6,1), enable_events=True, key='metadataBurnerPanel_albumCurrentLengthInput'), sg.Text("/", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(6,1), enable_events=True, key='metadataBurnerPanel_albumTotalLengthInput'), sg.Push(background_color='#2B475D'), sg.Text("CD Number:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(6,1), enable_events=True, key='metadataBurnerPanel_cdCurrentLengthInput'), sg.Text("/", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(6,1), enable_events=True, key='metadataBurnerPanel_cdTotalLengthInput'), sg.Push(background_color='#2B475D')],
     [sg.Text("Publisher:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(64,1), enable_events=True, key='metadataBurnerPanel_songPublisherInput')],
-    [sg.Text("Album Artwork:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(50,1), enable_events=True, key='metadataBurnerPanel_songArtworkInput'), sg.FileBrowse(key='metadataBurnerPanel_songArtworkBrowser')],
+    [sg.Text("Album Artwork:", font='Any 13', background_color='#2B475D'), sg.Input("", do_not_clear=True, size=(50,1), enable_events=True, key='metadataBurnerPanel_songArtworkInput'), sg.FileBrowse(file_types = (("Image Files", "*.png;*.jpg"), ("All Files", "*.*")), key='metadataBurnerPanel_songArtworkBrowser')],
     [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Options:", font='Any 13', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\false.png', border_width=0, button_color='#2B475D', key='metadataBurnerPanel_onlyLyricsCheckbox'), sg.Text("Burn only lyrics", font='Any 14', background_color='#2B475D')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\false.png', border_width=0, button_color='#2B475D', key='metadataBurnerPanel_multipleArtistsCheckbox'), sg.Text("Album includes multiple artists?", font='Any 14', background_color='#2B475D')],
@@ -233,7 +244,7 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
      ## CD Burner Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("CD Burner:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
     [sg.Listbox(values=[], size=(80, 12), key='cdburnerPanel_songsListbox', enable_events=True)],
-    [sg.Input("", do_not_clear=True, size=(55,1), enable_events=True, key='cdburnerPanel_songInput'), sg.FileBrowse(key='cdburnerPanel_fileBrowseButton'),
+    [sg.Input("", do_not_clear=True, size=(55,1), enable_events=True, key='cdburnerPanel_songInput'), sg.FileBrowse(file_types=(("Music Files", "*.mp3;*.wav;"), ("All Files", "*.*")), key='cdburnerPanel_fileBrowseButton'),
      sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\newItem.png', border_width=0, button_color='#2B475D', key="cdburnerPanel_addSongButton", tooltip="Add Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\trash.png', border_width=0, button_color='#2B475D', key="cdburnerPanel_removeSongButton", tooltip="Remove Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clearCD.png', border_width=0, button_color='#2B475D', key="cdburnerPanel_clearSongsButton", tooltip="Clear CD List")],
     [sg.HorizontalSeparator()], [sg.Push(background_color='#2B475D'), sg.Text("Space: (0.0 / 650) MB", font='Any 13', background_color='#2B475D', key='cdburnerPanel_cdSizeText'), sg.Push(background_color='#2B475D')],
     [sg.Push(background_color='#2B475D'), sg.Button("Burn CD", button_color=("White", "Blue"), font='Any 15', size=(8, 1), key='cdburnerPanel_burnButton'), sg.Push(background_color='#2B475D')]
@@ -258,7 +269,7 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ], vertical_alignment='center', background_color='#2B475D')]], relief='flat', title_location='nw', background_color='#2B475D'), ]], pad=((0, 0), (0, 0)), background_color='#2B475D', visible=False, key='desktopMoverPanel'),
     ## Settings Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Settings:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Frame("User Preferences", [[sg.Push(background_color='#2B475D'), sg.Text("Music Service:", background_color='#2B475D'), sg.Combo(('Apple Music', 'Spotify'), readonly=True, default_value=musicSub, key='settingsPanel_musicServiceCombo'), sg.Push(background_color='#2B475D')]], size=(580, 60), background_color='#2B475D')],
+    [sg.Frame("User Preferences", [[sg.Push(background_color='#2B475D'), sg.Text("Music Service:", background_color='#2B475D'), sg.Combo(('Apple Music', 'Spotify'), readonly=True, default_value=musicSub, key='settingsPanel_musicServiceCombo'), sg.Text("Billboard List:", background_color='#2B475D'), sg.Combo(("Hot 100", "Billboard 200", "Global", "Streaming Songs", "Radio Songs", "Adult Contemporary", "Digital Song Sales", "Pop Songs", "Country Songs", "Rock Songs", "Rap Songs", "Latin Songs", "Christian Songs", "Gospel Songs", "Jazz Songs", "Soundtracks"), readonly=True, default_value=billboardList, key='settingsPanel_billboardListCombo'), sg.Push(background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Text("Default Download Location:", background_color='#2B475D'), sg.Input(defaultDownloadLocation, do_not_clear=True, size=(30,1), enable_events=True, key='settingsPanel_defaultDownloadLocationInput'), sg.FolderBrowse(key='settingsPanel_defaultDownloadLocationBrowser'), sg.Push(background_color='#2B475D')]], size=(580, 80), background_color='#2B475D')],
     [sg.Frame("Cache Management", [[sg.Push(background_color='#2B475D'), sg.Text(str(round(getDirSize(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\") / (1024 * 1024), 2)) + " MB", background_color='#2B475D', key='settingsPanel_cacheStorageText'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clean.png', border_width=0, button_color='#2B475D', key='settingsPanel_cleanCacheButton', tooltip="Clean Cache Storage"), sg.Push(background_color='#2B475D')]], size=(580, 60), background_color='#2B475D')],
     [sg.Push(background_color='#2B475D'), sg.Button("Save Settings", button_color='#2B475D', key='settingsPanel_saveButton'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='settingsPanel'),
@@ -277,20 +288,27 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
 
 def homeScreen():
     global appSelected, HomeWindow, homeWindowLocationX, homeWindowLocationY, musicSearchResultData, profanityEngineDefinitions
-    applist = [[]]
+    try: billboardList = userSettingsData["billboardList"]
+    except: billboardList = "hot 100"
+    try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
+    except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
+    applist, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader"]
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
-            toolPanelApps, pinnedApps = toolLayoutData["allTools"], toolLayoutData["pinnedTools"]
+            toolPanelApps, pinnedApps = toolLayoutData["toolPanelApps"].copy(), toolLayoutData["pinnedApps"].copy()
     except:
-        toolPanelApps = ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "CD Burner", "Lyrics Checker", "Profanity Engine", "Settings"]
-        pinnedApps = ["Music Search", "Music Downloader", "Youtube Downloader", "CD Burner", "Music Tools", "Settings"]
+        toolLayoutData = {"toolPanelApps": ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "CD Burner", "Lyrics Checker", "Profanity Engine", "Settings"], "pinnedApps": ["Music Search", "Music Downloader", "Youtube Downloader", "CD Burner", "Music Tools", "Settings"]}
+        toolPanelApps, pinnedApps = toolLayoutData["toolPanelApps"].copy(), toolLayoutData["pinnedApps"].copy()
     for app in []: ## Add apps not in user's save
         if app not in toolPanelApps: toolPanelApps.append(app)
-    if wifiStatus == False: ## Remove apps that need internet
-        for app in ["Music Search", "Music Downloader", "Youtube Downloader"]: toolPanelApps.remove(app)
-    if wifiStatus == False: ## Remove pinned apps that need internet
-        for app in ["Music Search", "Music Downloader", "Youtube Downloader"]: pinnedApps.remove(app)
+    if wifiStatus: 
+        for app in onlineApps:
+            if app not in toolPanelApps: toolPanelApps.append(app)
+    else:
+        for app in onlineApps: ## Remove apps that need internet
+            if app in toolPanelApps: toolPanelApps.remove(app)
+            if app in pinnedApps: pinnedApps.remove(app)
     for app in pinnedApps: applist += [[sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent) + "\\data\\App icons\\" + app.lower().replace(" ", "") + ".png", button_color='#657076', border_width=0, key=app.replace(" ", "_") + '_AppSelector', tooltip='Open ' + app)]], pad=((5,5), (5, 5)), background_color='#657076')]] ## Add Apps to Side Panel
     ## Home Window
     layout = [[sg.Column(applist, size=(72,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True), sg.Column(homeScreenAppPanels(toolPanelApps, pinnedApps), size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D', scrollable=False, vertical_scroll_only=True)]]
@@ -298,13 +316,14 @@ def homeScreen():
     else: layout += [[sg.Column([[sg.Text(f"{platform.system()} | {softwareVersion} | {systemBuild} | Offline", enable_events=True, font='Any 13', background_color='#5A6E80', key='versionTextHomeBottom'), sg.Push(background_color='#5A6E80'), sg.Text("Oszust Industries", enable_events=True, font='Any 13', background_color='#5A6E80', key='creditsTextHomeBottom')], [sg.Column([[]], size=(710, 1), pad=(0,0))]], size=(710, 30), pad=(0,0), background_color='#5A6E80')]]
     windowSize = ((int((-4*(ctypes.windll.shcore.GetScaleFactorForDevice(0))+1060) * (ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100)), int((-4*(ctypes.windll.shcore.GetScaleFactorForDevice(0))+800) * (ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100))))
     HomeWindow = sg.Window('Oszust OS Music Tools', layout, size=windowSize, background_color='#657076', margins=(0,0), finalize=True, resizable=False, text_justification='r')
+    HomeWindow.hide()
     HomeWindow.TKroot.minsize(710, 440)
     ## Music Search: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     HomeWindow['musicSearchPanel_billboardTopSongsList'].bind('<Return>', '_Enter')  ## Enter on Top 100 list
     HomeWindow['musicSearchPanel_songSearchInput'].bind('<Return>', '_Enter')        ## Enter on Song Search
     for key in ['normalSongSearchButton', 'listSongSearchButton', 'clearSongSearchInputButton', 'billboardTopSongsList']: HomeWindow['musicSearchPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Settings: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
-    for key in ['saveButton']: HomeWindow['settingsPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    for key in ['musicServiceCombo', 'billboardListCombo', 'defaultDownloadLocationBrowser', 'saveButton']: HomeWindow['settingsPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Music Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     musicBurnLyrics, musicCompilationAlbum, musicDownloadName = True, False, False ## App Variables
     for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'burnLyricsCheckbox', 'compilationCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['musicDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
@@ -329,17 +348,33 @@ def homeScreen():
     ## Main Window: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     savedWifiStatus = wifiStatus
     HomeWindow['versionTextHomeBottom'].Widget.config(cursor="hand2") ## Hover icons
-    if wifiStatus:
-        appSelected = "Music_Search" ## App Variables
-        HomeWindow['creditsTextHomeBottom'].Widget.config(cursor="hand2") ## Hover icons
-    else:
-        appSelected = "Music_Tools" ## App Variables
-        HomeWindow['musicToolsPanel'].update(visible=True)
+    if appSelected != None:
         HomeWindow['musicSearchPanel'].update(visible=False)
+        HomeWindow['creditsTextHomeBottom'].Widget.config(cursor="hand2") ## Hover icons
+        if (appSelected.replace("_", " ") not in onlineApps or wifiStatus):
+            for app in toolPanelApps:
+                if app.replace(" ", "_") == appSelected: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=True)
+                else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
+            if appSelected == "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=True) ## Show Music Tools Window
+            elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window
+            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache")) / (1024 * 1024), 2)) + " MB")
+        else:
+            for app in toolPanelApps: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
+            appSelected = "Music_Tools" ## App Variables
+            HomeWindow['musicToolsPanel'].update(visible=True)
+    else:
+        if wifiStatus:
+            appSelected = "Music_Search" ## App Variables
+            HomeWindow['creditsTextHomeBottom'].Widget.config(cursor="hand2") ## Hover icons
+        else:
+            appSelected = "Music_Tools" ## App Variables
+            HomeWindow['musicToolsPanel'].update(visible=True)
+            HomeWindow['musicSearchPanel'].update(visible=False)
     if userSettingsData["firstSoftwareUse"]:
         popupMessage("Welcome to Music Tools!", "Explore the pinned apps on the left sidebar. Look for blue buttons marked with question marks for assistance. Access more tools in the drawer by clicking the nine-square icon.", "help") ## First Software Launch Popup
         savingSettings("firstSoftwareUse", False)
     for app in pinnedApps: HomeWindow[app.replace(" ", "_") + "_AppSelector"].Widget.config(cursor="hand2") ## App Side Panel hover icons
+    HomeWindow.un_hide()
     ## Reading Home Window
     while True:
         event, values = HomeWindow.read(timeout=10)
@@ -351,7 +386,7 @@ def homeScreen():
             HomeWindow.close()
             thisSystem = psutil.Process(os.getpid()) ## Close Program
             thisSystem.terminate()
-            break
+            return
 ## Home Screen Bottom Text
         elif event == 'versionTextHomeBottom' and wifiStatus: ## Home Screen: Version Text
             webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases", new=2, autoraise=True)
@@ -360,20 +395,22 @@ def homeScreen():
 ## Side Panel Apps (Buttons)
         elif "_AppSelector" in event and event.replace("_AppSelector", "") != appSelected:
             if savedWifiStatus != wifiStatus: ## Change in Internet
+                appSelected = event.replace("_AppSelector", "")
                 HomeWindow.close()
                 homeScreen()
                 return
-            elif appSelected == "desktop_mover" and toolLayoutData["allTools"] != toolPanelApps and toolLayoutData["pinnedTools"] != pinnedApps: ## Save Desktop Mover Changes
+            elif appSelected == "desktop_mover" and (toolLayoutData["toolPanelApps"] != toolPanelApps or toolLayoutData["pinnedApps"] != pinnedApps): ## Save Desktop Mover Changes
+                appSelected = event.replace("_AppSelector", "")
                 with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'w') as file:
                     toolLayoutData = {}
-                    toolLayoutData["allTools"] = toolPanelApps
-                    toolLayoutData["pinnedTools"] = pinnedApps
+                    toolLayoutData["toolPanelApps"] = toolPanelApps
+                    toolLayoutData["pinnedApps"] = pinnedApps
                     json.dump(toolLayoutData, file)
                 HomeWindow.close()
                 homeScreen()
                 return
-            HomeWindow["desktopMoverPanel"].update(visible=False)
             appSelected = event.replace("_AppSelector", "")
+            HomeWindow["desktopMoverPanel"].update(visible=False)
             for app in toolPanelApps:
                 if app.replace(" ", "_") == appSelected: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=True)
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
@@ -399,23 +436,23 @@ def homeScreen():
                 HomeWindow["musicToolsPanel"].update(visible=False)
 ## Desktop Mover
         elif appSelected == "desktop_mover":
-            if event == 'desktopMoverPanel_pinButton':
+            if event == 'desktopMoverPanel_pinButton': ## Pin App
                 selected_app = values['desktopMoverPanel_allListbox']
                 if selected_app and selected_app[0] not in pinnedApps and len(pinnedApps) < 6:
                     pinnedApps.append(selected_app[0])
                     HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
-            elif event == 'desktopMoverPanel_unpinButton':
+            elif event == 'desktopMoverPanel_unpinButton': ## Unpin App
                 selected_app = values['desktopMoverPanel_pinnedListbox']
                 if selected_app and selected_app[0] != "Music Tools":
                     pinnedApps.remove(selected_app[0])
                     HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
-            elif event == 'desktopMoverPanel_allResetButton':
+            elif event == 'desktopMoverPanel_allResetButton': ## Reset Normal
                 toolPanelApps = ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "CD Burner", "Lyrics Checker", "Profanity Engine", "Settings"]
                 HomeWindow['desktopMoverPanel_allListbox'].update(values=toolPanelApps)
-            elif event == 'desktopMoverPanel_pinnedResetButton':
+            elif event == 'desktopMoverPanel_pinnedResetButton': ## Reset Pinned
                 pinnedApps = ["Music Search", "Music Downloader", "Youtube Downloader", "CD Burner", "Music Tools", "Settings"]
                 HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
-            elif event == 'desktopMoverPanel_allUpButton':
+            elif event == 'desktopMoverPanel_allUpButton': ## Normal Up
                 selected_app = values['desktopMoverPanel_allListbox']
                 for app in selected_app:
                     index = toolPanelApps.index(app)
@@ -423,7 +460,7 @@ def homeScreen():
                         toolPanelApps[index], toolPanelApps[index - 1] = toolPanelApps[index - 1], toolPanelApps[index]
                 HomeWindow['desktopMoverPanel_allListbox'].update(values=toolPanelApps)
                 HomeWindow['desktopMoverPanel_allListbox'].set_value(selected_app)
-            elif event == 'desktopMoverPanel_allDownButton':
+            elif event == 'desktopMoverPanel_allDownButton': ## Normal Down
                 selected_app = values['desktopMoverPanel_allListbox']
                 for app in reversed(selected_app):
                     index = toolPanelApps.index(app)
@@ -431,7 +468,7 @@ def homeScreen():
                         toolPanelApps[index], toolPanelApps[index + 1] = toolPanelApps[index + 1], toolPanelApps[index]
                 HomeWindow['desktopMoverPanel_allListbox'].update(values=toolPanelApps)
                 HomeWindow['desktopMoverPanel_allListbox'].set_value(selected_app)
-            elif event == 'desktopMoverPanel_pinnedUpButton':
+            elif event == 'desktopMoverPanel_pinnedUpButton': ## Pinned Up
                 selected_app = values['desktopMoverPanel_pinnedListbox']
                 for app in selected_app:
                     index = pinnedApps.index(app)
@@ -439,7 +476,7 @@ def homeScreen():
                         pinnedApps[index], pinnedApps[index - 1] = pinnedApps[index - 1], pinnedApps[index]
                 HomeWindow['desktopMoverPanel_pinnedListbox'].update(values=pinnedApps)
                 HomeWindow['desktopMoverPanel_pinnedListbox'].set_value(selected_app)
-            elif event == 'desktopMoverPanel_pinnedDownButton':
+            elif event == 'desktopMoverPanel_pinnedDownButton': ## Pinned Down
                 selected_app = values['desktopMoverPanel_pinnedListbox']
                 for app in reversed(selected_app):
                     index = pinnedApps.index(app)
@@ -451,6 +488,20 @@ def homeScreen():
         elif appSelected == "Settings":
             if event == 'settingsPanel_saveButton':
                 savingSettings("musicService", values['settingsPanel_musicServiceCombo'])
+                try:
+                    if os.access(values['settingsPanel_defaultDownloadLocationInput'], os.W_OK) and (open(os.path.join(values['settingsPanel_defaultDownloadLocationInput'], 'test_write.tmp'), 'w').close() or os.remove(os.path.join(values['settingsPanel_defaultDownloadLocationInput'], 'test_write.tmp')) or True): savingSettings("defaultDownloadLocation", values['settingsPanel_defaultDownloadLocationInput'])
+                except: popupMessage("Settings", "The Default Download Location must be a valid folder with write permissions.", "error")
+                if values['settingsPanel_billboardListCombo'] != billboardList:
+                    savingSettings("billboardList", values['settingsPanel_billboardListCombo'])
+                    try: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Billboard.txt"))
+                    except: pass
+                    HomeWindow.close()
+                    loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
+                    homeScreen()
+                    return
+                ## Set Variables as Settings
+                billboardList = userSettingsData["billboardList"]
+                defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
             elif event == 'settingsPanel_cleanCacheButton':
                 if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software cache?", "confirmation"):
                     try:
@@ -640,7 +691,7 @@ def homeScreen():
                 profanityEngineDefinitions = sorted(profanityEngineDefinitions)
                 saveProfanityEngine(profanityEngineDefinitions)
             elif event == 'profanityEnginePanel_importButton': ## Import New List from Downloads
-                profanityEngineDefinitions, fileBrowserWindow = [], sg.Window("File Location Selector", [[sg.Text("Select a file location:")], [sg.Input(key="fileLocation"), sg.FileBrowse()], [sg.Push(), sg.Button("OK"), sg.Push()]], no_titlebar=True, keep_on_top=True, finalize=True)
+                profanityEngineDefinitions, fileBrowserWindow = [], sg.Window("File Location Selector", [[sg.Text("Select a file location:")], [sg.Input(key="fileLocation"), sg.FileBrowse(file_types=(("Text Files", "*.txt"), ("All Files", "*.*")))], [sg.Push(), sg.Button("OK"), sg.Push()]], no_titlebar=True, keep_on_top=True, finalize=True)
                 while True:
                     event, values = fileBrowserWindow.read(timeout=10)
                     try: fileBrowserWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - fileBrowserWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - fileBrowserWindow.size[1] // 2)
@@ -655,9 +706,9 @@ def homeScreen():
                     saveProfanityEngine(profanityEngineDefinitions)
             elif event == 'profanityEnginePanel_exportButton': ## Export List to Downloads
                 try:
-                    with open(str(pathlib.Path.home() / "Downloads") + "\\ExportedProfanityEngine" + str((datetime.datetime.now()).strftime("%d-%m-%Y-%H-%M-%S")) + ".txt", 'w') as file:
+                    with open(str(defaultDownloadLocation) + "\\ExportedProfanityEngine" + str((datetime.datetime.now()).strftime("%d-%m-%Y-%H-%M-%S")) + ".txt", 'w') as file:
                         for item in profanityEngineDefinitions: file.write(item + '\n')
-                    popupMessage("Profanity Engine", "Your Profanity Engine definitions have been successfully exported to your downloads folder.", "success", 3000) ## Show Error Message
+                    popupMessage("Profanity Engine", "Your Profanity Engine definitions have been successfully exported to your default folder.", "success", 3000) ## Show Error Message
                 except: popupMessage("Profanity Engine", "Failed to export Profanity Engine definitions.", "error", 3000) ## Show Error Message
             elif event == 'profanityEnginePanel_clearButton': ## Clear Entire List
                 if popupMessage("Profanity Engine Confirmation", "Are you sure you want to delete the entire Profanity Engine definitions list?", "confirmation"):
@@ -712,6 +763,8 @@ def homeScreen():
                         HomeWindow.Element('metadataBurnerPanel_songGenreInput').Update((re.search(r'\)([^)]*)$', str(audiofile.tag.genre)).group(1).strip()))
                         HomeWindow.Element('metadataBurnerPanel_albumCurrentLengthInput').Update(audiofile.tag.track_num[0])
                         HomeWindow.Element('metadataBurnerPanel_albumTotalLengthInput').Update(audiofile.tag.track_num[1])
+                        HomeWindow.Element('metadataBurnerPanel_cdCurrentLengthInput').Update(audiofile.tag.disc_num[0])
+                        HomeWindow.Element('metadataBurnerPanel_cdTotalLengthInput').Update(audiofile.tag.disc_num[1])
                         HomeWindow.Element('metadataBurnerPanel_songPublisherInput').Update(audiofile.tag.publisher)
                         HomeWindow.Element('metadataBurnerPanel_lyricsInput').update("")
                         for lyric in audiofile.tag.lyrics: HomeWindow.Element('metadataBurnerPanel_lyricsInput').print(str(lyric.text) + "\n")
@@ -719,7 +772,7 @@ def homeScreen():
             elif event == 'metadataBurnerPanel_burnButton':
                 if os.path.isfile(os.path.join(values['metadataBurnerPanel_songLocationInput'].replace("/", "\\"))) == False: popupMessage("Metadata Burner", "The specified song (.mp3) file location is invalid.", "error") ## Invalid Song File Popup
                 elif values['metadataBurnerPanel_songArtworkInput'] != "" and os.path.isfile(os.path.join(values['metadataBurnerPanel_songArtworkInput'].replace("/", "\\"))) == False: popupMessage("Metadata Burner", "The specified album artwork file location is invalid.", "error") ## Invalid Artwork File Popup
-                elif values['metadataBurnerPanel_albumCurrentLengthInput'].isdigit() == False or values['metadataBurnerPanel_albumCurrentLengthInput'].isdigit()  == False: popupMessage("Metadata Burner", "The specified album location and length must be numbers.", "error") ## Invalid Number Input Popup
+                elif not (values['metadataBurnerPanel_albumCurrentLengthInput'].isdigit() or values['metadataBurnerPanel_albumCurrentLengthInput'] == "") or not (values['metadataBurnerPanel_albumTotalLengthInput'].isdigit() or values['metadataBurnerPanel_albumTotalLengthInput'] == "") or not (values['metadataBurnerPanel_cdCurrentLengthInput'].isdigit() or values['metadataBurnerPanel_cdCurrentLengthInput'] == "") or not (values['metadataBurnerPanel_cdTotalLengthInput'].isdigit() or values['metadataBurnerPanel_cdTotalLengthInput'] == ""): popupMessage("Metadata Burner", "The specified album location, album length, CD location, and CD length must be numbers.", "error") ## Invalid Number Input Popup
                 else:
                     if True:
                         if values['metadataBurnerPanel_songArtworkInput'] != "" and "defaultMusicArtwork.png" not in values['metadataBurnerPanel_songArtworkInput']:
@@ -728,7 +781,7 @@ def homeScreen():
                             musicSearchResultData, png_data = {}, png_bio.getvalue()
                         else: musicSearchResultData, png_data = {}, str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
                         musicSearchResultData.update({"geniusMusicSearchArtists": values['metadataBurnerPanel_songArtistInput'], "geniusMusicSearchPrimeArtist": values['metadataBurnerPanel_songArtistInput'], "geniusMusicSearchDate": values['metadataBurnerPanel_songYearInput'],
-                        "geniusMusicSearchSongNameInfo": values['metadataBurnerPanel_songNameInput'], "geniusMusicSearchSongName": values['metadataBurnerPanel_songNameInput'], "png_data": png_data, "geniusMusicSearchAlbum": values['metadataBurnerPanel_songAlbumInput'], "geniusMusicSearchAlbumCurrent": values['metadataBurnerPanel_albumCurrentLengthInput'], "geniusMusicSearchAlbumLength": values['metadataBurnerPanel_albumTotalLengthInput'], 
+                        "geniusMusicSearchSongNameInfo": values['metadataBurnerPanel_songNameInput'], "geniusMusicSearchSongName": values['metadataBurnerPanel_songNameInput'], "png_data": png_data, "geniusMusicSearchAlbum": values['metadataBurnerPanel_songAlbumInput'], "geniusMusicSearchAlbumCurrent": values['metadataBurnerPanel_albumCurrentLengthInput'], "geniusMusicSearchAlbumLength": values['metadataBurnerPanel_albumTotalLengthInput'], "geniusMusicSearchCDCurrent": values['metadataBurnerPanel_cdCurrentLengthInput'], "geniusMusicSearchCDLength": values['metadataBurnerPanel_cdTotalLengthInput'], 
                         "geniusMusicSearchGenre": values['metadataBurnerPanel_songGenreInput'], "geniusMusicSearchLabels": values['metadataBurnerPanel_songPublisherInput'].split(", "), "lyrics": "UserInputted", "lyricsListFinal": values['metadataBurnerPanel_lyricsInput'].split("/n"), "extendedSongInfo": [values['metadataBurnerPanel_songNameInput'], values['metadataBurnerPanel_songArtistInput'], values['metadataBurnerPanel_songAlbumInput']]})
                         if metadataBurnerRenameFile: metadataBurnerRenameFile = values['metadataBurnerPanel_songNameInput']
                         else: metadataBurnerRenameFile = (values['metadataBurnerPanel_songLocationInput'].rsplit('/', 1)[-1]).replace(".mp3", "")
@@ -764,7 +817,7 @@ def homeScreen():
                 HomeWindow.Element('cdburnerPanel_songsListbox').Update("")
                 HomeWindow.Element('cdburnerPanel_cdSizeText').Update("Space: (0.0 / 650) MB")
             elif event == 'cdburnerPanel_burnButton': ## Burn CD
-                if len(values['cdburnerPanel_songsListbox']) > 0: print("COMING SOON")
+                if len(cdBurningList) > 0: popupMessage("CD Burner", "CD Burner is still being developed.", "error")
                 else: popupMessage("CD Burner", "There must be at least one song to start the burn process.", "error", 5000)
             
 ## Software Tools
@@ -812,8 +865,8 @@ def loadingScreen(functionLoader, homeHasLaunched, agr1=False, arg2=False, arg3=
             thisSystem.terminate()
         elif loadingStatus == "Start":
             if functionLoader == "Billboard_List_Download":
-                downloadTop100SongsThread = threading.Thread(name="downloadTop100Songs", target=downloadTop100Songs, args=())
-                downloadTop100SongsThread.start()
+                downloadBillboardSongsThread = threading.Thread(name="downloadBillboardSongs", target=downloadBillboardSongs, args=())
+                downloadBillboardSongsThread.start()
                 loadingStatus = "Downloading Billboard Hot 100 Songs..."  
             elif functionLoader == "YouTube_Downloader":
                 youtubeDownloaderThread = threading.Thread(name="downloadYouTube", target=downloadYouTube, args=(agr1, arg2, arg3, arg4, arg5,))
@@ -837,6 +890,8 @@ def loadingScreen(functionLoader, homeHasLaunched, agr1=False, arg2=False, arg3=
             elif loadingStatus == "Done_MusicDownloader":
                 metadataInfo["metadataBurnLocation"], metadataInfo["metadataBurnLyrics"], metadataInfo["metadataMultipleArtistsValue"], metadataInfo["metadataNameChangeValue"] = audioSavedPath, arg3, arg4, arg5
                 geniusMusicSearchList(youtubeTitle, "downloader")
+                try: HomeWindow.Element('musicSearchPanel_songSearchInput').Update("")
+                except: pass
                 popupMessage("Music Downloader", "The song has been downloadeded successfully.", "success")
             break
 
@@ -1080,6 +1135,8 @@ def loadGeniusMusic(userInput, forceResult):
             musicSearchResultData["lyrics"] = lyrics
             musicSearchResultData["lyricsListFinal"] = lyricsListFinal
             musicSearchResultData["png_data"] = png_data
+            musicSearchResultData["geniusMusicSearchCDCurrent"] = 1
+            musicSearchResultData["geniusMusicSearchCDLength"] = 1
             if "/songs/" in userInput or musicSearchResultData["geniusMusicSearchArtists"].lower() not in ["spotify", "genius"]: goodResult = True ## Good Result Found
             elif resultCount < hitsFound: resultCount += 1 ## Move to Next Result
             else: 
@@ -1240,6 +1297,8 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             break
         elif event == 'downloadMetadataMp3Button' or (event == '_PageDown'):
             appSelected = "Metadata_Burner"
+            try: HomeWindow.Element('musicSearchPanel_songSearchInput').Update("")
+            except: pass
             HomeWindow['metadataBurnerPanel'].update(visible=True)
             HomeWindow['musicSearchPanel'].update(visible=False)
             if musicSearchResultData["geniusMusicSearchSongNameInfo"] != None: HomeWindow.Element('metadataBurnerPanel_songNameInput').Update(musicSearchResultData["geniusMusicSearchSongNameInfo"])
@@ -1250,6 +1309,8 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             if musicSearchResultData["geniusMusicSearchGenre"] != None: HomeWindow.Element('metadataBurnerPanel_songGenreInput').Update(musicSearchResultData["geniusMusicSearchGenre"])
             if musicSearchResultData["geniusMusicSearchAlbumCurrent"] != None: HomeWindow.Element('metadataBurnerPanel_albumCurrentLengthInput').Update(musicSearchResultData["geniusMusicSearchAlbumCurrent"])
             if musicSearchResultData["geniusMusicSearchAlbumLength"] != None: HomeWindow.Element('metadataBurnerPanel_albumTotalLengthInput').Update(musicSearchResultData["geniusMusicSearchAlbumLength"])
+            if musicSearchResultData["geniusMusicSearchCDCurrent"] != None: HomeWindow.Element('metadataBurnerPanel_cdCurrentLengthInput').Update(musicSearchResultData["geniusMusicSearchCDCurrent"])
+            if musicSearchResultData["geniusMusicSearchCDLength"] != None: HomeWindow.Element('metadataBurnerPanel_cdTotalLengthInput').Update(musicSearchResultData["geniusMusicSearchCDLength"])
             if musicSearchResultData["geniusMusicSearchLabels"] != None: HomeWindow.Element('metadataBurnerPanel_songPublisherInput').Update(musicSearchResultData["geniusMusicSearchLabels"][0])
             if musicSearchResultData["png_data_location"] != None: HomeWindow.Element('metadataBurnerPanel_songArtworkInput').Update(musicSearchResultData["png_data_location"])
             HomeWindow.Element('metadataBurnerPanel_lyricsInput').update("")
@@ -1322,6 +1383,8 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
         if musicSearchResultData["geniusMusicSearchLabels"] != None and musicSearchResultData["geniusMusicSearchLabels"] != "": audiofile.tag.publisher = musicSearchResultData["geniusMusicSearchLabels"][0].replace("[", "").replace("]", "").replace("'", "") ## Label
         if musicSearchResultData["geniusMusicSearchAlbumCurrent"] != None and musicSearchResultData["geniusMusicSearchAlbumCurrent"] != "" and musicSearchResultData["geniusMusicSearchAlbumLength"] != None and musicSearchResultData["geniusMusicSearchAlbumLength"] != "": audiofile.tag.track_num = (musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbumLength"]) ## Current Song Position and Total Album
         elif musicSearchResultData["geniusMusicSearchAlbumCurrent"] != None and musicSearchResultData["geniusMusicSearchAlbumCurrent"] != "": audiofile.tag.track_num = musicSearchResultData["geniusMusicSearchAlbumCurrent"] ## Current Song Position
+        if musicSearchResultData["geniusMusicSearchCDCurrent"] != None and musicSearchResultData["geniusMusicSearchCDCurrent"] != "" and musicSearchResultData["geniusMusicSearchCDLength"] != None and musicSearchResultData["geniusMusicSearchCDLength"] != "": audiofile.tag.disc_num = (musicSearchResultData["geniusMusicSearchCDCurrent"], musicSearchResultData["geniusMusicSearchCDLength"]) ## Current CD Position and Total CD
+        elif musicSearchResultData["geniusMusicSearchCDCurrent"] != None and musicSearchResultData["geniusMusicSearchCDCurrent"] != "": audiofile.tag.disc_num = musicSearchResultData["geniusMusicSearchCDCurrent"] ## Current CD Position
         if musicSearchResultData["png_data"] != str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png": 
             for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, musicSearchResultData["png_data"], "image/png") ## Artwork - Basic
             for artworkType in [4, 3, 0]: audiofile.tag.images.set(artworkType, musicSearchResultData["png_data"], "image/jpeg", "cover") ## Artwork - Higher Quality
