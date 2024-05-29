@@ -1,13 +1,18 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 5-27-24
-softwareVersion = "v1.3.0"
+## Created on: 1-02-23 - Last update: 5-29-24
+softwareVersion = "v1.3.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
-import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
-from moviepy.editor import *
-from PIL import Image
-from pytube import YouTube
-import PySimpleGUI as sg
 import AutoUpdater
+try:
+    filesVerified = True
+    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, re, requests, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
+    from moviepy.editor import *
+    from PIL import Image
+    from pytube import YouTube
+    import PySimpleGUI as sg
+except:
+    filesVerified = False
+    print("Software files are missing. Please reinstall the software from GitHub and try again.")
 
 def softwareConfig():
     ## System Configuration
@@ -40,7 +45,7 @@ def softwareSetup():
     ## Get User's Configs
     softwareConfig() 
     ## Check WIFI
-    wifiStatus = True
+    appSelected, wifiStatus = None, True
     checkInternetstatusThread = threading.Thread(name="checkInternetstatus", target=checkInternetstatus)
     checkInternetstatusThread.start()
     ## Billboard Top 100 Hits from Cache
@@ -58,7 +63,6 @@ def softwareSetup():
     ## Retrieve Profanity Engine Definitions
     loadProfanityEngineDefinitions(False)
     ## AutoUpdater
-    appSelected = None
     checkAutoUpdater("setup")
 
 def crashMessage(message):
@@ -72,7 +76,13 @@ def crashMessage(message):
     for key in ['Report', 'Quit']: errorWindow[key].Widget.config(cursor="hand2") ## Hover icons
     while True:
         event, values = errorWindow.read(timeout=10)
-        if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'): break
+        if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'):
+            try: errorWindow.close()
+            except: pass
+            if systemBuild != "dev":
+                thisSystem = psutil.Process(os.getpid()) ## Close Program
+                thisSystem.terminate()
+            return
         elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
         elif event in RightClickMenu[1]: ## Right Click Menu Actions
             try:
@@ -250,8 +260,74 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     [sg.Push(background_color='#2B475D'), sg.Button("Burn CD", button_color=("White", "Blue"), font='Any 15', size=(8, 1), key='cdburnerPanel_burnButton'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdburnerPanel'),
     ## Music Player Panel
-    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Column([[sg.Listbox([
+    "Wish I was a stone, so I couldn't feel",
+    "You'd yell in my face, it'd be no big deal",
+    "But I'd miss the way we make up and smile",
+    "Don't want to be stone, I changed my mind",
+    "I wish I had eyes in the back of my head",
+    "Then I could see the places I've been",
+    "But then I would know that you're talkin' shit",
+    "I don't wanna know what my friends think",
+    "Wish I were my dog out on the lawn",
+    "I'd be so glad when I hear you come home",
+    "But if I were my dog, I wouldn't live long",
+    "I'm sure gonna miss her when she's gone",
+    "I wish I could act in a show on TV",
+    "'Cause then I could practice not bein' me",
+    "I'll practice my cry, put it into my reel",
+    "But you won't believe me when I cry for real",
+    "I wish that my brain would triple in size",
+    "I'd nail every joke, I'd win every fight",
+    "But I'd get too deep with that kind of mind",
+    "I don't wanna know the point of life",
+    "In some other life I would be rich",
+    "I'd travel in style, I'd cover the bill",
+    "But couldn't complain 'bout anything small",
+    "Nobody'd feel bad for me at all",
+    "If I was cocaine or a bottle of Jack",
+    "I'd get invited to every frat",
+    "But when you get old and your good days have passed",
+    "You'll only want me when you're sad",
+    "Wish I was a song, your favorite one",
+    "You'd follow the dance to me at your prom",
+    "I would be there when your baby is born",
+    "For two or three minutes, then I'm gone",
+    "I wish I was big, as big as my house",
+    "I'd sleep on the trees, I'd skip every crowd",
+    "But I wouldn't fit on my therapist's couch",
+    "God, I could really use him now",
+    "I wish I was God, I'd never trip up",
+    "And if I did, well, so fuckin' what?",
+    "I could be cruel and break all your stuff",
+    "Yeah, I'd be loved no matter what",
+    "But if I was God, it'd get kinda weird",
+    "'Cause you would only say what I wanna hear",
+    "And then you would die, you'd love me to death",
+    "I never know who the hell I am",
+    "I wish I was me, whoever that is",
+    "I could just be and not give a shit",
+    "Hey, I'll be whatever makes you a fan",
+    "'Cause I don't know who the hell I am",
+    "One, two, pandemonium",
+    "One, two, pandemonium",
+    "Here I go again",
+    "One, two, pandemonium",
+    "Here I go again",
+    "One, two, pandemonium",
+    "One, two-",
+    "Here I go again"
+], size=(48,7), font='Any 10', disabled=True, key='dsf')],
+    [sg.Text("Maybe Man", font='Any 16 bold', background_color='#2B475D', key='-CLEAR-')], [sg.Text("AJR", font='Any 12', background_color='#2B475D', key='-C2LEAR-')], [sg.Text("The Maybe Man", font='Any 12', background_color='#2B475D', key='-C2LEAR-')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='sfd'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='dsdsa')]], background_color='#2B475D', element_justification='c'),
+    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='sfd')],
+    [sg.Image("C:\\Users\\soszu\\AppData\\Roaming\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Artworks\\50d560a284130c00256c15146df0c123.png", size=(200,200))]], background_color='#2B475D', element_justification='c')],
+    [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='-CLEAR-'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='-SL-', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='-CLEAR-')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicPlayerPanel'),
+    ## Lyrics Guesser Panel
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Guesser Game:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='lyricsGuesserPanel'),
     ## Extra Apps Panel
     sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sidebar.png', border_width=0, button_color='#2B475D', key='musicToolsPanel_moveSidebarButton'), sg.Push(background_color='#2B475D'), sg.Text("All Music Tools:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("", size=(5, 1), background_color='#2B475D')],
     [sg.Column(toolsPanel, size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicToolsPanel'),
@@ -292,6 +368,7 @@ def homeScreen():
     except: billboardList = "hot 100"
     try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
     except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
+    ## "CD Burner", "Music Player", "Lyrics Guesser",
     applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
@@ -300,7 +377,7 @@ def homeScreen():
     except:
         toolLayoutData = {"toolPanelApps": defaultToolPanelApps, "pinnedApps": defaultPinnedApps}
         toolPanelApps, pinnedApps = toolLayoutData["toolPanelApps"].copy(), toolLayoutData["pinnedApps"].copy()
-    for app in []: ## Add apps not in user's save
+    for app in defaultToolPanelApps: ## Add apps not in user's save
         if app not in toolPanelApps: toolPanelApps.append(app)
     if wifiStatus: 
         for app in onlineApps:
@@ -379,8 +456,6 @@ def homeScreen():
     while True:
         event, values = HomeWindow.read(timeout=10)
         homeWindowLocationX, homeWindowLocationY = HomeWindow.CurrentLocation() ## X & Y Location of Home Window
-## Internet Status Changes
-        HomeWindow['versionTextHomeBottom'].update(f"{platform.system()} | {softwareVersion} | {systemBuild} | {'Online' if wifiStatus else 'Offline'}")
 ## Closed Window      
         if event == sg.WIN_CLOSED or event == 'Exit':
             HomeWindow.close()
@@ -522,8 +597,8 @@ def homeScreen():
             if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
             elif event == 'musicSearchPanel_listSongSearchButton' and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput']) ## Music Search All Results
             elif event == 'musicSearchPanel_clearSongSearchInputButton': HomeWindow.Element('musicSearchPanel_songSearchInput').Update("") ## Clear Music Search Input
-            elif event == 'musicSearchPanel_billboardTopSongsList' and HomeWindow['musicSearchPanel_billboardTopSongsList'].get()[values['musicSearchPanel_billboardTopSongsList'][0]][0].split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('musicSearchPanel_songSearchInput').Update(HomeWindow['musicSearchPanel_billboardTopSongsList'].get()[values['musicSearchPanel_billboardTopSongsList'][0]][0].split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
-            elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch(values['musicSearchPanel_billboardTopSongsList'][0].split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
+            elif event == 'musicSearchPanel_billboardTopSongsList' and (topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('musicSearchPanel_songSearchInput').Update((topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
+            elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch((topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
 ## Music Downloader (Buttons/Events)
         elif appSelected == "Music_Downloader":
             if not userSettingsData["musicSearchContract"]:
@@ -821,6 +896,8 @@ def homeScreen():
             elif event == 'cdburnerPanel_burnButton': ## Burn CD
                 if len(cdBurningList) > 0: popupMessage("CD Burner", "CD Burner is still being developed.", "error")
                 else: popupMessage("CD Burner", "There must be at least one song to start the burn process.", "error", 5000)
+## Internet Status Changes
+        HomeWindow['versionTextHomeBottom'].update(f"{platform.system()} | {softwareVersion} | {systemBuild} | {'Online' if wifiStatus else 'Offline'}")
             
 ## Software Tools
 
@@ -1219,8 +1296,8 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=True, finalize=True, keep_on_top=False, element_justification='c')
     MusicSearchSongWindow.TKroot.minsize(580, 710)
     MusicSearchSongWindow.hide()
-    MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchSongWindow.size[1] // 2)
-    if MusicSearchSongWindow.CurrentLocation()[1] < 200: MusicSearchSongWindow.move(MusicSearchSongWindow.CurrentLocation()[0], 100) ## Fix Over Top
+    MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2 -40, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchSongWindow.size[1] // 2)
+    if MusicSearchSongWindow.CurrentLocation()[1] < 200: MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2 -40, 100) ## Fix Over Top
     MusicSearchSongWindow.un_hide()
     ## Lyrics Right Click Menu
     if musicSearchResultData["lyrics"] != None: lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics']
@@ -1451,7 +1528,7 @@ def loadGeniusMusicList(userInput):
             if "https://assets.genius.com/images/default_cover_image.png" in geniusMusicSearchArtworkURL: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
             else:
                 try: ## Look in Cache for Artwork
-                    pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png") ## Open Artwork from Cache
+                    pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Mini Artworks" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png") ## Open Artwork from Cache
                     png_bio = io.BytesIO()
                     pil_image.save(png_bio, format="PNG")
                     png_data = png_bio.getvalue()
@@ -1462,8 +1539,8 @@ def loadGeniusMusicList(userInput):
                     png_bio = io.BytesIO()
                     pil_image.save(png_bio, format="PNG")
                     try: ## Save Artwork to Cache
-                        pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search")).mkdir(parents=True, exist_ok=True) ## Create Music Cache Folder
-                        png_data = pil_image.save(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + "-small.png")
+                        pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks")).mkdir(parents=True, exist_ok=True) ## Create Music Cache Folder
+                        png_data = pil_image.save(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Mini Artworks\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
                     except: pass
                     png_data = png_bio.getvalue()
         except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png" ## Default Artwork if Retrieval Fails
@@ -1537,7 +1614,8 @@ def geniusMusicSearchList(userInput, searchType="search"):
     MusicSearchListWindow = sg.Window("Music Search - List Results", musicListResultData["musicListLayout"], background_color='#657076', finalize=True, resizable=True, keep_on_top=False, element_justification='l')
     MusicSearchListWindow.TKroot.minsize(700, 300)
     MusicSearchListWindow.hide()
-    MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
+    MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2 -30, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
+    if MusicSearchListWindow.CurrentLocation()[1] < 200: MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2 -30, 50) ## Fix Over Top
     MusicSearchListWindow.un_hide()
     ## Window Shortcuts
     MusicSearchListWindow.bind('<Delete>', '_Delete')                               ## Close Window shortcut
@@ -1578,5 +1656,6 @@ def geniusMusicSearchList(userInput, searchType="search"):
 
 
 ## Start System
-try: softwareSetup()
-except Exception as Argument: crashMessage("Error 00: " + str(Argument))
+if filesVerified:     
+    try: softwareSetup()
+    except Exception as Argument: crashMessage("Error 00: " + str(Argument))
