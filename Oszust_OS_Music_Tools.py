@@ -575,20 +575,23 @@ def homeScreen():
                     homeScreen()
                     return
                 ## Set Variables as Settings
-                billboardList = userSettingsData["billboardList"]
-                defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
+                try: billboardList = userSettingsData["billboardList"]
+                except: billboardList = "hot 100"
+                try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
+                except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
                 HomeWindow['musicDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
                 HomeWindow['youtubeDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
             elif event == 'settingsPanel_cleanCacheButton':
                 if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software cache?", "confirmation"):
                     try:
-                        try:
+                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Artworks")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Artworks")) != []: ## Artworks
                             for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Artworks")):
                                 os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Artworks", item))
                             os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Artworks"))
-                        except: pass
-                        for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search")):
-                            os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", item))
+                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks")) != []: ## Mini Artworks
+                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks")):
+                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks", item))
+                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Music Search", "Mini Artworks"))
                         HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache")) / (1024 * 1024), 2)) + " MB")
                         popupMessage("Settings", "Cache has been successfully cleaned.", "success")
                     except: popupMessage("Settings", "Unable to clean the cache.", "error")
