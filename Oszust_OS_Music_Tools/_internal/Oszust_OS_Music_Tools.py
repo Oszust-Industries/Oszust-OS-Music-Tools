@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 5-29-24
-softwareVersion = "v1.3.1"
+## Created on: 1-02-23 - Last update: 6-02-24
+softwareVersion = "v1.3.2"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import AutoUpdater
 try:
@@ -10,9 +10,9 @@ try:
     from PIL import Image
     from pytube import YouTube
     import PySimpleGUI as sg
-except:
+except Exception as Argument:
     filesVerified = False
-    print("Software files are missing. Please reinstall the software from GitHub and try again.")
+    print(f"Software files are missing. Please reinstall the software from GitHub and try again. Missing: {Argument}")
 
 def softwareConfig():
     ## System Configuration
@@ -21,6 +21,7 @@ def softwareConfig():
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'r') as file: userSettingsData = json.load(file)
         if userSettingsData["firstSoftwareUse"] != None: pass
     except: ## Create new file and assign default values
+        print(f"[WARNING]: Failed to retrieve userSettingsData")
         userSettingsData = { ## Default Data
             "firstSoftwareUse": True, ## First use of Music Tools
             "musicSearchContract": False, ## Has the user accepted the Music Downloader contract
@@ -29,9 +30,10 @@ def softwareConfig():
             "defaultDownloadLocation": str(pathlib.Path.home() / "Downloads"), ## User's preferred music service
         }
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'w') as file: json.dump(userSettingsData, file)
+    print(f"[INFO]: userSettingsData loaded: {userSettingsData}")
 
 def softwareSetup():
-    global appSelected, topSongsList, wifiStatus
+    global appSelected, output, topSongsList, wifiStatus
     ## Setup Commands
     print("Loading...\nLaunching Interface...")
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) ## Hides the console
@@ -52,14 +54,20 @@ def softwareSetup():
     try:
         billboardCache, index, topSongsList = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Billboard.txt"), "r")).read().split("\n"), 1, []
         if datetime.datetime.strptime(billboardCache[0], '%Y-%m-%d') + datetime.timedelta(days=7) >= datetime.datetime.now(): ## Check if cache is >= week
-            if billboardCache[2][0] == "2": loadingScreen("Billboard_List_Download", False) ## Old Billboard Data
+            if billboardCache[2][1] == ".":
+                print(f"[WARNING]: Old Billboard format")
+                loadingScreen("Billboard_List_Download", False) ## Old Billboard Data
             while index < len(billboardCache):
                 if index + 1 < len(billboardCache):
                     topSongsList.append([billboardCache[index].strip(), billboardCache[index + 1].strip()])
                     index += 2
                 else: break ## Get list from cache
-        else: loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
-    except: loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
+        else:
+            print(f"[WARNING]: Outdated Billboard")
+            loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
+    except:
+        print(f"[WARNING]: Billboard file failed to load")
+        loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
     ## Retrieve Profanity Engine Definitions
     loadProfanityEngineDefinitions(False)
     ## AutoUpdater
@@ -69,6 +77,7 @@ def crashMessage(message):
     RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
     errorWindow = sg.Window(message.split(':')[0], [[sg.Text(systemName + " has crashed.", font=("Any", 13))], [sg.Multiline(message, size=(50,5), font=("Any", 13), disabled=True, autoscroll=False, right_click_menu=RightClickMenu, key='crashMessageErrorCodeText')], [sg.Button("Report Error", button_color=("White", "Blue"), key='Report'), sg.Button("Quit", button_color=("White", "Red"), key='Quit')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
     errorLine:sg.Multiline = errorWindow['crashMessageErrorCodeText']
+    print(f"[CRASH]: {message}")
     ## Window Shortcuts
     errorWindow.bind('<Insert>', '_Insert')  ## Report Error shortcut
     errorWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
@@ -78,6 +87,8 @@ def crashMessage(message):
         event, values = errorWindow.read(timeout=10)
         if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'):
             try: errorWindow.close()
+            except: pass
+            try: output.close()
             except: pass
             if systemBuild != "dev":
                 thisSystem = psutil.Process(os.getpid()) ## Close Program
@@ -112,10 +123,22 @@ def downloadBillboardSongs():
         chart, topSongsList = billboard.ChartData(billboardList.replace(" ", "-").lower(), fetch=True, max_retries=3, timeout=25), []
         for position, song in enumerate(chart):
             try:
-                if song.weeks == 1: topSongsList.append([f"{position + 1}. {song.title} - {song.artist}", "NEW"])
-                elif song.lastPos > song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
-                elif song.lastPos == song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
-                elif song.lastPos < song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
+                if billboardList == "Adult Contemporary" and position < 20:
+                    if position < 8:
+                        if song.weeks == 1: topSongsList.append([f"A{position + 1}. {song.title} - {song.artist}", "NEW"])
+                        elif song.lastPos > song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
+                        elif song.lastPos == song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
+                        elif song.lastPos < song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
+                    elif position < 20:
+                        if song.weeks == 1: topSongsList.append([f"B{position + 1}. {song.title} - {song.artist}", "NEW"])
+                        elif song.lastPos > song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
+                        elif song.lastPos == song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
+                        elif song.lastPos < song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
+                else:
+                    if song.weeks == 1: topSongsList.append([f"{position + 1}. {song.title} - {song.artist}", "NEW"])
+                    elif song.lastPos > song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
+                    elif song.lastPos == song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
+                    elif song.lastPos < song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
             except: topSongsList.append(f"{position + 1}. Result Failed to Load.", "N/A")
         try: ## Cache the List
             with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Billboard.txt"), "w") as billboardTextFile:  # Create Cache File
@@ -124,37 +147,47 @@ def downloadBillboardSongs():
                 for sublist in topSongsList:
                     for item in sublist: billboardTextFile.write("\n" + item)
         except: pass
-    except: topSongsList = [["Billboard Top 100 Failed to Load.", "N/A"]]
+    except:
+        print(f"[WARNING]: Billboard failed to load")
+        topSongsList = [["Billboard Top 100 Failed to Load.", "N/A"]]
     loadingStatus = "Done"
 
 def loadProfanityEngineDefinitions(downloadList):
     global profanityEngineDefinitions
     try:
         if downloadList:
+            print(f"[INFO]: Refreshing profanityEngineDefinitions")
             profanityEngineDefinitions = []
             try:
-                pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine")).mkdir(parents=True, exist_ok=True) ## Create Profanity Engine Cache Folder
                 ## Read default Profanity Engine Definitions
                 with open(os.path.join(pathlib.Path(__file__).resolve().parent, "data", "Default data", "profanityEngineDefaults.json"), 'r') as file: data = json.load(file)
                 for category, value in data['categories'].items(): profanityEngineDefinitions.extend(value)
                 ## Write Definitions to User save
                 try:
-                    with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine", "userDefinitions.txt"), 'w') as file:
+                    with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine User Definitions.txt"), 'w') as file:
                         for item in profanityEngineDefinitions: file.write(item + '\n')
                 except: pass
-            except: profanityEngineDefinitions = "Failed"
+            except:
+                print(f"[WARNING]: Failed to refresh profanityEngineDefinitions")
+                profanityEngineDefinitions = "Failed"
         else:
             try:
-                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine", "userDefinitions.txt"), 'r') as file: lines = file.readlines()
+                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine User Definitions.txt"), 'r') as file: lines = file.readlines()
                 profanityEngineDefinitions = [line.strip() for line in lines]
                 if len(profanityEngineDefinitions) == 0: loadProfanityEngineDefinitions(True)
-            except: loadProfanityEngineDefinitions(True)
-    except: profanityEngineDefinitions = "Failed"
+            except:
+                print(f"[WARNING]: Failed to open profanityEngineDefinitions file")
+                loadProfanityEngineDefinitions(True)
+    except:
+        print(f"[WARNING]: profanityEngineDefinitions failed to load")
+        profanityEngineDefinitions = "Failed"
 
 def checkAutoUpdater(command):
-    try: AutoUpdaterDate = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdaterDate.txt"), "r")).read().split("\n")
-    except: AutoUpdaterDate = [str(datetime.date.today() - datetime.timedelta(days=3)), "Missing File"]
-    if (datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"] and wifiStatus) or (command == "check" and wifiStatus):
+    try: AutoUpdaterDate = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdater Date.txt"), "r")).read().split("\n")
+    except:
+        print(f"[WARNING]: Missing AutoUpdaterDate file")
+        AutoUpdaterDate = [str(datetime.date.today() - datetime.timedelta(days=3)), "Missing File"]
+    if (datetime.datetime.strptime(AutoUpdaterDate[0], '%Y-%m-%d') <= datetime.datetime.now() and systemBuild.lower() not in ["dev", "main"] and wifiStatus) or (command == "check" and wifiStatus) or (len(AutoUpdaterDate) == 2 and AutoUpdaterDate[1] == "Missing File" and wifiStatus):
         try: newestVersion = ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest")).json())['tag_name']
         except: newestVersion = "Failed"
         if newestVersion != softwareVersion and newestVersion != "Failed":
@@ -163,16 +196,17 @@ def checkAutoUpdater(command):
                 if response == True:
                     try:
                         try:
-                            os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdaterDate.txt"))
+                            os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdater Date.txt"))
                             HomeWindow.close()
                         except: pass
                         pyuac.runAsAdmin()
                     except:
+                        print(f"[ERROR]: AutoUpdater couldn't get admin")
                         if command == "check": popupMessage("AutoUpdater", "Failed to launch the software with administrator privileges.", "error")
                         else: homeScreen()
                 else:
                     try: ## Cache the Next Date
-                        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdaterDate.txt"), "w") as AutoUpdaterDateFile: ## Create Cache File
+                        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdater Date.txt"), "w") as AutoUpdaterDateFile: ## Create Cache File
                             if response == "Week": AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=7)))
                             else: AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
                             AutoUpdaterDateFile.close()
@@ -182,14 +216,13 @@ def checkAutoUpdater(command):
             else:
                 AutoUpdater.main(systemName, systemBuild, softwareVersion, newestVersion)
         elif newestVersion == "Failed" and command == "check": ## GitHub Error
+            print(f"[ERROR]: AutoUpdater couldn't get newestVersion: {newestVersion}")
             popupMessage("AutoUpdater", "There was an error while trying to fetch the latest version of  " + systemName + ".", "error")
             homeScreen()
         else: ## On Newest Version
             try: ## Cache the Next Date
-                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdaterDate.txt"), "w") as AutoUpdaterDateFile: ## Create Cache File
-                    AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1)))
-                    AutoUpdaterDateFile.close()
-            except: pass
+                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "AutoUpdater Date.txt"), "w") as AutoUpdaterDateFile: AutoUpdaterDateFile.write(str(datetime.date.today() + datetime.timedelta(days=1))) ## Create Cache File
+            except: pass      
             if command == "check": popupMessage("AutoUpdater", "You are already using the latest version of " + systemName + ".", "success")
             else: homeScreen()
     else: homeScreen()
@@ -261,68 +294,16 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdburnerPanel'),
     ## Music Player Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Column([[sg.Listbox([
-    "Wish I was a stone, so I couldn't feel",
-    "You'd yell in my face, it'd be no big deal",
-    "But I'd miss the way we make up and smile",
-    "Don't want to be stone, I changed my mind",
-    "I wish I had eyes in the back of my head",
-    "Then I could see the places I've been",
-    "But then I would know that you're talkin' shit",
-    "I don't wanna know what my friends think",
-    "Wish I were my dog out on the lawn",
-    "I'd be so glad when I hear you come home",
-    "But if I were my dog, I wouldn't live long",
-    "I'm sure gonna miss her when she's gone",
-    "I wish I could act in a show on TV",
-    "'Cause then I could practice not bein' me",
-    "I'll practice my cry, put it into my reel",
-    "But you won't believe me when I cry for real",
-    "I wish that my brain would triple in size",
-    "I'd nail every joke, I'd win every fight",
-    "But I'd get too deep with that kind of mind",
-    "I don't wanna know the point of life",
-    "In some other life I would be rich",
-    "I'd travel in style, I'd cover the bill",
-    "But couldn't complain 'bout anything small",
-    "Nobody'd feel bad for me at all",
-    "If I was cocaine or a bottle of Jack",
-    "I'd get invited to every frat",
-    "But when you get old and your good days have passed",
-    "You'll only want me when you're sad",
-    "Wish I was a song, your favorite one",
-    "You'd follow the dance to me at your prom",
-    "I would be there when your baby is born",
-    "For two or three minutes, then I'm gone",
-    "I wish I was big, as big as my house",
-    "I'd sleep on the trees, I'd skip every crowd",
-    "But I wouldn't fit on my therapist's couch",
-    "God, I could really use him now",
-    "I wish I was God, I'd never trip up",
-    "And if I did, well, so fuckin' what?",
-    "I could be cruel and break all your stuff",
-    "Yeah, I'd be loved no matter what",
-    "But if I was God, it'd get kinda weird",
-    "'Cause you would only say what I wanna hear",
-    "And then you would die, you'd love me to death",
-    "I never know who the hell I am",
-    "I wish I was me, whoever that is",
-    "I could just be and not give a shit",
-    "Hey, I'll be whatever makes you a fan",
-    "'Cause I don't know who the hell I am",
-    "One, two, pandemonium",
-    "One, two, pandemonium",
-    "Here I go again",
-    "One, two, pandemonium",
-    "Here I go again",
-    "One, two, pandemonium",
-    "One, two-",
-    "Here I go again"
-], size=(48,7), font='Any 10', disabled=True, key='dsf')],
-    [sg.Text("Maybe Man", font='Any 16 bold', background_color='#2B475D', key='-CLEAR-')], [sg.Text("AJR", font='Any 12', background_color='#2B475D', key='-C2LEAR-')], [sg.Text("The Maybe Man", font='Any 12', background_color='#2B475D', key='-C2LEAR-')],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='sfd'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='dsdsa')]], background_color='#2B475D', element_justification='c'),
-    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='sfd')],
-    [sg.Image("", size=(200,200))]], background_color='#2B475D', element_justification='c')],
+    [sg.Column([[sg.Text("Maybe Man", font='Any 16 bold', background_color='#2B475D', key='-CLEAR-')], [sg.Text("AJR", font='Any 12', background_color='#2B475D', key='-C2LEAR-')], [sg.Text("The Maybe Man", font='Any 12', background_color='#2B475D', key='-C2LEAR-')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='sfd'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='dsdsa')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=True, key='musicPlayerPanel_playerPanel'),
+        
+        
+        
+    sg.Column([[sg.Text("Maybe Man - AJR", font='Any 14', background_color='#2B475D', key='-CLEAR-')], [sg.Listbox(["Wish I was a stone, so I couldn't feel", "You'd yell in my face, it'd be no big deal", "But I'd miss the way we make up and smile", "Don't want to be stone, I changed my mind", "I wish I had eyes in the back of my head", "Then I could see the places I've been", "But then I would know that you're talkin' shit", "I don't wanna know what my friends think", "Wish I were my dog out on the lawn", "I'd be so glad when I hear you come home", "But if I were my dog, I wouldn't live long", "I'm sure gonna miss her when she's gone", "I wish I could act in a show on TV", "'Cause then I could practice not bein' me", "I'll practice my cry, put it into my reel", "But you won't believe me when I cry for real", "I wish that my brain would triple in size", "I'd nail every joke, I'd win every fight", "But I'd get too deep with that kind of mind", "I don't wanna know the point of life", "In some other life I would be rich", "I'd travel in style, I'd cover the bill", "But couldn't complain 'bout anything small", "Nobody'd feel bad for me at all", "If I was cocaine or a bottle of Jack", "I'd get invited to every frat", "But when you get old and your good days have passed", "You'll only want me when you're sad", "Wish I was a song, your favorite one", "You'd follow the dance to me at your prom", "I would be there when your baby is born", "For two or three minutes, then I'm gone", "I wish I was big, as big as my house", "I'd sleep on the trees, I'd skip every crowd", "But I wouldn't fit on my therapist's couch", "God, I could really use him now", "I wish I was God, I'd never trip up", "And if I did, well, so fuckin' what?", "I could be cruel and break all your stuff", "Yeah, I'd be loved no matter what", "But if I was God, it'd get kinda weird", "'Cause you would only say what I wanna hear", "And then you would die, you'd love me to death", "I never know who the hell I am", "I wish I was me, whoever that is", "I could just be and not give a shit", "Hey, I'll be whatever makes you a fan", "'Cause I don't know who the hell I am", "One, two, pandemonium", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "One, two-", "Here I go again"]
+                                                                                                                             , size=(48,14), font='Any 10', disabled=True, key='dsf')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
+    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='sfd')],
+    #[sg.Image("C:\\Users\\soszu\\AppData\\Roaming\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Artworks\\50d560a284130c00256c15146df0c123.png", size=(200,200))]
+               ], background_color='#2B475D', element_justification='c')],
     [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='-CLEAR-'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='-SL-', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='-CLEAR-')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicPlayerPanel'),
     ## Lyrics Guesser Panel
@@ -368,7 +349,6 @@ def homeScreen():
     except: billboardList = "hot 100"
     try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
     except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
-    ## "CD Burner", "Music Player", "Lyrics Guesser",
     applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
@@ -459,6 +439,8 @@ def homeScreen():
 ## Closed Window      
         if event == sg.WIN_CLOSED or event == 'Exit':
             HomeWindow.close()
+            try: output.close()
+            except: pass
             thisSystem = psutil.Process(os.getpid()) ## Close Program
             thisSystem.terminate()
             return
@@ -581,6 +563,7 @@ def homeScreen():
                 except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
                 HomeWindow['musicDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
                 HomeWindow['youtubeDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
+                print(f"[INFO]: Settings were saved: {userSettingsData}")
             elif event == 'settingsPanel_cleanCacheButton':
                 if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software cache?", "confirmation"):
                     try:
@@ -908,7 +891,7 @@ def saveProfanityEngine(profanityEngineDefinitions):
     HomeWindow.Element('profanityEnginePanel_searchInput').Update("") ## Clear Search
     HomeWindow.Element('profanityEnginePanel_definitionsList').Update([item.replace("~", "'") for item in profanityEngineDefinitions]) ## Update List
     try: ## Save to File
-        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine", "userDefinitions.txt"), 'w') as file:
+        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "cache", "Profanity Engine User Definitions.txt"), 'w') as file:
             for item in profanityEngineDefinitions: file.write(item.replace("'", "~") + '\n')
     except: pass
 
@@ -949,7 +932,7 @@ def loadingScreen(functionLoader, homeHasLaunched, agr1=False, arg2=False, arg3=
             if functionLoader == "Billboard_List_Download":
                 downloadBillboardSongsThread = threading.Thread(name="downloadBillboardSongs", target=downloadBillboardSongs, args=())
                 downloadBillboardSongsThread.start()
-                loadingStatus = "Downloading Billboard Hot 100 Songs..."  
+                loadingStatus = "Downloading Billboard List..."  
             elif functionLoader == "YouTube_Downloader":
                 youtubeDownloaderThread = threading.Thread(name="downloadYouTube", target=downloadYouTube, args=(agr1, arg2, arg3, arg4, arg5,))
                 youtubeDownloaderThread.start()
@@ -1106,7 +1089,7 @@ def loadGeniusMusic(userInput, forceResult):
             loadingAction = "Genius_Page_Down:" + str(Argument)
             return
     try:
-        musicSearchApiBody = [result for result in (json.loads(raw)["response"]["hits"]) if "song" in result["type"] and not any(tag in result["result"]["title"].lower() for tag in ["instrumental", "radio edit", "slow", "sped", "version", "acapella", "acoustic", "log", "transcriptions"]) and not any(tag in result["result"]["artist_names"].lower() for tag in ["genius", "siriusxm"])]
+        musicSearchApiBody = [result for result in (json.loads(raw)["response"]["hits"]) if "song" in result["type"] and not any(tag in result["result"]["title"].lower() for tag in ["instrumental", "radio edit", "slow", "sped", "version", "acapella", "acoustic", "log", "transcriptions"]) and not any(tag in result["result"]["artist_names"].lower() for tag in ["genius", "siriusxm", "fortnite"])]
         if len(musicSearchApiBody) > 0: musicSearchApiBodyPath = musicSearchApiBody[0]["result"]
     except: musicSearchApiBody, musicSearchApiBodyPath = json.loads(raw)["response"]["song"], json.loads(raw)["response"]["song"]
     hitsFound = len(musicSearchApiBody)
@@ -1176,9 +1159,12 @@ def loadGeniusMusic(userInput, forceResult):
                     match = re.search(r"<div class=\"AlbumTracklist__TrackNumber-sc-123giuo-3 epTVob\">(\d+)\. </div>" + musicSearchResultData["geniusMusicSearchSongNameInfo"], song)
                     if match: musicSearchResultData["geniusMusicSearchAlbumCurrent"] = match.group(1)
                     albumList.append(song)
+                albumList = [(song.text).split(". ")[1].replace("\\u200b", "").replace("', '", "") for song in bs4.BeautifulSoup(str(albumList), 'html.parser').find_all('div', class_='AlbumTracklist__TrackName-sc-123giuo-2')]
+                musicSearchResultData["geniusMusicSearchAlbumList"] = albumList
                 musicSearchResultData["geniusMusicSearchAlbumLength"] = len(albumList)
-                if len(albumList) == 1: musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbum"] = 1, musicSearchResultData["geniusMusicSearchSongName"] + " - Single"
-            except: musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbumLength"] = None, None
+                if len(albumList) <= 1:
+                    musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbum"], musicSearchResultData["geniusMusicSearchAlbumList"] = 1, musicSearchResultData["geniusMusicSearchSongName"] + " - Single", None
+            except: musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbumLength"], musicSearchResultData["geniusMusicSearchAlbumList"] = None, None, None
             try: ## Song's Genre
                 infoList = str(html.select("div[class*=SongTags__Container]")).split('</a>') ## Song Genre Container
                 musicSearchResultData["geniusMusicSearchGenre"] = (re.sub(r'<.+?>', '', str(infoList[0]))).replace("[", "").replace("]", "").replace("&amp;", "&") ## Song Genre
@@ -1212,6 +1198,7 @@ def loadGeniusMusic(userInput, forceResult):
                         count += 1
                 except: lyrics = None ## Lyrics Failed to Load
             else: lyrics = None ## Lyrics Aren't Complete
+            if lyrics == None: lyricsListFinal = None
             # Add the collected data to the dictionary
             musicSearchResultData["hitsFound"] = hitsFound
             musicSearchResultData["lyrics"] = lyrics
@@ -1282,8 +1269,10 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     ## Song Window
     if musicSearchResultData["lyrics"] != None: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition', 'Add to Profanity Engine', 'Remove from Profanity Engine']] ## Lyrics Right Click Menu - Profanity Engine
     else: lyricsRightClickMenu = ['', ['Copy', 'Lookup Definition']] ## Lyrics Right Click Menu - No Profanity Engine
-    if musicSearchResultData["hitsFound"] > 1: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
-    else: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    if musicSearchResultData["hitsFound"] > 1 and musicSearchResultData["geniusMusicSearchAlbumList"] != None: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchAlbum.png', border_width=0, button_color='#2B475D', key='musicSearchAlbumResultsMenu', tooltip="Open Album"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    elif musicSearchResultData["hitsFound"] > 1: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMenu.png', border_width=0, button_color='#2B475D', key='musicSearchResultsMenu', tooltip="All Results"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    elif musicSearchResultData["geniusMusicSearchAlbumList"] != None: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchAlbum.png', border_width=0, button_color='#2B475D', key='musicSearchAlbumResultsMenu', tooltip="Open Album"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
+    else: layout = [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\personSearch.png', border_width=0, button_color='#2B475D', key='musicSearchArtistResultsMenu', tooltip="Search Artist"), sg.Push(background_color='#2B475D'), sg.Text("Music Search Result", font='Any 20', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchMP3Opener.png', border_width=0, button_color='#2B475D', key='downloadMetadataMp3Button', tooltip="Burn Metadata to MP3")]]
     if musicSub == "Apple Music": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchListenApple.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Apple Music")]]
     elif musicSub == "Spotify": layout += [[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchArtist.png', border_width=0, button_color='#2B475D', key='musicSearchArtistButton', tooltip="Open Artist page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2B475D', key='searchmusicSearchGenius', tooltip="Open Genius Lyrics page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchListenSpotify.png', border_width=0, button_color='#2B475D', key='musicSearchListenButton', tooltip="Play Song - Spotify")]]
     if musicSearchResultData["geniusMusicSearchAlbum"] != None and musicSearchResultData["geniusMusicSearchDate"] != None: layout += [[sg.Image(musicSearchResultData["png_data"])], [sg.Text(musicSearchResultData["geniusMusicSearchSongNameInfo"], font='Any 20 bold', background_color='#2B475D', enable_events=True, key='geniusMusicSearchSongNameInfoText', tooltip=musicSearchResultData["extendedSongInfo"][0])], [sg.Text(musicSearchResultData["geniusMusicSearchAlbum"], font='Any 18', background_color='#2B475D', enable_events=True, key='geniusMusicSearchAlbumText', tooltip=musicSearchResultData["extendedSongInfo"][2])], [sg.Text(musicSearchResultData["geniusMusicSearchArtists"], font='Any 16', background_color='#2B475D', enable_events=True, key='geniusMusicSearchArtistsText', tooltip=musicSearchResultData["extendedSongInfo"][1])], [sg.Text(musicSearchResultData["geniusMusicSearchGenre"].upper() + " " + u"\N{Dot Operator}" + " " + musicSearchResultData["geniusMusicSearchDate"], font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchGenreText')]] ## Album Name Found
@@ -1297,13 +1286,14 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     elif musicSearchResultData["geniusMusicSearchLabels"] != None and len(musicSearchResultData["geniusMusicSearchLabels"]) == 1: layout += [[sg.Text("Label: " + str(musicSearchResultData["geniusMusicSearchLabels"]).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
     layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
     MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=True, finalize=True, keep_on_top=False, element_justification='c')
-    MusicSearchSongWindow.TKroot.minsize(580, 710)
+    if musicSearchResultData["lyrics"] != None:
+        lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics'] ## Lyrics Right Click Menu
+        MusicSearchSongWindow.TKroot.minsize(580, 710)
+    else: MusicSearchSongWindow.TKroot.minsize(580, 510)
     MusicSearchSongWindow.hide()
     MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2 -40, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchSongWindow.size[1] // 2)
     if MusicSearchSongWindow.CurrentLocation()[1] < 200: MusicSearchSongWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchSongWindow.size[0] // 2 -40, 100) ## Fix Over Top
     MusicSearchSongWindow.un_hide()
-    ## Lyrics Right Click Menu
-    if musicSearchResultData["lyrics"] != None: lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics']
     ## Window Shortcuts
     MusicSearchSongWindow.bind('<PageUp>', '_PageUp')      ## List Result shortcut
     MusicSearchSongWindow.bind('<PageDown>', '_PageDown')  ## Download Metadata shortcut
@@ -1313,6 +1303,7 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     ## Mouse Icon Changes
     for key in ['downloadMetadataMp3Button', 'musicSearchArtistButton', 'musicSearchArtistResultsMenu', 'musicSearchListenButton', 'searchmusicSearchGenius']: MusicSearchSongWindow[key].Widget.config(cursor="hand2") ## Hover icons
     if musicSearchResultData["hitsFound"] > 1: MusicSearchSongWindow["musicSearchResultsMenu"].Widget.config(cursor="hand2")                                     ## List Search Results Hover icon
+    if musicSearchResultData["geniusMusicSearchAlbumList"] != None: MusicSearchSongWindow["musicSearchAlbumResultsMenu"].Widget.config(cursor="hand2")           ## Album List Hover icon
     if musicSearchResultData["geniusMusicSearchSongNameInfo"] != None: MusicSearchSongWindow["geniusMusicSearchSongNameInfoText"].Widget.config(cursor="hand2")  ## Song Name Text Hover icon
     if musicSearchResultData["geniusMusicSearchAlbum"] != None: MusicSearchSongWindow["geniusMusicSearchAlbumText"].Widget.config(cursor="hand2")                ## Song Album Text Hover icon
     if musicSearchResultData["geniusMusicSearchArtists"] != None: MusicSearchSongWindow["geniusMusicSearchArtistsText"].Widget.config(cursor="hand2")            ## Song Artist Text Hover icon
@@ -1377,6 +1368,10 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             MusicSearchSongWindow.close()
             geniusMusicSearchList(musicSearchResultData["geniusMusicSearchPrimeArtist"])
             break
+        elif event == 'musicSearchAlbumResultsMenu': ## Album List
+            MusicSearchSongWindow.close()
+            geniusMusicSearchList(musicSearchResultData["geniusMusicSearchAlbumList"], "album")
+            break
         elif event == 'downloadMetadataMp3Button' or (event == '_PageDown'):
             appSelected = "Metadata_Burner"
             try: HomeWindow.Element('musicSearchPanel_songSearchInput').Update("")
@@ -1428,7 +1423,7 @@ def musicSearchPrintSongLyrics(lyricsLocation, lyricsListFinal):
                 badLine = True
                 lastEnd = actual_end
             lyricsBox.update(lyric[lastEnd:], autoscroll=False, append=True)
-            lyricsBox.update("\n", autoscroll=False, append=True)
+            if lyric != lyricsListFinal[len(lyricsListFinal)-1]: lyricsBox.update("\n", autoscroll=False, append=True)
             if badLine: badWordCount += 1
     except: ## Profanity Engine Dictionary Failed to Load
         profanityEngineDefinitions = "Failed"
@@ -1487,27 +1482,60 @@ def loadGeniusMusicList(userInput):
     ## Set Local Variables
     try: musicSub = userSettingsData["musicService"]
     except: musicSub = "Apple Music"
-    artistSearch, musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["musicListLayout"], resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"] = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInput, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], 0, [], [], []
-    if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
-    request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(userInput.lower().replace(" by ", "-")) + "&lang=en&type=song&page=1")
-    request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
-    request.add_header("User-Agent", "curl/7.9.8 (i686-pc-linux-gnu) libcurl 7.9.8 (OpenSSL 0.9.6b) (ipv6 enabled)")
-    try: raw = (urllib.request.urlopen(request, timeout=10)).read()
-    except Exception as Argument:
-        if "Error 403" in str(Argument):
-            loadingAction = "Genius_Robot_Check"
+    if isinstance(userInput, list): userInputDisplay = musicSearchResultData["geniusMusicSearchAlbum"] + " - " + musicSearchResultData["geniusMusicSearchPrimeArtist"]
+    else: userInputDisplay = userInput
+    artistSearch, musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["musicListLayout"], resultColumns, resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"] = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], [], 0, [], [], []
+    if isinstance(userInput, list):
+        musicSearchApiBody, hitsFound = [], 0
+        for song in userInput:
+            request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(song.lower().replace(" by ", "-")).replace(" ", "-") + "-" + musicSearchResultData["geniusMusicSearchPrimeArtist"].lower().replace(" ", "-") + "&lang=en&type=song&page=1")
+            request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
+            request.add_header("User-Agent", "curl/7.9.8 (i686-pc-linux-gnu) libcurl 7.9.8 (OpenSSL 0.9.6b) (ipv6 enabled)")
+            try: raw = (urllib.request.urlopen(request, timeout=10)).read()
+            except Exception as Argument:
+                if "Error 403" in str(Argument):
+                    loadingAction = "Genius_Robot_Check"
+                    return
+                else:
+                    loadingAction = "Genius_Page_Down:" + str(Argument)
+                    return
+            ## Find Number of Hits
+            musicSearchApiBodyTemp = [result for result in (json.loads(raw)["response"]["hits"]) if "song" in result["type"] and not any(tag in result["result"]["title"].lower() for tag in ["instrumental", "radio edit", "slow", "sped", "version", "acapella", "acoustic", "log", "transcriptions"]) and not any(tag in result["result"]["artist_names"].lower() for tag in ["genius", "siriusxm", "fortnite"])]
+            try:
+                musicSearchApiBody.append(musicSearchApiBodyTemp[0])
+                hitsFound += len(musicSearchApiBody)
+            except: pass
+        if hitsFound == 0: ## Check if Result Found
+            loadingAction = "No_Result_Found"
             return
-        else:
-            loadingAction = "Genius_Page_Down:" + str(Argument)
+    else:
+        if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
+        musicSearchApiBody, hitsFound, pageNumber = [], 0, 1 
+        while pageNumber < 3:
+            request = urllib.request.Request("http://api.genius.com/search?q=" + urllib.request.quote(userInput.lower().replace(" by ", "-")) + "&lang=en&type=song&page=" + str(pageNumber))
+            request.add_header("Authorization", "Bearer " + "ThgJU2pTawXV60l2g2jQXNEYT-b3MP7KDRd51BD-kLL7K5Eg8-UzrEGY96L3Z1c4")   
+            request.add_header("User-Agent", "curl/7.9.8 (i686-pc-linux-gnu) libcurl 7.9.8 (OpenSSL 0.9.6b) (ipv6 enabled)")
+            try: raw = (urllib.request.urlopen(request, timeout=10)).read()
+            except Exception as Argument:
+                if "Error 403" in str(Argument):
+                    loadingAction = "Genius_Robot_Check"
+                    return
+                else:
+                    loadingAction = "Genius_Page_Down:" + str(Argument)
+                    return
+            ## Find Number of Hits
+            musicSearchApiBodyTemp = [result for result in (json.loads(raw)["response"]["hits"]) if "song" in result["type"] and not any(tag in result["result"]["title"].lower() for tag in ["instrumental", "radio edit", "slow", "sped", "version", "acapella", "acoustic", "log", "transcriptions"]) and not any(tag in result["result"]["artist_names"].lower() for tag in ["genius", "siriusxm", "fortnite"])]
+            try:
+                for song in musicSearchApiBodyTemp: musicSearchApiBody.append(song)
+                hitsFound += len(musicSearchApiBody)
+            except: pass
+            if len(musicSearchApiBody) > 0 and str(musicSearchApiBody[0]["result"]["primary_artist"]["name"]).lower() not in userInput.lower(): pageNumber += 1
+            elif len(musicSearchApiBody) > 0 and str(musicSearchApiBody[0]["result"]["primary_artist"]["name"]).lower() == userInput.lower(): pageNumber += 1
+            else: pageNumber = 6
+        if hitsFound == 0: ## Check if Result Found
+            loadingAction = "No_Result_Found"
             return
-    ## Find Number of Hits
-    musicSearchApiBody = [result for result in (json.loads(raw)["response"]["hits"]) if "song" in result["type"] and not any(tag in result["result"]["title"].lower() for tag in ["instrumental", "radio edit", "slow", "sped", "version", "acapella", "acoustic", "log", "transcriptions"]) and not any(tag in result["result"]["artist_names"].lower() for tag in ["genius", "siriusxm"])]
-    hitsFound = len(musicSearchApiBody)
-    if hitsFound == 0: ## Check if Result Found
-        loadingAction = "No_Result_Found"
-        return
-    if hitsFound > 8: hitsFound = 8 ## Set Max to 8 if More Than 8 Results Returned
-    while hitsFound > 0 and resultNumber < 10:
+    while hitsFound > 0 and resultNumber < len(musicSearchApiBody) and resultNumber < 20:
         geniusMusicSearchArtists = str(musicSearchApiBody[resultNumber]["result"]["artist_names"]).replace("(Rock)", "") ## Song Artists
         musicListResultData["songArtists"].append(geniusMusicSearchArtists) ## Add Artists to List 
         geniusMusicSearchPrimeArtist = str(musicSearchApiBody[resultNumber]["result"]["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
@@ -1556,12 +1584,14 @@ def loadGeniusMusicList(userInput):
         elif musicSub == "Spotify": musicServiceImage = "musicSearchListenSpotify" ## Set Listening Link to Spotify
         ## Song Window
         if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius", "siriusxm the highway"] and "genius" not in geniusMusicSearchArtists.lower():
-            if geniusMusicSearchDate != None: musicListResultData["musicListLayout"] += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12', background_color='#2b475d')]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
-            else: musicListResultData["musicListLayout"] += [[sg.Column([[sg.Image(png_data), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)]], background_color='#2b475d'), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', expand_x=True)]]
+            if geniusMusicSearchDate != None: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12', background_color='#2b475d')]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
+            else: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
             musicListResultData["resultNumbers"].append(resultNumber)
         resultNumber += 1
         hitsFound -= 1
-    musicListResultData["musicListLayout"] += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
+    if len(resultColumns) <= 8: musicListResultData["musicListLayout"] += [[sg.Column(resultColumns, scrollable=True, expand_x=True, background_color='#2b475d', vertical_scroll_only=True, size=(700, len(resultColumns)*110))]]
+    else: musicListResultData["musicListLayout"] += [[sg.Column(resultColumns, scrollable=True, expand_x=True, background_color='#2b475d', vertical_scroll_only=True, size=(700, 880))]]
+    musicListResultData["musicListLayout"] += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius (" + str(len(resultColumns)) + " Results)", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
     ## Check if Any Good Results Found
     if len(musicListResultData["resultNumbers"]) == 0: loadingAction = "No_Result_Found"
     elif len(musicListResultData["resultNumbers"]) == 1: loadingAction = "Only_One_Result"
@@ -1615,10 +1645,10 @@ def geniusMusicSearchList(userInput, searchType="search"):
             loadingPopup.close()
             break
     MusicSearchListWindow = sg.Window("Music Search - List Results", musicListResultData["musicListLayout"], background_color='#657076', finalize=True, resizable=True, keep_on_top=False, element_justification='l')
-    MusicSearchListWindow.TKroot.minsize(700, 300)
+    MusicSearchListWindow.TKroot.minsize(700, 310)
     MusicSearchListWindow.hide()
-    MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2 -30, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
-    if MusicSearchListWindow.CurrentLocation()[1] < 200: MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2 -30, 50) ## Fix Over Top
+    MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
+    if MusicSearchListWindow.CurrentLocation()[1] < 200: MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2, 50) ## Fix Over Top
     MusicSearchListWindow.un_hide()
     ## Window Shortcuts
     MusicSearchListWindow.bind('<Delete>', '_Delete')                               ## Close Window shortcut
@@ -1658,7 +1688,7 @@ def geniusMusicSearchList(userInput, searchType="search"):
             break
 
 
-## Start System
+## Start System       
 if filesVerified:     
     try: softwareSetup()
     except Exception as Argument: crashMessage("Error 00: " + str(Argument))
