@@ -60,10 +60,6 @@ Developer: [Oszust Industries](https://github.com/Oszust-Industries)
 #### Permissions: 
 * Read/write access to files on your device
 
-#### License:
-
-Permission to copy, modify, and distribute this software and its associated documentation for personal and non-commercial purposes is denied without explicitly written permission from Oszust Industries.
-
 #### Credits:
 
 This software uses [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) for an interface.
