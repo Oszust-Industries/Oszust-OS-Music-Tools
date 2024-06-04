@@ -1,0 +1,41 @@
+# Oszust OS Music Tools License Agreement
+Version 1.0, Last updated: June 3, 2024
+
+Oszust OS Music Tools is a software program created by Oszust Industries for music-related tasks and utilities.
+
+## License
+
+This License applies to the software program Oszust OS Music Tools ("Software"), created by Oszust Industries. Using the Software, you agree to comply with and be bound by the following terms and conditions.
+
+### 1. License Grant
+Oszust Industries grants you a personal, non-exclusive, non-transferable, revocable license to use the Software solely for your own personal use or for any public use that has been explicitly requested and allowed by Oszust Industries.
+
+### 2. Restrictions
+You agree not to, and you will not permit others to:
+
+- Copy, modify, merge, distribute, sell, or lease any part of the Software.
+- Reverse engineer, decompile, disassemble, or otherwise attempt to derive the Software's source code.
+- Use the Software in any manner that could damage, disable, overburden, or impair any Oszust Industries server, or the network(s) connected to any Oszust Industries server, or interfere with any other party's use and enjoyment of the Software.
+
+### 3. Intellectual Property
+All intellectual property rights in and to the Software are and shall remain the sole property of Oszust Industries. Applicable intellectual property laws and international treaties protect the Software.
+
+### 4. Termination
+This license is effective until terminated. Your rights under this license will terminate automatically without notice from Oszust Industries if you fail to comply with any term(s) of this license. Upon termination of this license, you shall cease all use of the Software and destroy all copies, full or partial, of the Software.
+
+### 5. Disclaimer of Warranties
+The Software is provided "as is" and with all faults. Oszust Industries makes no express or implied warranties about the Software. To the extent permitted by law, Oszust Industries disclaims all warranties of any kind, whether express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
+
+### 6. Limitation of Liability
+To the extent permitted by law, in no event will Oszust Industries be liable for any special, incidental, indirect, or consequential damages whatsoever arising out of or in connection with your use or inability to use the Software, even if Oszust Industries has been advised of the possibility of such damages.
+
+### 7. Governing Law
+This License shall be governed by and construed following the laws of the jurisdiction where Oszust Industries is located, without regard to its conflict of laws principles.
+
+### 8. Entire Agreement
+This License constitutes the entire agreement between you and Oszust Industries regarding using the Software. It supersedes all prior and contemporaneous understandings and agreements regarding such subject matter, whether written or oral.
+
+### 9. Contact Information
+If you have any questions about this License, please contact Oszust Industries.
+
+By using the Software, you acknowledge that you have read this License, understand it, and agree to be bound by its terms and conditions.
