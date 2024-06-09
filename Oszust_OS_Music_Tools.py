@@ -1,5 +1,5 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 6-02-24
+## Created on: 1-02-23 - Last update: 6-08-24
 softwareVersion = "v1.3.2"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
@@ -12,7 +12,7 @@ try:
     import PySimpleGUI as sg
 except Exception as Argument:
     filesVerified = False
-    print(f"Software files are missing. Please reinstall the software from GitHub and try again. Missing: {Argument}")
+    print(f"[ERROR]: Software files are missing. Please reinstall the software from GitHub and try again. Missing: {Argument}")
 
 def softwareConfig():
     ## System Configuration
@@ -30,7 +30,7 @@ def softwareConfig():
             "defaultDownloadLocation": str(pathlib.Path.home() / "Downloads"), ## User's preferred music service
         }
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'w') as file: json.dump(userSettingsData, file)
-    print(f"[INFO]: userSettingsData loaded: {userSettingsData}")
+    print(f"[userSettingsData]: {userSettingsData}")
 
 def softwareSetup():
     global appSelected, output, topSongsList, wifiStatus
@@ -45,6 +45,7 @@ def softwareSetup():
         sys.stdout = output
         sys.stderr = output
     ## Get User's Configs
+    print(f"[START]:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
     softwareConfig() 
     ## Check WIFI
     appSelected, wifiStatus = None, True
@@ -309,6 +310,18 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## Lyrics Guesser Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Guesser Game:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='lyricsGuesserPanel'),
+    ## CD Ripper Panel
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("CD Ripper:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdripperPanel'),
+    ## Music Editor Panel
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Editor:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicEditorPanel'),
+    ## Playlist Maker Panel
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Playlist Maker:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='playlistMakerPanel'),
+    ## Radio Show Maker Panel
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Radio Show Maker:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
+    ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='radioShowMakerPanel'),
     ## Extra Apps Panel
     sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\sidebar.png', border_width=0, button_color='#2B475D', key='musicToolsPanel_moveSidebarButton'), sg.Push(background_color='#2B475D'), sg.Text("All Music Tools:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("", size=(5, 1), background_color='#2B475D')],
     [sg.Column(toolsPanel, size=(595,390), pad=((10,10), (10, 10)), background_color='#2B475D')]], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicToolsPanel'),
@@ -350,6 +363,8 @@ def homeScreen():
     try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
     except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
     applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
+    if systemBuild == "dev":
+        for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
