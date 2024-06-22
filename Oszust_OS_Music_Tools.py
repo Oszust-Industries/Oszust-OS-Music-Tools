@@ -1,5 +1,5 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 6-21-24
+## Created on: 1-02-23 - Last update: 6-22-24
 softwareVersion = "v1.4.0 BETA"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
@@ -246,7 +246,7 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
         toolsPanelRow = []
         toolPanelAppLocation += 6
     ## Listboxes
-    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " "*39, 'Weeks'), num_rows=16, auto_size_columns=True, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
+    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " " * int((-7 / 25) * ctypes.windll.shcore.GetScaleFactorForDevice(0) + 67), 'Weeks'), num_rows=16, auto_size_columns=True, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
     profanityEngineListBoxed = [[sg.Listbox([item.replace("~", "'") for item in profanityEngineDefinitions], size=(25, 17), horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white', key='profanityEnginePanel_definitionsList')]]
     ## Music Search Panel [Default]
     return [[sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', justification='c', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
@@ -304,17 +304,13 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdripperPanel'),
     ## Music Player Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Column([[sg.Text("Maybe Man", font='Any 16 bold', background_color='#2B475D', key='-CLEAR-')], [sg.Text("AJR", font='Any 12', background_color='#2B475D', key='-C2LEAR-')], [sg.Text("The Maybe Man", font='Any 12', background_color='#2B475D', key='-C2LEAR-')],
-    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='sfd'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='dsdsa')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=True, key='musicPlayerPanel_playerPanel'),
-        
-        
-        
-    sg.Column([[sg.Text("Maybe Man - AJR", font='Any 14', background_color='#2B475D', key='-CLEAR-')], [sg.Listbox(["Wish I was a stone, so I couldn't feel", "You'd yell in my face, it'd be no big deal", "But I'd miss the way we make up and smile", "Don't want to be stone, I changed my mind", "I wish I had eyes in the back of my head", "Then I could see the places I've been", "But then I would know that you're talkin' shit", "I don't wanna know what my friends think", "Wish I were my dog out on the lawn", "I'd be so glad when I hear you come home", "But if I were my dog, I wouldn't live long", "I'm sure gonna miss her when she's gone", "I wish I could act in a show on TV", "'Cause then I could practice not bein' me", "I'll practice my cry, put it into my reel", "But you won't believe me when I cry for real", "I wish that my brain would triple in size", "I'd nail every joke, I'd win every fight", "But I'd get too deep with that kind of mind", "I don't wanna know the point of life", "In some other life I would be rich", "I'd travel in style, I'd cover the bill", "But couldn't complain 'bout anything small", "Nobody'd feel bad for me at all", "If I was cocaine or a bottle of Jack", "I'd get invited to every frat", "But when you get old and your good days have passed", "You'll only want me when you're sad", "Wish I was a song, your favorite one", "You'd follow the dance to me at your prom", "I would be there when your baby is born", "For two or three minutes, then I'm gone", "I wish I was big, as big as my house", "I'd sleep on the trees, I'd skip every crowd", "But I wouldn't fit on my therapist's couch", "God, I could really use him now", "I wish I was God, I'd never trip up", "And if I did, well, so fuckin' what?", "I could be cruel and break all your stuff", "Yeah, I'd be loved no matter what", "But if I was God, it'd get kinda weird", "'Cause you would only say what I wanna hear", "And then you would die, you'd love me to death", "I never know who the hell I am", "I wish I was me, whoever that is", "I could just be and not give a shit", "Hey, I'll be whatever makes you a fan", "'Cause I don't know who the hell I am", "One, two, pandemonium", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "One, two-", "Here I go again"]
-                                                                                                                             , size=(48,14), font='Any 10', disabled=True, key='dsf')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
-    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='fds'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='sfd')],
-    [sg.Image("C:\\Users\\soszu\\AppData\\Roaming\\Oszust Industries\\Oszust OS Music Tools\\cache\\Music Search\\Artworks\\50d560a284130c00256c15146df0c123.png", size=(200,200))]
-               ], background_color='#2B475D', element_justification='c')],
-    [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='-CLEAR-'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='-SL-', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='-CLEAR-')]
+    [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButton', visible=False)], [sg.Text("", font='Any 18', background_color='#2B475D', visible=True)], [sg.Text("", font='Any 16', background_color='#2B475D')], [sg.Text("Not Playing", font='Any 16 bold', background_color='#2B475D', key='musicPlayerPanel_songTitle')], [sg.Text("Artist", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songArtist')], [sg.Text("Album", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songAlbum')],
+    [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_rewindButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_playButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_forwardButton')], [sg.Text("", background_color='#2B475D', size=(43, 1))], [sg.Text("", font='Any 24', background_color='#2B475D')]], background_color='#2B475D', element_justification='c', visible=True, key='musicPlayerPanel_playerPanel'),
+    sg.Column([[sg.Text("Not Playing - Artist", font='Any 14', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox(["Wish I was a stone, so I couldn't feel", "You'd yell in my face, it'd be no big deal", "But I'd miss the way we make up and smile", "Don't want to be stone, I changed my mind", "I wish I had eyes in the back of my head", "Then I could see the places I've been", "But then I would know that you're talkin' shit", "I don't wanna know what my friends think", "Wish I were my dog out on the lawn", "I'd be so glad when I hear you come home", "But if I were my dog, I wouldn't live long", "I'm sure gonna miss her when she's gone", "I wish I could act in a show on TV", "'Cause then I could practice not bein' me", "I'll practice my cry, put it into my reel", "But you won't believe me when I cry for real", "I wish that my brain would triple in size", "I'd nail every joke, I'd win every fight", "But I'd get too deep with that kind of mind", "I don't wanna know the point of life", "In some other life I would be rich", "I'd travel in style, I'd cover the bill", "But couldn't complain 'bout anything small", "Nobody'd feel bad for me at all", "If I was cocaine or a bottle of Jack", "I'd get invited to every frat", "But when you get old and your good days have passed", "You'll only want me when you're sad", "Wish I was a song, your favorite one", "You'd follow the dance to me at your prom", "I would be there when your baby is born", "For two or three minutes, then I'm gone", "I wish I was big, as big as my house", "I'd sleep on the trees, I'd skip every crowd", "But I wouldn't fit on my therapist's couch", "God, I could really use him now", "I wish I was God, I'd never trip up", "And if I did, well, so fuckin' what?", "I could be cruel and break all your stuff", "Yeah, I'd be loved no matter what", "But if I was God, it'd get kinda weird", "'Cause you would only say what I wanna hear", "And then you would die, you'd love me to death", "I never know who the hell I am", "I wish I was me, whoever that is", "I could just be and not give a shit", "Hey, I'll be whatever makes you a fan", "'Cause I don't know who the hell I am", "One, two, pandemonium", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "One, two-", "Here I go again"], size=(48,14), font='Any 10', disabled=True, key='musicPlayerPanel_lyricsListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
+    sg.Column([[sg.Text("Not Playing - Artist", font='Any 14', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox([], size=(48,14), font='Any 10', disabled=False, key='musicPlayerPanel_queueListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_queuePanel'),
+    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_shuffleQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_loopQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_lyricsPage'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_queuePage')],
+    [sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png', size=(200,200))]], background_color='#2B475D', element_justification='c', key='musicPlayerPanel_artworkPanel')],
+    [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_startTime'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='musicPlayerPanel_timeSlider', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_endTime')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicPlayerPanel'),
     ## Lyrics Guesser Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Guesser Game:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
@@ -368,9 +364,9 @@ def homeScreen():
     except: billboardList = "hot 100"
     try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
     except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
-    applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
-    if systemBuild == "dev":
-        for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
+    applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Player", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
+    #if systemBuild == "dev":
+    #    for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
@@ -408,6 +404,9 @@ def homeScreen():
     ## YouTube Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName = False, True, False ## App Variables
     for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'audioDownloadCheckbox', 'videoDownloadCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['youtubeDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    ## Music Player: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
+    musicPlayerPage = "player"
+    for key in ['rewindButton', 'playButton', 'forwardButton', 'shuffleQueue', 'loopQueue', 'lyricsPage', 'queuePage', 'timeSlider']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Lyrics Checker: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     for key in ['openWebButton', 'pasteClipboardButton', 'clearInputButton', 'checkLyricsButton']: HomeWindow['lyricsCheckerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Profanity Engine Editor: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
@@ -905,6 +904,55 @@ def homeScreen():
             elif event == 'cdburnerPanel_burnButton': ## Burn CD
                 if len(cdBurningList) > 0: popupMessage("CD Burner", "CD Burner is still being developed.", "error")
                 else: popupMessage("CD Burner", "There must be at least one song to start the burn process.", "error", 5000)
+## CD Burner (Buttons/Events)              
+        elif appSelected == "Music_Player":
+            if event == 'musicPlayerPanel_lyricsPage':
+                if musicPlayerPage == "player":
+                    musicPlayerPage = "lyrics"
+                    HomeWindow['musicPlayerPanel_lyricsPage'].update(button_color='blue')
+                    HomeWindow['musicPlayerPanel_playerPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_lyricsPanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+                elif musicPlayerPage == "lyrics":
+                    musicPlayerPage = "player"
+                    HomeWindow['musicPlayerPanel_lyricsPage'].update(button_color='#2B475D')
+                    HomeWindow['musicPlayerPanel_lyricsPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_playerPanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+                elif musicPlayerPage == "queue":
+                    musicPlayerPage = "lyrics"
+                    HomeWindow['musicPlayerPanel_lyricsPage'].update(button_color='blue')
+                    HomeWindow['musicPlayerPanel_queuePage'].update(button_color='#2B475D')
+                    HomeWindow['musicPlayerPanel_queuePanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_lyricsPanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+            elif event == 'musicPlayerPanel_queuePage':
+                if musicPlayerPage == "player":
+                    musicPlayerPage = "queue"
+                    HomeWindow['musicPlayerPanel_queuePage'].update(button_color='blue')
+                    HomeWindow['musicPlayerPanel_playerPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_queuePanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+                elif musicPlayerPage == "queue":
+                    musicPlayerPage = "player"
+                    HomeWindow['musicPlayerPanel_queuePage'].update(button_color='#2B475D')
+                    HomeWindow['musicPlayerPanel_queuePanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_playerPanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+                elif musicPlayerPage == "lyrics":
+                    musicPlayerPage = "queue"
+                    HomeWindow['musicPlayerPanel_lyricsPage'].update(button_color='#2B475D')
+                    HomeWindow['musicPlayerPanel_queuePage'].update(button_color='Blue')
+                    HomeWindow['musicPlayerPanel_lyricsPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
+                    HomeWindow['musicPlayerPanel_queuePanel'].update(visible=True)
+                    HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+                
 ## Internet Status Changes
         HomeWindow['versionTextHomeBottom'].update(f"{platform.system()} | {softwareVersion} | {systemBuild} | {'Online' if wifiStatus else 'Offline'}")
             
