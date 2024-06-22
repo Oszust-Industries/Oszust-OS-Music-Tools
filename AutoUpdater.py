@@ -1,5 +1,5 @@
 ## Oszust OS AutoUpdater - v4.1.0 (5.15.24) - Oszust Industries
-import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
+import os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
 def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):

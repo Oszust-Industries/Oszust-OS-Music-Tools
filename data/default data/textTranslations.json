@@ -1,14 +1,8 @@
 {
-    "en": {
-        "welcome_message": "Welcome",
-        "exit_message": "Goodbye",
-        "login_button": "Login",
-        "signup_button": "Sign Up"
+    "english": {
+        "welcome_message": "Welcome"
     },
-    "es": {
-        "welcome_message": "Bienvenido",
-        "exit_message": "Adiós",
-        "login_button": "Iniciar sesión",
-        "signup_button": "Regístrate"
+    "spanish": {
+        "welcome_message": "hola"
     }
 }
