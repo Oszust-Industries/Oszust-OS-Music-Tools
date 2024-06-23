@@ -1,5 +1,5 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 6-22-24
+## Created on: 1-02-23 - Last update: 6-23-24
 softwareVersion = "v1.4.0 BETA"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
@@ -46,7 +46,7 @@ def softwareSetup():
         sys.stderr = output
     ## Get User's Configs
     print(f"[LOG START]:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
-    softwareConfig() 
+    softwareConfig()
     ## Check WIFI
     appSelected, wifiStatus = None, True
     checkInternetstatusThread = threading.Thread(name="checkInternetstatus", target=checkInternetstatus)
@@ -77,7 +77,7 @@ def softwareSetup():
 
 def crashMessage(message):
     RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
-    errorWindow = sg.Window(message.split(':')[0], [[sg.Text(systemName + " has crashed.", font=("Any", 13))], [sg.Multiline(message, size=(50,5), font=("Any", 13), disabled=True, autoscroll=False, right_click_menu=RightClickMenu, key='crashMessageErrorCodeText')], [sg.Button("Report Error", button_color=("White", "Blue"), key='Report'), sg.Button("Quit", button_color=("White", "Red"), key='Quit')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
+    errorWindow = sg.Window(message.split(':')[0], [[sg.Text(systemName + " has crashed.", font=("Any", 13))], [sg.Multiline(message, size=(50,5), font=("Any", 13), disabled=True, autoscroll=False, right_click_menu=RightClickMenu, key='crashMessageErrorCodeText')], [sg.Button("Log File", button_color=("White", "Orange"), key='OpenLogFile'), sg.Button("Report Error", button_color=("White", "Blue"), key='Report'), sg.Button("Quit", button_color=("White", "Red"), key='Quit')]], resizable=False, finalize=True, keep_on_top=True, element_justification='c')
     errorLine:sg.Multiline = errorWindow['crashMessageErrorCodeText']
     print(f"[CRASH]: {message}")
     ## Window Shortcuts
@@ -85,18 +85,21 @@ def crashMessage(message):
     errorWindow.bind('<Delete>', '_Delete')  ## Close Window shortcut
     ## Mouse Icon Changes
     for key in ['Report', 'Quit']: errorWindow[key].Widget.config(cursor="hand2") ## Hover icons
+    try: output.close()
+    except: pass
     while True:
         event, values = errorWindow.read(timeout=10)
         if event == sg.WIN_CLOSED or event == 'Quit' or (event == '_Delete'):
             try: errorWindow.close()
-            except: pass
-            try: output.close()
             except: pass
             if systemBuild != "dev":
                 thisSystem = psutil.Process(os.getpid()) ## Close Program
                 thisSystem.terminate()
             return
         elif event == 'Report' or (event == '_Insert'): webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/issues/new", new=2, autoraise=True)
+        elif event == 'OpenLogFile':
+            try: os.startfile(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools"))
+            except: pass
         elif event in RightClickMenu[1]: ## Right Click Menu Actions
             try:
                 if event == 'Copy': ## Copy Error Text
@@ -246,7 +249,8 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
         toolsPanelRow = []
         toolPanelAppLocation += 6
     ## Listboxes
-    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " " * int((-7 / 25) * ctypes.windll.shcore.GetScaleFactorForDevice(0) + 67), 'Weeks'), num_rows=16, auto_size_columns=True, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
+    print(int((-7 / 25) * ctypes.windll.shcore.GetScaleFactorForDevice(0) + 67))
+    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " " * 33, 'Weeks'), num_rows=16, auto_size_columns=True, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
     profanityEngineListBoxed = [[sg.Listbox([item.replace("~", "'") for item in profanityEngineDefinitions], size=(25, 17), horizontal_scroll=True, select_mode=None, enable_events=True, highlight_background_color='blue', highlight_text_color='white', key='profanityEnginePanel_definitionsList')]]
     ## Music Search Panel [Default]
     return [[sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', justification='c', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
@@ -304,12 +308,12 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdripperPanel'),
     ## Music Player Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButton', visible=False)], [sg.Text("", font='Any 18', background_color='#2B475D', visible=True)], [sg.Text("", font='Any 16', background_color='#2B475D')], [sg.Text("Not Playing", font='Any 16 bold', background_color='#2B475D', key='musicPlayerPanel_songTitle')], [sg.Text("Artist", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songArtist')], [sg.Text("Album", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songAlbum')],
+    [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButtonPlayer', visible=False)], [sg.Text("", font='Any 18', background_color='#2B475D', visible=True)], [sg.Text("", font='Any 16', background_color='#2B475D')], [sg.Text("Not Playing", font='Any 14 bold', background_color='#2B475D', key='musicPlayerPanel_songTitle')], [sg.Text("Artist", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songArtist')], [sg.Text("Album", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songAlbum')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_rewindButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_playButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_forwardButton')], [sg.Text("", background_color='#2B475D', size=(43, 1))], [sg.Text("", font='Any 24', background_color='#2B475D')]], background_color='#2B475D', element_justification='c', visible=True, key='musicPlayerPanel_playerPanel'),
-    sg.Column([[sg.Text("Not Playing - Artist", font='Any 14', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox(["Wish I was a stone, so I couldn't feel", "You'd yell in my face, it'd be no big deal", "But I'd miss the way we make up and smile", "Don't want to be stone, I changed my mind", "I wish I had eyes in the back of my head", "Then I could see the places I've been", "But then I would know that you're talkin' shit", "I don't wanna know what my friends think", "Wish I were my dog out on the lawn", "I'd be so glad when I hear you come home", "But if I were my dog, I wouldn't live long", "I'm sure gonna miss her when she's gone", "I wish I could act in a show on TV", "'Cause then I could practice not bein' me", "I'll practice my cry, put it into my reel", "But you won't believe me when I cry for real", "I wish that my brain would triple in size", "I'd nail every joke, I'd win every fight", "But I'd get too deep with that kind of mind", "I don't wanna know the point of life", "In some other life I would be rich", "I'd travel in style, I'd cover the bill", "But couldn't complain 'bout anything small", "Nobody'd feel bad for me at all", "If I was cocaine or a bottle of Jack", "I'd get invited to every frat", "But when you get old and your good days have passed", "You'll only want me when you're sad", "Wish I was a song, your favorite one", "You'd follow the dance to me at your prom", "I would be there when your baby is born", "For two or three minutes, then I'm gone", "I wish I was big, as big as my house", "I'd sleep on the trees, I'd skip every crowd", "But I wouldn't fit on my therapist's couch", "God, I could really use him now", "I wish I was God, I'd never trip up", "And if I did, well, so fuckin' what?", "I could be cruel and break all your stuff", "Yeah, I'd be loved no matter what", "But if I was God, it'd get kinda weird", "'Cause you would only say what I wanna hear", "And then you would die, you'd love me to death", "I never know who the hell I am", "I wish I was me, whoever that is", "I could just be and not give a shit", "Hey, I'll be whatever makes you a fan", "'Cause I don't know who the hell I am", "One, two, pandemonium", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "Here I go again", "One, two, pandemonium", "One, two-", "Here I go again"], size=(48,14), font='Any 10', disabled=True, key='musicPlayerPanel_lyricsListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
-    sg.Column([[sg.Text("Not Playing - Artist", font='Any 14', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox([], size=(48,14), font='Any 10', disabled=False, key='musicPlayerPanel_queueListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_queuePanel'),
+    sg.Column([[sg.Text("Not Playing - Artist", font='Any 11', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox([], size=(48,14), font='Any 10', disabled=True, key='musicPlayerPanel_lyricsListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
+    sg.Column([[sg.Text("Not Playing - Artist", font='Any 11', background_color='#2B475D', key='musicPlayerPanel_songTitleQueue')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\upList.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_upQueueButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\downList.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_downQueueButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\trash.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_trashQueueButton')], [sg.Text("", font='Any 1', background_color='#2B475D')], [sg.Listbox([], size=(48,11), font='Any 10', disabled=False, key='musicPlayerPanel_queueListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_queuePanel'),
     sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_shuffleQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_loopQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_lyricsPage'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_queuePage')],
-    [sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png', size=(200,200))]], background_color='#2B475D', element_justification='c', key='musicPlayerPanel_artworkPanel')],
+    [sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png', size=(200,200), key='musicPlayerPanel_songArtwork')]], background_color='#2B475D', element_justification='c', key='musicPlayerPanel_artworkPanel')],
     [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_startTime'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='musicPlayerPanel_timeSlider', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_endTime')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicPlayerPanel'),
     ## Lyrics Guesser Panel
@@ -405,8 +409,8 @@ def homeScreen():
     youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName = False, True, False ## App Variables
     for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'audioDownloadCheckbox', 'videoDownloadCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['youtubeDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Music Player: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
-    musicPlayerPage = "player"
-    for key in ['rewindButton', 'playButton', 'forwardButton', 'shuffleQueue', 'loopQueue', 'lyricsPage', 'queuePage', 'timeSlider']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    musicPlayerCurrentSong, musicPlayerLoop, musicPlayerPage, musicPlayerShuffle, musicPlayerQueue = "", False, "player", False, []
+    for key in ['rewindButton', 'playButton', 'forwardButton', 'shuffleQueue', 'loopQueue', 'lyricsPage', 'queuePage', 'addSongButton', 'upQueueButton', 'downQueueButton', 'trashQueueButton', 'timeSlider']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Lyrics Checker: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     for key in ['openWebButton', 'pasteClipboardButton', 'clearInputButton', 'checkLyricsButton']: HomeWindow['lyricsCheckerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Profanity Engine Editor: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
@@ -906,7 +910,52 @@ def homeScreen():
                 else: popupMessage("CD Burner", "There must be at least one song to start the burn process.", "error", 5000)
 ## CD Burner (Buttons/Events)              
         elif appSelected == "Music_Player":
-            if event == 'musicPlayerPanel_lyricsPage':
+            if len(musicPlayerQueue) > 0 and musicPlayerCurrentSong != musicPlayerQueue[0]:
+                musicPlayerCurrentSong = musicPlayerQueue[0]
+                try:
+                    audiofile = eyed3.load(musicPlayerQueue[0])
+                    try: ## Get Song Artwork
+                        for tag in audiofile.tag.images:
+                            if tag.mime_type == 'image/png': bio = io.BytesIO(tag.image_data)
+                        HomeWindow.Element('musicPlayerPanel_songArtwork').update(data=bio.read())
+                    except: HomeWindow.Element('musicPlayerPanel_songArtwork').update(data=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png')
+                    try: ## Get Song Lyrics
+                        HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(disabled=False)
+                        for lyric in audiofile.tag.lyrics: lyricsList = (lyric.text).split("\n")
+                        HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(lyricsList[::2])
+                        HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(disabled=True)
+                    except: HomeWindow.Element('musicPlayerPanel_lyricsListbox').update([])
+                    HomeWindow.Element('musicPlayerPanel_songTitle').Update(audiofile.tag.title)
+                    HomeWindow.Element('musicPlayerPanel_songArtist').Update(audiofile.tag.artist)
+                    HomeWindow.Element('musicPlayerPanel_songAlbum').Update(audiofile.tag.album)
+                    if len(str(audiofile.tag.title + " - " + audiofile.tag.artist)) > 60:
+                        if len(audiofile.tag.title) > len(audiofile.tag.artist): ## Title is longer than artist
+                            HomeWindow.Element('musicPlayerPanel_songTitleLyrics').Update(audiofile.tag.title[:30] + "... - " + audiofile.tag.artist)
+                            HomeWindow.Element('musicPlayerPanel_songTitleQueue').Update(audiofile.tag.title[:30] + "... - " + audiofile.tag.artist)
+                        else:
+                            HomeWindow.Element('musicPlayerPanel_songTitleLyrics').Update(audiofile.tag.title + " - " + audiofile.tag.artist[:30] + "...")
+                            HomeWindow.Element('musicPlayerPanel_songTitleQueue').Update(audiofile.tag.title + " - " + audiofile.tag.artist[:30] + "...")
+                    else:
+                        HomeWindow.Element('musicPlayerPanel_songTitleLyrics').Update(audiofile.tag.title + " - " + audiofile.tag.artist)
+                        HomeWindow.Element('musicPlayerPanel_songTitleQueue').Update(audiofile.tag.title + " - " + audiofile.tag.artist)
+                except:
+                    print(f"[ERROR]: Failed to load metadata from Music Player song")
+                    popupMessage("Music Player", "Metadata Failed to load from song.", "error", 5000)
+            if event == 'musicPlayerPanel_shuffleQueue': ## Shuffle Queue Button
+                if musicPlayerShuffle:
+                    musicPlayerShuffle = False
+                    HomeWindow['musicPlayerPanel_shuffleQueue'].update(button_color='#2B475D')
+                else:
+                    musicPlayerShuffle = True
+                    HomeWindow['musicPlayerPanel_shuffleQueue'].update(button_color='blue')
+            elif event == 'musicPlayerPanel_loopQueue': ## Loop Queue Button
+                if musicPlayerLoop:
+                    musicPlayerLoop = False
+                    HomeWindow['musicPlayerPanel_loopQueue'].update(button_color='#2B475D')
+                else:
+                    musicPlayerLoop = True
+                    HomeWindow['musicPlayerPanel_loopQueue'].update(button_color='blue')
+            elif event == 'musicPlayerPanel_lyricsPage': ## Open / Close Lyrics Panel
                 if musicPlayerPage == "player":
                     musicPlayerPage = "lyrics"
                     HomeWindow['musicPlayerPanel_lyricsPage'].update(button_color='blue')
@@ -929,7 +978,7 @@ def homeScreen():
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
                     HomeWindow['musicPlayerPanel_lyricsPanel'].update(visible=True)
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
-            elif event == 'musicPlayerPanel_queuePage':
+            elif event == 'musicPlayerPanel_queuePage': ## Open / Close Queue Panel
                 if musicPlayerPage == "player":
                     musicPlayerPage = "queue"
                     HomeWindow['musicPlayerPanel_queuePage'].update(button_color='blue')
@@ -952,6 +1001,17 @@ def homeScreen():
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
                     HomeWindow['musicPlayerPanel_queuePanel'].update(visible=True)
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
+            elif event == 'musicPlayerPanel_addSongButton': ## Add Song to Queue
+                fileBrowserWindow = sg.Window("Song Selector", [[sg.Text("Song File:")], [sg.Input(key="fileLocation"), sg.FilesBrowse(file_types=(("Music Files", "*.mp3;*.wav;"), ("All Files", "*.*")))], [sg.Push(), sg.Button("OK"), sg.Push()]], no_titlebar=True, keep_on_top=True, finalize=True)
+                while True:
+                    event, values = fileBrowserWindow.read(timeout=10)
+                    try: fileBrowserWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - fileBrowserWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - fileBrowserWindow.size[1] // 2)
+                    except: pass
+                    if event == sg.WINDOW_CLOSED or event == "OK":
+                        for item in values["fileLocation"].split(";"): musicPlayerQueue.append(item)
+                        HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
+                        fileBrowserWindow.close()
+                        break
                 
 ## Internet Status Changes
         HomeWindow['versionTextHomeBottom'].update(f"{platform.system()} | {softwareVersion} | {systemBuild} | {'Online' if wifiStatus else 'Offline'}")
@@ -1532,6 +1592,13 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
     try:
         print(f"[INFO]: Metadata Burner: {musicSearchResultData}, location: {audioSavedPath}, ({burnLyricsOnly}, {multipleArtists}, {renameFile}, {displayMessage})")
         audiofile, lyricsText = eyed3.load(audioSavedPath), "" ## Load MP3
+        try: print(f"[INFO] Testing metadata tags: {audiofile.tag}")
+        except:
+            try: audiofile.initTag(version=(2, 3, 0))
+            except:
+                print(f"[ERROR]: Metadata Burner can't write")
+                popupMessage("Metadata Burner", "Can't write to file.", "error")
+                return            
         for i in range(len(musicSearchResultData["lyricsListFinal"])): ## Get Lyrics
             if len(musicSearchResultData["lyricsListFinal"][i]) == 0: lyricsText += "\n"
             else: lyricsText += musicSearchResultData["lyricsListFinal"][i] + "\n"
@@ -1565,8 +1632,8 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
                 try: os.rename(audioSavedPath, audioSavedPath.replace(audioSavedPath.rsplit('\\', 1)[1], "") + "\\" + renameFile.strip() + ".mp3") ## Rename MP3 to Song Name Fix
                 except: print(f"[ERROR]: Metadata Burner: Failed to rename to {renameFile}")
         if displayMessage: popupMessage("Metadata Burner", "Metadata has been successfully saved to " + renameFile + ".", "saved", 3000) ## Show Success Message
-    except:
-        print(f"[ERROR]: Metadata Burner failed")
+    except Exception as Argument:
+        print(f"[ERROR]: Metadata Burner failed: {Argument}")
         popupMessage("Metadata Burner", "Failed to burn metadata.", "error")
 
 def loadGeniusMusicList(userInput):
