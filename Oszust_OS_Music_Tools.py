@@ -1,7 +1,7 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 6-23-24
 softwareVersion = "v1.4.0 BETA"
-systemName, systemBuild = "Oszust OS Music Tools", "dist"
+systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
 try:
     filesVerified = True
@@ -628,6 +628,10 @@ def homeScreen():
                             for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")):
                                 os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", item))
                             os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info"))
+                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")) != []: ## Music Search List Info
+                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")):
+                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", item))
+                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info"))
                         HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache")) / (1024 * 1024), 2)) + " MB")
                         popupMessage("Settings", "Cache has been successfully cleaned.", "success")
                     except: popupMessage("Settings", "Unable to clean the Cache.", "error")
@@ -1308,6 +1312,7 @@ def loadGeniusMusic(userInput, forceResult):
                 musicSearchResultData["png_data_location"] = str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Artworks\\" + str(musicSearchResultData["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png"
                 musicSearchResultData["png_data"] = png_data
                 loadingAction = "Search_Finished"
+                return
             else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.rsplit('/', 1)[-1] + ".json"))
         except: pass
     ## Load from Online
@@ -1372,10 +1377,9 @@ def loadGeniusMusic(userInput, forceResult):
                         pil_image = pil_image.resize((200, 200)) ## Artwork Size
                         png_bio = io.BytesIO()
                         pil_image.save(png_bio, format="PNG")
-                        try: ## Save Artwork to Cache
-                            pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")).mkdir(parents=True, exist_ok=True) ## Create Music Artwork Cache Folder
-                            png_data = pil_image.save(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
-                            musicSearchResultData["png_data_location"] = str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png"
+                        try: ## Save Artwork to Cache PNG
+                            pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")).mkdir(parents=True, exist_ok=True) ## Create Music Cache Folder
+                            with open(os.path.join(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks"), str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/", 1)[1].split(".", 1)[0] + ".png"), "wb") as f: f.write(png_bio.getbuffer())
                         except: pass
                         png_data = png_bio.getvalue()
             except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
@@ -1745,7 +1749,7 @@ def burnAudioData(audioSavedPath, burnLyricsOnly, multipleArtists, renameFile, d
         print(f"[ERROR]: Metadata Burner failed: {Argument}")
         popupMessage("Metadata Burner", "Failed to burn metadata.", "error")
 
-def loadGeniusMusicList(userInput):
+def loadGeniusMusicList(userInput, forceResult):
     global musicListLayout, loadingAction, musicListResultData
     print(f"[INFO]: Music Search List: {userInput}")
     musicListResultData = {}
@@ -1754,7 +1758,35 @@ def loadGeniusMusicList(userInput):
     except: musicSub = "Apple Music"
     if isinstance(userInput, list): userInputDisplay = musicSearchResultData["geniusMusicSearchAlbum"] + " - " + musicSearchResultData["geniusMusicSearchPrimeArtist"]
     else: userInputDisplay = userInput
-    artistSearch, musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["musicListLayout"], resultColumns, resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"], musicListResultData["song_art_image_url"] = False, [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], [], 0, [], [], [], []
+    artistSearch, musicListResultData["geniusMusicSearchDate"], musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["longArtists"], musicListResultData["longSongNameInfo"], musicListResultData["lyricsHoverMessage"], musicListResultData["lyricsImage"], musicListResultData["musicListLayout"], resultColumns, resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"], musicListResultData["song_art_image_url"] = False, [], [], [], [], [], [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], [], 0, [], [], [], []
+    if forceResult != "refresh": ## Read from Cache
+        try:
+            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"), 'r') as file:
+                musicListResultData = json.load(file)
+            musicListResultData["musicListLayout"] = [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]]
+            if datetime.datetime.strptime(musicListResultData["geniusMusicSearchExpireDate"], '%Y-%m-%d') > datetime.datetime.now(): ## Cache Expired
+                for resultNumber in musicListResultData["resultNumbers"]:
+                    ## Look in Cache for Artwork
+                    try: ## Open Artwork PNG from Cache
+                        pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Mini Artworks\\" + str(musicListResultData["song_art_image_url"][resultNumber]).split(".com/",1)[1].split(".",1)[0] + ".png") ## Open Artwork from Cache
+                        png_bio = io.BytesIO()
+                        pil_image.save(png_bio, format="PNG")
+                        png_data = png_bio.getvalue()
+                    except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
+                    ## Music Service
+                    if musicSub == "Apple Music": musicServiceImage = "musicSearchListenApple" ## Set Listening Link to Apple
+                    elif musicSub == "Spotify": musicServiceImage = "musicSearchListenSpotify" ## Set Listening Link to Spotify
+                    ## Song Window
+                    if musicListResultData["geniusMusicSearchDate"][resultNumber] != None: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(musicListResultData["songNames"][resultNumber]), font='Any 16', background_color='#2b475d', tooltip=musicListResultData["longSongNameInfo"][resultNumber])], [sg.Text(str(musicListResultData["songArtists"][resultNumber]), font='Any 14', background_color='#2b475d', tooltip=musicListResultData["longArtists"][resultNumber])], [sg.Text(str(musicListResultData["geniusMusicSearchDate"][resultNumber]), font='Any 12', background_color='#2b475d')]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicListResultData["lyricsImage"][resultNumber]+'.png', background_color='#2b475d', tooltip=musicListResultData["lyricsHoverMessage"][resultNumber]), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
+                    else: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(musicListResultData["songNames"][resultNumber]), font='Any 16', background_color='#2b475d', tooltip=musicListResultData["longSongNameInfo"][resultNumber])], [sg.Text(str(musicListResultData["songArtists"][resultNumber]), font='Any 14', background_color='#2b475d', tooltip=musicListResultData["longArtists"][resultNumber])]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicListResultData["lyricsImage"][resultNumber]+'.png', background_color='#2b475d', tooltip=musicListResultData["lyricsHoverMessage"][resultNumber]), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
+                if len(resultColumns) <= 8: musicListResultData["musicListLayout"] += [[sg.Column(resultColumns, scrollable=True, expand_x=True, background_color='#2b475d', vertical_scroll_only=True, size=(700, len(resultColumns)*110))]]
+                else: musicListResultData["musicListLayout"] += [[sg.Column(resultColumns, scrollable=True, expand_x=True, background_color='#2b475d', vertical_scroll_only=True, size=(700, 880))]]
+                musicListResultData["musicListLayout"] += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius (" + str(len(resultColumns)) + " Results)", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
+                loadingAction = "Search_Finished"
+                return
+            else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"))
+        except: pass
+    ## Load from Online
     if isinstance(userInput, list):
         musicSearchApiBody, hitsFound = [], 0
         for song in userInput:
@@ -1815,9 +1847,12 @@ def loadGeniusMusicList(userInput):
         geniusMusicSearchArtists = str(musicSearchApiBody[resultNumber]["result"]["artist_names"]).replace("(Rock)", "") ## Song Artists
         musicListResultData["songArtists"].append(geniusMusicSearchArtists) ## Add Artists to List 
         geniusMusicSearchPrimeArtist = str(musicSearchApiBody[resultNumber]["result"]["primary_artist"]["name"]).split('(')[0] ## Song Main Artist
-        if str(musicSearchApiBody[0]["result"]["artist_names"]).replace(" ", "-").lower() == userInput: artistSearch = True ## Find if Search is an Artist
+        if str(musicSearchApiBody[0]["result"]["artist_names"]).replace(" ", "-").lower() == userInput.lower().replace(" ", "-"): artistSearch = True ## Find if Search is an Artist
+        else: artistSearch = False
+        musicListResultData["artistSearch"] = artistSearch
         geniusMusicSearchDate = str(musicSearchApiBody[resultNumber]["result"]["release_date_for_display"]) ## Result Release Date
         if geniusMusicSearchDate == "None": geniusMusicSearchDate = None ## Fix Release Date if None Found
+        musicListResultData["geniusMusicSearchDate"].append(geniusMusicSearchDate) ## Add Release Date to List
         geniusMusicSearchSongNameInfo = str(musicSearchApiBody[resultNumber]["result"]["title_with_featured"]) ## Result Full Title
         musicListResultData["songNames"].append(geniusMusicSearchSongNameInfo) ## Add Song Full Title to List
         geniusMusicSearchGeniusURL = str(musicSearchApiBody[resultNumber]["result"]["url"]) ## Result Genius URL
@@ -1826,7 +1861,9 @@ def loadGeniusMusicList(userInput):
         musicListResultData["geniusSongIDs"].append(geniusMusicSearchGeniusSongID) ## Add Song ID to List
         ## Shorten Results
         longSongNameInfo = geniusMusicSearchSongNameInfo
+        musicListResultData["longSongNameInfo"].append(geniusMusicSearchSongNameInfo)
         longArtists = geniusMusicSearchArtists
+        musicListResultData["longArtists"].append(geniusMusicSearchArtists)
         if len(geniusMusicSearchSongNameInfo) > 30: geniusMusicSearchSongNameInfo = geniusMusicSearchSongNameInfo[:29] + "..." ## Shorten Song Name
         if len(geniusMusicSearchArtists) > 30: geniusMusicSearchArtists = geniusMusicSearchArtists[:29] + "..." ## Shorten Artists Names
         ## Song Artwork
@@ -1836,7 +1873,7 @@ def loadGeniusMusicList(userInput):
             else:
                 musicListResultData["song_art_image_url"].append(geniusMusicSearchArtworkURL)
                 try: ## Look in Cache for Artwork
-                    pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Mini Artworks" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png") ## Open Artwork from Cache
+                    pil_image = Image.open(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Mini Artworks\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png") ## Open Artwork from Cache
                     png_bio = io.BytesIO()
                     pil_image.save(png_bio, format="PNG")
                     png_data = png_bio.getvalue()
@@ -1846,9 +1883,9 @@ def loadGeniusMusicList(userInput):
                     pil_image = pil_image.resize((80, 80)) ## Artwork Size
                     png_bio = io.BytesIO()
                     pil_image.save(png_bio, format="PNG")
-                    try: ## Save Artwork to Cache
+                    try: ## Save Artwork to Cache PNG
                         pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks")).mkdir(parents=True, exist_ok=True) ## Create Music Cache Folder
-                        png_data = pil_image.save(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Mini Artworks\\" + str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png")
+                        with open(os.path.join(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks"), str(musicSearchApiBody[resultNumber]["result"]["song_art_image_url"]).split(".com/", 1)[1].split(".", 1)[0] + ".png"), "wb") as f: f.write(png_bio.getbuffer())
                     except: pass
                     png_data = png_bio.getvalue()
         except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png" ## Default Artwork if Retrieval Fails
@@ -1856,11 +1893,13 @@ def loadGeniusMusicList(userInput):
         geniusMusicSearchLyricsState = str(musicSearchApiBody[resultNumber]["result"]["lyrics_state"]) ## Result Song Lyrics
         if geniusMusicSearchLyricsState.lower() == "complete": lyricsImage, lyricsHoverMessage = "checked", "Lyrics Found" ## Lyrics Found
         else: lyricsImage, lyricsHoverMessage = "checkFailed", "Lyrics Not Found" ## No Lyrics Found
+        musicListResultData["lyricsImage"].append(lyricsImage) ## Add Lyrics Image to List
+        musicListResultData["lyricsHoverMessage"].append(lyricsHoverMessage) ## Add Lyrics Message to List
         ## Music Service
         if musicSub == "Apple Music": musicServiceImage = "musicSearchListenApple" ## Set Listening Link to Apple
         elif musicSub == "Spotify": musicServiceImage = "musicSearchListenSpotify" ## Set Listening Link to Spotify
         ## Song Window
-        if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput)) and geniusMusicSearchArtists.lower() not in ["spotify", "genius", "siriusxm the highway"] and "genius" not in geniusMusicSearchArtists.lower():
+        if (artistSearch == False or (artistSearch == True and geniusMusicSearchPrimeArtist.replace(" ", "-").split('(')[0].lower() == userInput.replace(" ", "-").split('(')[0].lower())) and geniusMusicSearchArtists.lower() not in ["spotify", "genius", "siriusxm the highway"] and "genius" not in geniusMusicSearchArtists.lower():
             if geniusMusicSearchDate != None: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)], [sg.Text(str(geniusMusicSearchDate), font='Any 12', background_color='#2b475d')]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
             else: resultColumns += [[sg.Column([[sg.Image(png_data, background_color='#2b475d'), sg.Column([[sg.Text(str(geniusMusicSearchSongNameInfo), font='Any 16', background_color='#2b475d', tooltip=longSongNameInfo)], [sg.Text(str(geniusMusicSearchArtists), font='Any 14', background_color='#2b475d', tooltip=longArtists)]], background_color='#2b475d', size=(400, 100)), sg.Push(background_color='#2b475d'), sg.Column([[sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+lyricsImage+'.png', background_color='#2b475d', tooltip=lyricsHoverMessage), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\musicSearchGenius.png', border_width=0, button_color='#2b475d', key='searchmusicListSearchGenius_' + str(resultNumber), tooltip="Open Genius Page"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+musicServiceImage+'.png', border_width=0, button_color='#2b475d', key='searchmusicListPlaySong_' + str(resultNumber), tooltip="Play Song"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\openView.png', border_width=0, button_color='#2b475d', key='searchMusicListOpenSong_' + str(resultNumber), tooltip="Open Result")]], background_color='#2b475d')]], background_color='#2b475d', size=(700, 100))]]
             musicListResultData["resultNumbers"].append(resultNumber)
@@ -1877,9 +1916,15 @@ def loadGeniusMusicList(userInput):
         print(f"[ERROR]: Music Search List: Only one result found")
         loadingAction = "Only_One_Result"
     else:
+        try: ## Save Info to Cache
+            musicListResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=10))
+            pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")).mkdir(parents=True, exist_ok=True) ## Create Music Search List Info Cache Folder
+            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"), 'w') as file:
+                json.dump({k: v for k, v in musicListResultData.items() if k not in ["musicListLayout"]}, file)
+        except: pass
         print(f"[INFO]: Music Search List: Finished:")
         for key, value in musicListResultData.items():
-            if key != "png_data": print(f"{key}: {value}")
+            if key != "musicListLayout": print(f"{key}: {value}")
         loadingAction = "Search_Finished"
 
 def geniusMusicSearchList(userInput, searchType="search"):
@@ -1898,7 +1943,9 @@ def geniusMusicSearchList(userInput, searchType="search"):
         loadingPopup["loadingGIFImage"].UpdateAnimation(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", time_between_frames=30) ## Load Loading GIF
         ## Actions from Thread
         if loadingAction == "Start": ## Start Music Search List Thread
-            loadGeniusMusicListThread = threading.Thread(name="loadGeniusMusicList", target=loadGeniusMusicList, args=(userInput,))
+            if searchType == "downloader": forceResult = "refresh"
+            else: forceResult = False
+            loadGeniusMusicListThread = threading.Thread(name="loadGeniusMusicList", target=loadGeniusMusicList, args=(userInput,forceResult,))
             loadGeniusMusicListThread.start()
             loadingAction = "Running"
         elif loadingAction == "No_Result_Found" and searchType == "downloader": ## No Music Search Result Found and Downloader
