@@ -377,9 +377,9 @@ def homeScreen():
     except:
         print(f"[ERROR]: Software files are missing. Please reinstall the software from GitHub and try again. Missing: pygame")
         crashMessage("Missing the pygame package.")
-    applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Playlist Maker", "Metadata Burner", "Music Player", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
+    applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Player", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
     #if systemBuild == "dev":
-    #    for app in ["Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
+    #    for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
@@ -616,22 +616,11 @@ def homeScreen():
             elif event == 'settingsPanel_cleanCacheButton':
                 if popupMessage("Cache Cleaner Confirmation", "Are you sure you want to delete all software Cache?", "confirmation"):
                     try:
-                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")) != []: ## Artworks
-                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")):
-                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks", item))
-                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks"))
-                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks")) != []: ## Mini Artworks
-                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks")):
-                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks", item))
-                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Mini Artworks"))
-                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")) != []: ## Music Search Info
-                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")):
-                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", item))
-                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info"))
-                        if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")) != []: ## Music Search List Info
-                            for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")):
-                                os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", item))
-                            os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info"))
+                        for location in ["Artworks", "Mini Artworks", "Music Search Info", "Music Search List Info"]:
+                            if os.path.exists(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location)) and os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location)) != []:
+                                for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location)):
+                                    os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location, item))
+                                os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location))
                         HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(getDirSize(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache")) / (1024 * 1024), 2)) + " MB")
                         popupMessage("Settings", "Cache has been successfully cleaned.", "success")
                     except: popupMessage("Settings", "Unable to clean the Cache.", "error")
@@ -939,6 +928,10 @@ def homeScreen():
             elif event == 'cdburnerPanel_burnButton': ## Burn CD
                 if len(cdBurningList) > 0: popupMessage("CD Burner", "CD Burner is still being developed.", "error")
                 else: popupMessage("CD Burner", "There must be at least one song to start the burn process.", "error", 5000)
+## CD Burner (Buttons/Events)              
+        elif appSelected == "CD_Ripper":
+            if event == 'cdripperPanel_ripButton': ## Rip CD
+                popupMessage("CD Ripper", "CD Ripper is still being developed.", "error")
 ## Playlist Maker (Buttons/Events)              
         elif appSelected == "Playlist_Maker":
             if event == 'playlistMakerPanel_playlistListbox' and len(values['playlistMakerPanel_playlistListbox']) > 0: HomeWindow.Element('playlistMakerPanel_playlistInput').Update(values['playlistMakerPanel_playlistListbox'][0]) ## Copy Playlist to Playlist Input
@@ -1300,7 +1293,7 @@ def loadGeniusMusic(userInput, forceResult):
     artistSearch, goodResult, hitsFound, musicSearchResultData, resultCount = False, False, 1, {}, 0
     if forceResult != "refresh": ## Read from Cache
         try:
-            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.rsplit('/', 1)[-1] + ".json"), 'r') as file:
+            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'r') as file:
                 musicSearchResultData = json.load(file)
             if datetime.datetime.strptime(musicSearchResultData["geniusMusicSearchExpireDate"], '%Y-%m-%d') > datetime.datetime.now(): ## Cache Expired
                 if musicSearchResultData["lyricsListFinal"] != None: musicSearchResultData["lyrics"] = "Cached"
@@ -1313,7 +1306,7 @@ def loadGeniusMusic(userInput, forceResult):
                 musicSearchResultData["png_data"] = png_data
                 loadingAction = "Search_Finished"
                 return
-            else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.rsplit('/', 1)[-1] + ".json"))
+            else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"))
         except: pass
     ## Load from Online
     if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
@@ -1418,6 +1411,7 @@ def loadGeniusMusic(userInput, forceResult):
                 infoList = str(html.select("div[class*=SongTags__Container]")).split('</a>') ## Song Genre Container
                 musicSearchResultData["geniusMusicSearchGenre"] = (re.sub(r'<.+?>', '', str(infoList[0]))).replace("[", "").replace("]", "").replace("&amp;", "&") ## Song Genre
             except: musicSearchResultData["geniusMusicSearchGenre"] = None
+            musicSearchResultData["geniusMusicSearchSongLength"] = None ## Song's Length
             try: ## Record Label
                 songScrapedInfo = '<div class="SongInfo__Credit">Label</div><div>Republic Records</div>'
                 labelsText = (re.search(r'<div.*?>Label</div><div>(.*?)</div>', songScrapedInfo)).group(1)
@@ -1464,7 +1458,7 @@ def loadGeniusMusic(userInput, forceResult):
     try: ## Save Info to Cache
         musicSearchResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=10))
         pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")).mkdir(parents=True, exist_ok=True) ## Create Music Search Info Cache Folder
-        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.rsplit('/', 1)[-1] + ".json"), 'w') as file:
+        with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'w') as file:
             json.dump({k: v for k, v in musicSearchResultData.items() if k not in ["lyrics", "png_data"]}, file)
     except: pass
     print(f"[INFO]: Music Search: Finished:")
@@ -1761,7 +1755,7 @@ def loadGeniusMusicList(userInput, forceResult):
     artistSearch, musicListResultData["geniusMusicSearchDate"], musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["longArtists"], musicListResultData["longSongNameInfo"], musicListResultData["lyricsHoverMessage"], musicListResultData["lyricsImage"], musicListResultData["musicListLayout"], resultColumns, resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"], musicListResultData["song_art_image_url"] = False, [], [], [], [], [], [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], [], 0, [], [], [], []
     if forceResult != "refresh": ## Read from Cache
         try:
-            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"), 'r') as file:
+            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'r') as file:
                 musicListResultData = json.load(file)
             musicListResultData["musicListLayout"] = [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]]
             if datetime.datetime.strptime(musicListResultData["geniusMusicSearchExpireDate"], '%Y-%m-%d') > datetime.datetime.now(): ## Cache Expired
@@ -1784,7 +1778,7 @@ def loadGeniusMusicList(userInput, forceResult):
                 musicListResultData["musicListLayout"] += [[sg.Push(background_color='#657076'), sg.Text("Music Search powered by Genius (" + str(len(resultColumns)) + " Results)", background_color='#657076', font='Any 11'), sg.Push(background_color='#657076')]] ## Credits
                 loadingAction = "Search_Finished"
                 return
-            else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"))
+            else: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"))
         except: pass
     ## Load from Online
     if isinstance(userInput, list):
@@ -1919,7 +1913,7 @@ def loadGeniusMusicList(userInput, forceResult):
         try: ## Save Info to Cache
             musicListResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=10))
             pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")).mkdir(parents=True, exist_ok=True) ## Create Music Search List Info Cache Folder
-            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.rsplit('/', 1)[-1] + ".json"), 'w') as file:
+            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'w') as file:
                 json.dump({k: v for k, v in musicListResultData.items() if k not in ["musicListLayout"]}, file)
         except: pass
         print(f"[INFO]: Music Search List: Finished:")
