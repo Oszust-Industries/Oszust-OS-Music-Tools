@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 6-23-24
-softwareVersion = "v1.4.0 BETA"
+## Created on: 1-02-23 - Last update: 6-25-24
+softwareVersion = "v1.4.0 Beta"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
 try:
@@ -200,8 +200,16 @@ def checkAutoUpdater(command):
         except: newestVersion = "Failed"
         if newestVersion != softwareVersion and newestVersion != "Failed":
             if not pyuac.isUserAdmin():
-                response = popupMessage("New Update Available", "A new version " + newestVersion + " is now available for " + systemName + ". Would you like to update now?", "downloaded")
-                if response == True:
+                try: releaseInfo = json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode()) ## Changelog File
+                except: releaseInfo = "Failed"
+                if "[AutoUpdater Code 0]" in releaseInfo: response = popupMessage("New Update Available", "A new version " + newestVersion + " is now available for " + systemName + ". AutoUpdater will not work for this update, so you must install it manually. Would you like to open the downloads page?", "downloaded")
+                else: response = popupMessage("New Update Available", "A new version " + newestVersion + " is now available for " + systemName + ". Would you like to update now?", "downloaded")
+                if response == True and "[AutoUpdater Code 0]" in releaseInfo: ## AutoUpdater is Blacklisted
+                    webbrowser.open("https://github.com/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases/latest", new=2, autoraise=True)
+                    thisSystem = psutil.Process(os.getpid()) ## Close Program
+                    thisSystem.terminate()
+                    return 
+                elif response == True: 
                     try:
                         try:
                             os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "AutoUpdater Date.txt"))
