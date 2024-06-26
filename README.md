@@ -14,8 +14,8 @@ YouTube Downloader enables you to download audio and video files from YouTube. Y
 ### Metadata Burner
 Metadata Burner allows you to add and edit metadata for your music files. This ensures that all your music is properly tagged and organized.
 
-### CD Burner
-CD Burner helps you burn your favorite tracks onto CDs. This is perfect for creating physical copies of your music for playing on CD players.
+### Music Player
+Music Player lets you play songs, view lyrics, and create a queue. Enjoy your favorite music right in the software.
 
 ### Lyrics Checker
 Lyrics Checker scans your lyrics for explicit language. It helps you ensure your music is free from unwanted language, providing a cleaner listening experience.
