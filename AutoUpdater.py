@@ -65,7 +65,7 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             loadingStatus = "Error-Bad API call was made to GitHub's releases." ## Bad API Call
             return
         if newestVersion != softwareVersion:
-            try: releaseInfo = json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode()) ## Changelog File
+            try: releaseInfo = (json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode()))[0]['body'] ## Changelog File
             except: releaseInfo = "Failed"
             if "[AutoUpdater Code 0]" in releaseInfo: ## AutoUpdater is Blacklisted
                 loadingStatus = "AutoUpdater can't install the files properly. User must install them manually."
