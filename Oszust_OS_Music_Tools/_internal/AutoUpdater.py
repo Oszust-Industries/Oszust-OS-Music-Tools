@@ -1,4 +1,4 @@
-## Oszust OS AutoUpdater - v4.1.0 (5.15.24) - Oszust Industries
+## Oszust OS AutoUpdater - v4.2.0 (6.25.24) - Oszust Industries
 import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
@@ -65,6 +65,11 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion)
             loadingStatus = "Error-Bad API call was made to GitHub's releases." ## Bad API Call
             return
         if newestVersion != softwareVersion:
+            try: releaseInfo = (json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode()))[0]['body'] ## Changelog File
+            except: releaseInfo = "Failed"
+            if "[AutoUpdater Code 0]" in releaseInfo: ## AutoUpdater is Blacklisted
+                loadingStatus = "AutoUpdater can't install the files properly. User must install them manually."
+                return
         ## Create Temp Folder for Update in Appdata
             loadingStatus, loadingStep = "Creating Temp Folder...", 3    
             if os.path.exists(tempDownloadFolder) == False: os.mkdir(tempDownloadFolder)
