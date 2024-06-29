@@ -1,8 +1,8 @@
-## Oszust OS AutoUpdater - v4.2.0 (6.25.24) - Oszust Industries
+## Oszust OS AutoUpdater - v4.2.0 (6.29.24) - Oszust Industries
 import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
-def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
+def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion, reinstall):
     if systemBuild.lower() in ["dev", "main"]: return ## STOPS THE UPDATER
     ## Setup Thread and Return to Main App
     global loadingStatus, loadingStep
@@ -15,7 +15,7 @@ def setupUpdate(systemName, systemBuild, softwareVersion, newestVersion):
         if event == sg.WIN_CLOSED: exit()
         elif loadingStatus == "Starting Updater...":
                 loadingStatus, loadingStep = "Checking Internet...", 1    
-                OszustOSAutoUpdaterThread = threading.Thread(name="OszustOSAutoUpdater", target=OszustOSAutoUpdater, args=(systemName, systemBuild, softwareVersion, newestVersion,))
+                OszustOSAutoUpdaterThread = threading.Thread(name="OszustOSAutoUpdater", target=OszustOSAutoUpdater, args=(systemName, systemBuild, softwareVersion, reinstall,))
                 OszustOSAutoUpdaterThread.start()
         elif "Error-" in loadingStatus:
             loadingPopup.close()
@@ -52,7 +52,7 @@ def crashMessage(message, systemName):
                     except: pass
             except: pass
 
-def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, newestVersion):
+def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, reinstall):
     global current, loadingStatus, loadingStep
     try: urllib.request.urlopen("http://google.com", timeout=3) ## Test Internet
     except:
@@ -137,6 +137,6 @@ def createBatFile(systemName):
 
 
 ## Start System
-def main(systemName, systemBuild, softwareVersion, newestVersion):
-    try: setupUpdate(systemName, systemBuild, softwareVersion, newestVersion)
+def main(systemName, systemBuild, softwareVersion, newestVersion, reinstall):
+    try: setupUpdate(systemName, systemBuild, softwareVersion, newestVersion, reinstall)
     except Exception as Argument: print("AutoUpdater Error: " + str(Argument))
