@@ -48,7 +48,7 @@ def softwareSetup():
         sys.stdout = output
         sys.stderr = output
     ## Get User's Configs
-    print(f"[LOG START]:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
+    print(f"[LOG START] {datetime.datetime.now().strftime("%Y-%m-%d | %H:%M:%S")}:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
     softwareConfig()
     ## Check WIFI
     appSelected, wifiStatus = None, True

@@ -1,4 +1,4 @@
-## Oszust OS AutoUpdater - v4.2.0 (6.29.24) - Oszust Industries
+## Oszust OS AutoUpdater - v5.0.0 (7.13.24) - Oszust Industries
 import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
@@ -92,6 +92,9 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, reinstall):
                 loadingStatus = "Error-Unable to delete current files. You will have to remove them yourself."
                 return
             os.rename(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + ".exe", tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\" + systemName.replace(" ", "_") + "2.exe")
+        ## Extract Packages ZIP Folder
+            with zipfile.ZipFile(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\_internal\\_internal.zip", 'r') as zip_ref: zip_ref.extractall(tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_") + "\\_internal")
+        ## Copy Files / Folder to Install
             try: copyFilesFolders((tempDownloadFolder + "\\temp\\" + systemName.replace(" ", "-") + "-" + systemBuild + "\\" + systemName.replace(" ", "_")), current)
             except:
                 loadingStatus = "Error-Unable to copy update files. You will have to copy them yourself."
