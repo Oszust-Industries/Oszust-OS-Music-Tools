@@ -1,11 +1,11 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 6-29-24
-softwareVersion = "v1.4.0"
+## Created on: 1-02-23 - Last update: 7-13-24
+softwareVersion = "v1.4.1"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import AutoUpdater
 try:
     filesVerified = True
-    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, re, requests, shutil, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
+    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, random, re, requests, shutil, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
     from moviepy.editor import *
     from mutagen.mp3 import MP3
     from mutagen.wave import WAVE
@@ -242,7 +242,7 @@ def checkAutoUpdater(command):
             if command == "check": popupMessage("AutoUpdater", "You are already using the latest version of " + systemName + ".", "success")
             else: homeScreen()
     else: homeScreen()
-    
+   
 def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## Set Local Variables
     try: musicSub = userSettingsData["musicService"]
@@ -318,14 +318,13 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='cdripperPanel'),
     ## Music Player Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Player:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButtonPlayer', visible=True)], [sg.Text("", font='Any 18', background_color='#2B475D', visible=False)], [sg.Text("", font='Any 16', background_color='#2B475D')], [sg.Text("Not Playing", font='Any 14 bold', background_color='#2B475D', key='musicPlayerPanel_songTitle')], [sg.Text("Artist", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songArtist')], [sg.Text("Album", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songAlbum')],
+    [sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButtonPlayer', visible=False), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_searchButtonPlayer', visible=True)], [sg.Text("", font='Any 18', background_color='#2B475D', visible=False)], [sg.Text("", font='Any 16', background_color='#2B475D')], [sg.Text("Not Playing", font='Any 14 bold', background_color='#2B475D', key='musicPlayerPanel_songTitle')], [sg.Text("Artist", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songArtist')], [sg.Text("Album", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_songAlbum')],
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\rewind.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_rewindButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_playButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\forward.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_forwardButton')], [sg.Text("", background_color='#2B475D', size=(43, 1))], [sg.Text("", font='Any 24', background_color='#2B475D')]], background_color='#2B475D', element_justification='c', visible=True, key='musicPlayerPanel_playerPanel'),
     sg.Column([[sg.Text("Not Playing - Artist", font='Any 11', background_color='#2B475D', key='musicPlayerPanel_songTitleLyrics')], [sg.Listbox([], size=(48,14), font='Any 10', disabled=True, key='musicPlayerPanel_lyricsListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_lyricsPanel'),
     sg.Column([[sg.Text("Not Playing - Artist", font='Any 11', background_color='#2B475D', key='musicPlayerPanel_songTitleQueue')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\addSong.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_addSongButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\upList.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_upQueueButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\downList.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_downQueueButton'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\trash.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_trashQueueButton')], [sg.Text("", font='Any 1', background_color='#2B475D')], [sg.Listbox([], size=(48,11), font='Any 10', disabled=False, right_click_menu=['&Right Click', ['&Play Next', '&Delete']], key='musicPlayerPanel_queueListbox')], [sg.Text("", background_color='#2B475D', size=(43, 1))]], background_color='#2B475D', element_justification='c', visible=False, key='musicPlayerPanel_queuePanel'),
-    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_lyricsPage')],
-    #sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_shuffleQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_loopQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_lyricsPage'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_queuePage')],
+    sg.Column([[sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\shuffle.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_shuffleQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\loop.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_loopQueue'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\lyrics.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_lyricsPage'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\queue.png', border_width=0, button_color='#2B475D', key='musicPlayerPanel_queuePage')],
     [sg.Image(str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png', size=(200,200), key='musicPlayerPanel_songArtwork')]], background_color='#2B475D', element_justification='c', key='musicPlayerPanel_artworkPanel')],
-    [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_startTime'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=False, disable_number_display=True, disabled=True, orientation='horizontal', key='musicPlayerPanel_timeSlider', background_color='#2B475D'), sg.Text("4:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_endTime')]
+    [sg.Text("0:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_startTime'), sg.Slider(range=(0, 240), default_value=0, expand_x=True, enable_events=True, disable_number_display=True, orientation='horizontal', key='musicPlayerPanel_timeSlider', background_color='#2B475D'), sg.Text("0:00", font='Any 12', background_color='#2B475D', key='musicPlayerPanel_endTime')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='musicPlayerPanel'),
     ## Lyrics Guesser Panel
     sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Guesser Game:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')]
@@ -432,9 +431,8 @@ def homeScreen():
     youtubeAudioDownload, youtubeVideoDownload, youtubeDownloadName = False, True, False ## App Variables
     for key in ['pasteClipboardButton', 'openYoutubeButton', 'fileBrowseButton', 'resetSettings', 'audioDownloadCheckbox', 'videoDownloadCheckbox', 'changeNameCheckbox', 'changeNameClipboard', 'changeNameClearInput', 'downloadButton']: HomeWindow['youtubeDownloaderPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Music Player: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
-    musicPlayerCurrentSong, musicPlayerQueueCurrentState, musicPlayerLoop, musicPlayerPage, musicPlayerShuffle, musicPlayerQueue = "", "pause", False, "player", False, []
-    #for key in ['rewindButton', 'playButton', 'forwardButton', 'shuffleQueue', 'loopQueue', 'lyricsPage', 'queuePage', 'addSongButton', 'upQueueButton', 'downQueueButton', 'trashQueueButton']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
-    for key in ['rewindButton', 'playButton', 'forwardButton', 'lyricsPage']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    musicPlayerCurrentSong, musicPlayerQueueCurrentState, musicPlayerQueueCurrentIndex, musicPlayerLoop, musicPlayerPage, musicPlayerShuffle, musicPlayerQueue = "", "pause", 0, False, "player", False, []
+    for key in ['searchButtonPlayer', 'rewindButton', 'playButton', 'forwardButton', 'shuffleQueue', 'loopQueue', 'lyricsPage', 'queuePage', 'addSongButton', 'upQueueButton', 'downQueueButton', 'trashQueueButton']: HomeWindow['musicPlayerPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Lyrics Checker: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     HomeWindow['lyricsCheckerPanel_lyricsInput'].bind('<Insert>', '_Ins')          ## Insert on Input
     HomeWindow['lyricsCheckerPanel_lyricsInput'].bind('<Delete>', '_Del')          ## Delete on Input
@@ -982,22 +980,40 @@ def homeScreen():
                 except: popupMessage("Playlist Maker", "Failed to import playlists.", "error", 3000) ## Show Error Message
 ## Music Player (Buttons/Events)              
         elif appSelected == "Music_Player":
-            if musicPlayerQueueCurrentState == "play": ## Update Slider and Time
-                HomeWindow['musicPlayerPanel_startTime'].update(f"{int(((mixer.music.get_pos() / 1000)) // 60)}:{int(((mixer.music.get_pos() / 1000)) % 60):02}")
-                HomeWindow['musicPlayerPanel_timeSlider'].update((mixer.music.get_pos() / 1000))
-            if len(musicPlayerQueue) > 0 and musicPlayerCurrentSong != musicPlayerQueue[0]: ## Song is Ready to Play
-                musicPlayerCurrentSong = musicPlayerQueue[0]
+            if musicPlayerQueueCurrentState == "play" and event != 'musicPlayerPanel_timeSlider': ## Update Slider and Time
+                HomeWindow['musicPlayerPanel_startTime'].update(f"{int((sliderPos + (mixer.music.get_pos() / 1000)) // 60)}:{int((sliderPos + (mixer.music.get_pos() / 1000)) % 60):02}")
+                HomeWindow['musicPlayerPanel_timeSlider'].update(sliderPos + (mixer.music.get_pos() / 1000))
+            if musicPlayerQueueCurrentState == "play" and audio.info.length <= sliderPos + (mixer.music.get_pos() / 1000) + 0.5: ## Song Finished
+                if musicPlayerLoop and musicPlayerQueueCurrentIndex == len(musicPlayerQueue) - 1: ## Loop on
+                    musicPlayerQueueCurrentIndex = 0
+                elif musicPlayerQueueCurrentIndex == len(musicPlayerQueue) - 1: ## Loop off
+                    musicPlayerQueueCurrentIndex = 0
+                    musicPlayerQueueCurrentState = "stop"
+                else: musicPlayerQueueCurrentIndex = musicPlayerQueueCurrentIndex + 1 ## Next Song
+                sliderPos = 0
+                if len(musicPlayerQueue) > 0 and musicPlayerQueueCurrentIndex+1 < len(musicPlayerQueue): HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                else: HomeWindow['musicPlayerPanel_queueListbox'].update([])
+            if len(musicPlayerQueue) > 0 and musicPlayerCurrentSong != musicPlayerQueue[musicPlayerQueueCurrentIndex]: ## Song is Ready to Play
+                musicPlayerCurrentSong = musicPlayerQueue[musicPlayerQueueCurrentIndex]
                 try:
-                    audiofile = eyed3.load(musicPlayerQueue[0])
+                    audiofile = eyed3.load(musicPlayerQueue[musicPlayerQueueCurrentIndex])
                     try: ## Get Song Artwork
+                        HomeWindow.Element('musicPlayerPanel_songArtwork').update(filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png')
                         for tag in audiofile.tag.images:
-                            if tag.mime_type == 'image/png': bio = io.BytesIO(tag.image_data)
-                        HomeWindow.Element('musicPlayerPanel_songArtwork').update(data=bio.read())
-                    except: HomeWindow.Element('musicPlayerPanel_songArtwork').update(data=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png')
+                            if tag.mime_type == 'image/png':
+                                bio = io.BytesIO(tag.image_data)
+                                HomeWindow.Element('musicPlayerPanel_songArtwork').update(data=bio.read())
+                    except: HomeWindow.Element('musicPlayerPanel_songArtwork').update(filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\defaultMusicPlayerArtwork.png')
                     try: ## Get Song Lyrics
                         HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(disabled=False)
-                        for lyric in audiofile.tag.lyrics: lyricsList = (lyric.text).split("\n")
-                        HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(lyricsList[::2])
+                        formattedLyrics = []
+                        for lyric in audiofile.tag.lyrics:
+                            lyricLines = lyric.text.split("\n")
+                            for line in lyricLines:
+                                if line.strip(): formattedLyrics.extend((textwrap.TextWrapper(width=55, max_lines=6, placeholder='...')).wrap(line))
+                                else: formattedLyrics.append('')
+                        while formattedLyrics and formattedLyrics[-1] == '': formattedLyrics.pop()
+                        HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(formattedLyrics)
                         HomeWindow.Element('musicPlayerPanel_lyricsListbox').update(disabled=True)
                     except: HomeWindow.Element('musicPlayerPanel_lyricsListbox').update([])
                     HomeWindow.Element('musicPlayerPanel_songTitle').Update(audiofile.tag.title)
@@ -1016,17 +1032,25 @@ def homeScreen():
                 except:
                     print(f"[ERROR]: Failed to load metadata from Music Player song")
                     popupMessage("Music Player", "Metadata Failed to load from song.", "error", 5000)
-                ## Start Playing Song  
-                musicPlayerQueueCurrentState = "play"    
-                mixer.music.load(musicPlayerQueue[0])
+                ## Start Playing Song
+                sliderPos = 0
+                if len(musicPlayerQueue) > 0 and musicPlayerQueueCurrentIndex+1 < len(musicPlayerQueue): HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                else: HomeWindow['musicPlayerPanel_queueListbox'].update([])
+                if musicPlayerQueueCurrentState != "stop": musicPlayerQueueCurrentState = "play"    
+                mixer.music.load(musicPlayerQueue[musicPlayerQueueCurrentIndex])
                 HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\pause.png')
-                if musicPlayerQueue[0].endswith('.mp3'):
-                    audio = MP3(musicPlayerQueue[0])
-                elif musicPlayerQueue[0].endswith('.wav'):
-                    audio = WAVE(musicPlayerQueue[0])
+                if musicPlayerQueue[musicPlayerQueueCurrentIndex].endswith('.mp3'):
+                    audio = MP3(musicPlayerQueue[musicPlayerQueueCurrentIndex])
+                elif musicPlayerQueue[musicPlayerQueueCurrentIndex].endswith('.wav'):
+                    audio = WAVE(musicPlayerQueue[musicPlayerQueueCurrentIndex])
                 HomeWindow['musicPlayerPanel_timeSlider'].update(range=(0, int(audio.info.length)), value=0)
                 HomeWindow.Element('musicPlayerPanel_endTime').update(f"{int(audio.info.length // 60)}:{int(audio.info.length % 60)}")
+                HomeWindow['musicPlayerPanel_startTime'].update(f"0:00")
                 mixer.music.play()
+                if musicPlayerQueueCurrentState == "stop":
+                    mixer.music.pause()
+                    musicPlayerQueueCurrentState = "pause"
+                    HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png')
             if event == 'musicPlayerPanel_playButton': ## Play / Pause Button
                 if musicPlayerQueueCurrentState == "pause": ## play
                     mixer.music.unpause()
@@ -1037,20 +1061,40 @@ def homeScreen():
                     HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png')
                     musicPlayerQueueCurrentState = "pause"
             elif event == 'musicPlayerPanel_rewindButton': ## Rewind Button
-                mixer.music.play()
-            elif event == 'musicPlayerPanel_forwardButton': ## Forward Button
-                if len(musicPlayerQueue) > 1:
-                    selectedSong = musicPlayerQueue[0]
-                    musicPlayerQueue.remove(musicPlayerQueue[0])
-                    HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
+                sliderPos = 0
+                if musicPlayerQueueCurrentIndex > 0: musicPlayerQueueCurrentIndex = musicPlayerQueueCurrentIndex - 1
                 else: mixer.music.play()
+            elif event == 'musicPlayerPanel_forwardButton': ## Forward Button
+                sliderPos = 0
+                if musicPlayerQueueCurrentIndex < len(musicPlayerQueue) - 1: musicPlayerQueueCurrentIndex = musicPlayerQueueCurrentIndex + 1
+                elif musicPlayerLoop and len(musicPlayerQueue) > 1: musicPlayerQueueCurrentIndex = 0
+                else:
+                    musicPlayerQueueCurrentIndex = 0
+                    if musicPlayerLoop == False:
+                        musicPlayerQueueCurrentState = "stop"
+                        mixer.music.pause()
+                        HomeWindow['musicPlayerPanel_timeSlider'].update(range=(0, int(audio.info.length)), value=0)
+                        HomeWindow['musicPlayerPanel_startTime'].update(f"0:00")
+                        HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png')
+                    else: mixer.music.play()
+            elif event == 'musicPlayerPanel_searchButtonPlayer' and len(musicPlayerQueue) > 0: geniusMusicSearch(audiofile.tag.title + " " + audiofile.tag.artist, False) ## Music Search Button
             elif event == 'musicPlayerPanel_shuffleQueue': ## Shuffle Queue Button
                 if musicPlayerShuffle:
+                    part1 = musicPlayerQueue[:musicPlayerQueueCurrentIndex+1]
+                    part2 = musicPlayerQueueCopy[musicPlayerQueueCurrentIndex+1:]
+                    musicPlayerQueue = part1 + part2
                     musicPlayerShuffle = False
                     HomeWindow['musicPlayerPanel_shuffleQueue'].update(button_color='#2B475D')
                 else:
+                    musicPlayerQueueCopy = musicPlayerQueue
+                    if musicPlayerQueueCurrentIndex < len(musicPlayerQueue)-1:
+                        part1 = musicPlayerQueue[:musicPlayerQueueCurrentIndex+1]
+                        part2 = musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]
+                        random.shuffle(part2)
+                        musicPlayerQueue = part1 + part2
                     musicPlayerShuffle = True
                     HomeWindow['musicPlayerPanel_shuffleQueue'].update(button_color='blue')
+                HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
             elif event == 'musicPlayerPanel_loopQueue': ## Loop Queue Button
                 if musicPlayerLoop:
                     musicPlayerLoop = False
@@ -1104,8 +1148,13 @@ def homeScreen():
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=False)
                     HomeWindow['musicPlayerPanel_queuePanel'].update(visible=True)
                     HomeWindow['musicPlayerPanel_artworkPanel'].update(visible=True)
-            #elif event == 'musicPlayerPanel_timeSlider': ## Change Part of Song
-            #    mixer.music.play(start=values['musicPlayerPanel_timeSlider'])
+            elif event == 'musicPlayerPanel_timeSlider' and len(musicPlayerQueue) > 0: ## Change Part of Song
+                if musicPlayerQueueCurrentState == "pause": ## play
+                    mixer.music.unpause()
+                    HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\pause.png')
+                    musicPlayerQueueCurrentState = "play"
+                sliderPos = values['musicPlayerPanel_timeSlider']
+                mixer.music.play(start=values['musicPlayerPanel_timeSlider'])
             elif event == 'musicPlayerPanel_addSongButton' or event == 'musicPlayerPanel_addSongButtonPlayer': ## Add Song to Queue
                 if event == 'musicPlayerPanel_addSongButtonPlayer': musicPlayerQueue = []
                 fileBrowserWindow = sg.Window("Song Selector", [[sg.Text("Song File:")], [sg.Input(key="fileLocation"), sg.FilesBrowse(file_types=(("Music Files", "*.mp3;*.wav;"), ("All Files", "*.*")))], [sg.Push(), sg.Button("OK"), sg.Push()]], no_titlebar=True, keep_on_top=True, finalize=True)
@@ -1117,51 +1166,42 @@ def homeScreen():
                         if values["fileLocation"] != "":
                             for item in values["fileLocation"].split(";"):
                                 if item not in musicPlayerQueue: musicPlayerQueue.append(item)
-                            HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
+                            HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[musicPlayerQueueCurrentIndex:]])
                         fileBrowserWindow.close()
                         break
             elif event == 'musicPlayerPanel_upQueueButton': ## Queue Move Up
                 selectedSong = values['musicPlayerPanel_queueListbox']
                 if selectedSong:
-                    selectedSong = selectedSong[0]
-                    for i, song in enumerate([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]]):
-                        if selectedSong in song:
-                            if i > 0:
-                                musicPlayerQueue[i], musicPlayerQueue[i - 1] = musicPlayerQueue[i - 1], musicPlayerQueue[i]
-                            break
-                    HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
-                    HomeWindow['musicPlayerPanel_queueListbox'].set_value([selectedSong])
+                    selectedSongIndex = [os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue].index(selectedSong[0])
+                    if selectedSongIndex > 0 and selectedSongIndex > musicPlayerQueueCurrentIndex+1:
+                        musicPlayerQueue[selectedSongIndex], musicPlayerQueue[selectedSongIndex - 1] = musicPlayerQueue[selectedSongIndex - 1], musicPlayerQueue[selectedSongIndex]
+                        HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(song))[0] for song in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                        HomeWindow['musicPlayerPanel_queueListbox'].update(set_to_index=selectedSongIndex-2)
             elif event == 'musicPlayerPanel_downQueueButton': ## Queue Move Down
                 selectedSong = values['musicPlayerPanel_queueListbox']
                 if selectedSong:
-                    selectedSong = selectedSong[0]
-                    for i, song in enumerate([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]]):
-                        if selectedSong in song:
-                            if i < len(musicPlayerQueue) - 1:
-                                musicPlayerQueue[i], musicPlayerQueue[i + 1] = musicPlayerQueue[i + 1], musicPlayerQueue[i]
-                            break
-                    HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
-                    HomeWindow['musicPlayerPanel_queueListbox'].set_value([selectedSong])
+                    selectedSongIndex = [os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue].index(selectedSong[0])
+                    if selectedSongIndex > 0 and selectedSongIndex < len(musicPlayerQueue)-1:
+                        musicPlayerQueue[selectedSongIndex], musicPlayerQueue[selectedSongIndex + 1] = musicPlayerQueue[selectedSongIndex + 1], musicPlayerQueue[selectedSongIndex]
+                        HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(song))[0] for song in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                        HomeWindow['musicPlayerPanel_queueListbox'].update(set_to_index=selectedSongIndex)
             elif event == 'musicPlayerPanel_trashQueueButton' or values['musicPlayerPanel_queueListbox'] and event == 'Delete': ## Remove Song Queue and Right Click - Delete
                 selectedSong = values['musicPlayerPanel_queueListbox']
                 if selectedSong:
-                    selectedSong = selectedSong[0]
-                    for i, song in enumerate([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]]):
-                        if selectedSong in song:
-                            musicPlayerQueue.pop(i)
-                            break
-                    HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
-                    HomeWindow['musicPlayerPanel_queueListbox'].set_value([selectedSong]) 
+                    selectedSongIndex = [os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue].index(selectedSong[0])
+                    if selectedSongIndex > 0:
+                        del musicPlayerQueue[selectedSongIndex]
+                        HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(song))[0] for song in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                        HomeWindow['musicPlayerPanel_queueListbox'].update(set_to_index=selectedSongIndex-1)
             elif values['musicPlayerPanel_queueListbox'] and event == 'Play Next': ## Right Click - Play Next
                 selectedSong = values['musicPlayerPanel_queueListbox']
                 if selectedSong:
-                    selectedSong = selectedSong[0]
-                    for i, song in enumerate([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]]):
-                        if selectedSong in song:
-                            musicPlayerQueue.pop(i)
-                            break
-                    musicPlayerQueue.insert(1, selectedSong)
-                    HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue[1:]])
+                    selectedSongIndex = [os.path.splitext(os.path.basename(file_path))[0] for file_path in musicPlayerQueue].index(selectedSong[0])
+                    if selectedSongIndex > 0 and selectedSongIndex > musicPlayerQueueCurrentIndex+1:
+                        song = musicPlayerQueue.pop(selectedSongIndex)
+                        musicPlayerQueue.insert(musicPlayerQueueCurrentIndex+1, song)
+                        HomeWindow['musicPlayerPanel_queueListbox'].update([os.path.splitext(os.path.basename(song))[0] for song in musicPlayerQueue[musicPlayerQueueCurrentIndex+1:]])
+                        HomeWindow['musicPlayerPanel_queueListbox'].update(set_to_index=musicPlayerQueueCurrentIndex)
 ## Internet Status Changes
         HomeWindow['versionTextHomeBottom'].update(f"{platform.system()} | {softwareVersion} | {systemBuild} | {'Online' if wifiStatus else 'Offline'}")
             
@@ -1235,8 +1275,7 @@ def loadingScreen(functionLoader, homeHasLaunched, agr1=False, arg2=False, arg3=
             break
 
 def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTimer=0):
-    wrapper = textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')
-    popupMessageText = '\n'.join(wrapper.wrap(popupMessageText))
+    popupMessageText = '\n'.join((textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')).wrap(popupMessageText))
     if "New Update Available" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#1B2838', key='messagePopupExitButton', tooltip="Install Update Now"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\nextWeek.png', border_width=0, button_color='#1B2838', key='messagePopupRemindButton', tooltip="Remind Me Next Week"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#1B2838', key='messagePopupCancelButton', tooltip="Don't Install Update")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     elif "Confirmation" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#1B2838', key='messagePopupExitButton', tooltip="Accept"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#1B2838', key='messagePopupCancelButton', tooltip="Cancel")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     else: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("OK", font=('Any 12'), button_color=('white','#5A6E80'), key='messagePopupExitButton')]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
@@ -1291,7 +1330,8 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNee
         stream.download(downloadLocation, filename=youtubeTitle) ## Download the video
         youtubeTitle = youtubeTitle[:youtubeTitle.rfind(".mp4")]
     except:
-        print(f"[ERROR]: Retrieved title: {youtubeTitle}")
+        try: print(f"[ERROR]: Retrieved title: {youtubeTitle}")
+        except: print(f"[ERROR]: Retrieved title: FATAL ERROR")
         loadingStatus = "Failed_YouTubeDownloader"
         return
     if audioFileNeeded: ## Convert MP4 Video to MP3 Audio
@@ -1333,7 +1373,8 @@ def downloadAudio(youtubeLink, downloadLocation):
         stream.download(downloadLocation, filename=youtubeTitle) ## Download the video
         youtubeTitle = youtubeTitle[:youtubeTitle.rfind(".mp4")]
     except:
-        print(f"[ERROR]: Retrieved title: {youtubeTitle}")
+        try: print(f"[ERROR]: Retrieved title: {youtubeTitle}")
+        except: print(f"[ERROR]: Retrieved title: FATAL ERROR")
         loadingStatus = "Failed_MusicDownloaderYouTube"
         return
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
@@ -1440,6 +1481,7 @@ def loadGeniusMusic(userInput, forceResult):
                             with open(os.path.join(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks"), str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/", 1)[1].split(".", 1)[0] + ".png"), "wb") as f: f.write(png_bio.getbuffer())
                         except: pass
                         png_data = png_bio.getvalue()
+                        musicSearchResultData["png_data_location"] = str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\Music Search\\Artworks\\" + str(musicSearchApiBodyPath["song_art_image_url"]).split(".com/",1)[1].split(".",1)[0] + ".png"
             except: png_data = str(pathlib.Path(__file__).resolve().parent) + "\\data\\icons\\defaultMusicArtwork.png"
             ## Album, Album List, Genre, and Label
             try: html = bs4.BeautifulSoup((requests.get(musicSearchResultData["geniusMusicSearchGeniusURL"])).text, "html.parser") # Scrape the info from the HTML
@@ -1696,6 +1738,7 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             except: pass
             HomeWindow['metadataBurnerPanel'].update(visible=True)
             HomeWindow['musicSearchPanel'].update(visible=False)
+            HomeWindow.Element('metadataBurnerPanel_songLocationInput').Update("")
             if musicSearchResultData["geniusMusicSearchSongNameInfo"] != None: HomeWindow.Element('metadataBurnerPanel_songNameInput').Update(musicSearchResultData["geniusMusicSearchSongNameInfo"])
             if musicSearchResultData["geniusMusicSearchSongNameInfo"] != None: HomeWindow.Element('metadataBurnerPanel_songNameInput').Update(musicSearchResultData["geniusMusicSearchSongNameInfo"])
             if musicSearchResultData["geniusMusicSearchPrimeArtist"] != None: HomeWindow.Element('metadataBurnerPanel_songArtistInput').Update(musicSearchResultData["geniusMusicSearchPrimeArtist"])
@@ -1707,9 +1750,8 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
             if musicSearchResultData["geniusMusicSearchCDCurrent"] != None: HomeWindow.Element('metadataBurnerPanel_cdCurrentLengthInput').Update(musicSearchResultData["geniusMusicSearchCDCurrent"])
             if musicSearchResultData["geniusMusicSearchCDLength"] != None: HomeWindow.Element('metadataBurnerPanel_cdTotalLengthInput').Update(musicSearchResultData["geniusMusicSearchCDLength"])
             if musicSearchResultData["geniusMusicSearchLabels"] != None: HomeWindow.Element('metadataBurnerPanel_songPublisherInput').Update(musicSearchResultData["geniusMusicSearchLabels"][0])
-            if musicSearchResultData["png_data_location"] != None:
-                HomeWindow.Element('metadataBurnerPanel_songArtworkInput').Update(musicSearchResultData["png_data_location"])
-                HomeWindow.Element('metadataBurnerPanel_songArtworkBrowser').InitialFolder = os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")
+            if musicSearchResultData["png_data_location"] != None: HomeWindow.Element('metadataBurnerPanel_songArtworkInput').Update(musicSearchResultData["png_data_location"])
+            HomeWindow.Element('metadataBurnerPanel_songArtworkBrowser').InitialFolder = os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Artworks")
             HomeWindow.Element('metadataBurnerPanel_lyricsInput').update("")
             if musicSearchResultData["lyricsListFinal"] != None:
                 for i in range(len(musicSearchResultData["lyricsListFinal"])):
@@ -1872,7 +1914,8 @@ def loadGeniusMusicList(userInput, forceResult):
             print(f"[ERROR]: Music Search List: No results found")
             loadingAction = "No_Result_Found"
             return
-    else:
+        else: userInput = "done"
+    elif userInput != "done":
         if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
         musicSearchApiBody, hitsFound, pageNumber = [], 0, 1 
         while pageNumber < 3:
