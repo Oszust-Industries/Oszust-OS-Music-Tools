@@ -1,16 +1,16 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 7-13-24
-softwareVersion = "v1.4.1"
+## Created on: 1-02-23 - Last update: 8-17-24
+softwareVersion = "v1.4.2"
 systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
 try:
     filesVerified = True
-    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, random, re, requests, shutil, textwrap, threading, time, urllib.request, webbrowser, win32clipboard
+    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, random, re, requests, shutil, textwrap, threading, time, urllib.request, webbrowser, win32clipboard, yt_dlp
     from moviepy.editor import *
     from mutagen.mp3 import MP3
     from mutagen.wave import WAVE
     from PIL import Image
-    from pytube import YouTube
+    from pytube import YouTube ## REMOVE
     import PySimpleGUI as sg
 except Exception as Argument:
     filesVerified = False
@@ -133,21 +133,21 @@ def downloadBillboardSongs():
             try:
                 if billboardList == "Adult Contemporary" and position < 20:
                     if position < 8:
-                        if song.weeks == 1: topSongsList.append([f"A{position + 1}. {song.title} - {song.artist}", "NEW"])
-                        elif song.lastPos > song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
-                        elif song.lastPos == song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
-                        elif song.lastPos < song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
+                        if song.weeks == 1: topSongsList.append([f"A{position + 1}. {song.title} - {song.artist}", "   NEW"])
+                        elif song.lastPos > song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     ^ {song.lastPos - position}" if song.weeks <= 9 else f"   ^ {song.lastPos - position}")])
+                        elif song.lastPos == song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -") + (position - song.lastPos)])
+                        elif song.lastPos < song.rank: topSongsList.append([f"A{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     v {song.lastPos - position}" if song.weeks <= 9 else f"   v {song.lastPos - position}")])
                     elif position < 20:
-                        if song.weeks == 1: topSongsList.append([f"B{position + 1}. {song.title} - {song.artist}", "NEW"])
-                        elif song.lastPos > song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
-                        elif song.lastPos == song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
-                        elif song.lastPos < song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
+                        if song.weeks == 1: topSongsList.append([f"B{position + 1}. {song.title} - {song.artist}", "   NEW"])
+                        elif song.lastPos > song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     ^ {song.lastPos - position}" if song.weeks <= 9 else f"   ^ {song.lastPos - position}")])
+                        elif song.lastPos == song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -") + (position - song.lastPos)])
+                        elif song.lastPos < song.rank: topSongsList.append([f"B{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     v {song.lastPos - position}" if song.weeks <= 9 else f"   v {song.lastPos - position}")])
                 else:
-                    if song.weeks == 1: topSongsList.append([f"{position + 1}. {song.title} - {song.artist}", "NEW"])
-                    elif song.lastPos > song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   ^")])
-                    elif song.lastPos == song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   -")])
-                    elif song.lastPos < song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     ^" if song.weeks <= 9 else "   v")])
-            except: topSongsList.append(f"{position + 1}. Result Failed to Load.", "N/A")
+                    if song.weeks == 1: topSongsList.append([f"{position + 1}. {song.title} - {song.artist}", "   NEW"])
+                    elif song.lastPos > song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     ^ {song.lastPos - position}" if song.weeks <= 9 else f"   ^ {song.lastPos - position}")])
+                    elif song.lastPos == song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + ("     -" if song.weeks <= 9 else "   -")])
+                    elif song.lastPos < song.rank: topSongsList.append([f"{position + 1}. {song.title} -  {song.artist}", str(song.weeks) + (f"     v {song.lastPos - position}" if song.weeks <= 9 else f"   v {song.lastPos - position}")])
+            except: topSongsList.append([f"{position + 1}. Result Failed to Load.", "N/A"])
         try: ## Cache the List
             with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"), "w") as billboardTextFile:  # Create Cache File
                 lastTuesday = datetime.date.today() - datetime.timedelta(days=(datetime.date.today().weekday() - 1) % 7)  # Data is fresh on Tuesday
@@ -155,9 +155,9 @@ def downloadBillboardSongs():
                 for sublist in topSongsList:
                     for item in sublist: billboardTextFile.write("\n" + item)
         except: pass
-    except:
-        print(f"[WARNING]: Billboard failed to load")
-        topSongsList = [["Billboard Top 100 Failed to Load.", "N/A"]]
+    except Exception as error:
+        print(f"[WARNING]: Billboard failed to load. {error}")
+        topSongsList = [["Billboard Failed to Load.", "N/A"]]
     loadingStatus = "Done"
 
 def loadProfanityEngineDefinitions(downloadList):
@@ -260,7 +260,7 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
         toolsPanelRow = []
         toolPanelAppLocation += 6
     ## Listboxes
-    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " " * int((-7 / 25) * ctypes.windll.shcore.GetScaleFactorForDevice(0) + 67), 'Weeks'), num_rows=16, auto_size_columns=True, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
+    topSongsListBoxed = [[sg.Table(values=topSongsList, headings=('Songs' + " " * int((-7 / 25) * ctypes.windll.shcore.GetScaleFactorForDevice(0) + 67), 'Weeks'), col_widths=[53, 8], num_rows=16, auto_size_columns=False, enable_events=True, background_color='white', text_color='black', justification='l', key='musicSearchPanel_billboardTopSongsList')]]
     profanityEngineListBoxed = [[sg.Listbox([item.replace("~", "'") for item in profanityEngineDefinitions], size=(25, 17), horizontal_scroll=True, select_mode=None, enable_events=True, right_click_menu=['&Right Click', ['&Delete']], highlight_background_color='blue', highlight_text_color='white', key='profanityEnginePanel_definitionsList')]]
     ## Music Search Panel [Default]
     return [[sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Music Search:", font='Any 20 bold', justification='c', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
@@ -634,10 +634,10 @@ def homeScreen():
                     except: popupMessage("Settings", "Unable to clean the Cache.", "error")
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
-            if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
-            elif (event == 'musicSearchPanel_listSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Ins') or (event == 'musicSearchPanel_billboardTopSongsList' + '_Ins')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput']) ## Music Search All Results
+            if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardfailedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
+            elif (event == 'musicSearchPanel_listSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Ins') or (event == 'musicSearchPanel_billboardTopSongsList' + '_Ins')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardfailedtoload"]: geniusMusicSearchList(values['musicSearchPanel_songSearchInput']) ## Music Search All Results
             elif event == 'musicSearchPanel_clearSongSearchInputButton' or (event == 'musicSearchPanel_songSearchInput' + '_Del'): HomeWindow.Element('musicSearchPanel_songSearchInput').Update("") ## Clear Music Search Input
-            elif event == 'musicSearchPanel_billboardTopSongsList' and (topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardtop100failedtoload"]: HomeWindow.Element('musicSearchPanel_songSearchInput').Update((topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
+            elif event == 'musicSearchPanel_billboardTopSongsList' and (topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0].split('.')[1].replace(" ","").replace(".","").lower() not in ["", "resultfailedtoload", "billboardfailedtoload"]): HomeWindow.Element('musicSearchPanel_songSearchInput').Update((topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0]) ## Copy Top 100 to Music Search
             elif (event == 'musicSearchPanel_billboardTopSongsList' + '_Enter'): geniusMusicSearch((topSongsList[values['musicSearchPanel_billboardTopSongsList'][0]][0]).split(". ", 1)[1].split("   (", 1)[0], False) ## Top 100 Song Search
 ## Music Downloader (Buttons/Events)
         elif appSelected == "Music_Downloader":
@@ -1051,7 +1051,7 @@ def homeScreen():
                     mixer.music.pause()
                     musicPlayerQueueCurrentState = "pause"
                     HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png')
-            if event == 'musicPlayerPanel_playButton': ## Play / Pause Button
+            if event == 'musicPlayerPanel_playButton' and len(musicPlayerQueue) > 0: ## Play / Pause Button
                 if musicPlayerQueueCurrentState == "pause": ## play
                     mixer.music.unpause()
                     HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\pause.png')
@@ -1060,11 +1060,11 @@ def homeScreen():
                     mixer.music.pause()
                     HomeWindow.Element('musicPlayerPanel_playButton').update(image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\play.png')
                     musicPlayerQueueCurrentState = "pause"
-            elif event == 'musicPlayerPanel_rewindButton': ## Rewind Button
+            elif event == 'musicPlayerPanel_rewindButton' and len(musicPlayerQueue) > 0: ## Rewind Button
                 sliderPos = 0
                 if musicPlayerQueueCurrentIndex > 0: musicPlayerQueueCurrentIndex = musicPlayerQueueCurrentIndex - 1
                 else: mixer.music.play()
-            elif event == 'musicPlayerPanel_forwardButton': ## Forward Button
+            elif event == 'musicPlayerPanel_forwardButton' and len(musicPlayerQueue) > 0: ## Forward Button
                 sliderPos = 0
                 if musicPlayerQueueCurrentIndex < len(musicPlayerQueue) - 1: musicPlayerQueueCurrentIndex = musicPlayerQueueCurrentIndex + 1
                 elif musicPlayerLoop and len(musicPlayerQueue) > 1: musicPlayerQueueCurrentIndex = 0
@@ -1287,19 +1287,20 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
     ## Window Shortcuts
     messagePopup.bind('<FocusOut>', '_FocusOut')        ## Window Focus Out
     messagePopup.bind('<Delete>', '_Delete')            ## Close Window shortcut
+    messagePopup.bind('<Return>', '_Enter')             ## Enter Window shortcut
     messagePopup['messagePopupExitButton'].Widget.config(cursor="hand2") ## Hover icons
     while True:
         event, values = messagePopup.read(timeout=100)
         try: messagePopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - messagePopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - messagePopup.size[1] // 2)
         except: pass
         if messagePopup.CurrentLocation()[1] < 200: messagePopup.move(messagePopup.CurrentLocation()[0], 100) ## Fix Over Top
-        if event == sg.WIN_CLOSED or event == 'messagePopupExitButton' or (event == '_Delete') or (event == '_FocusOut' and popupTimer != 0 and timeOpened >= 100):
+        if event == sg.WIN_CLOSED or event == 'messagePopupExitButton' or (event == '_Delete' and "Confirmation" not in popupMessageTitle) or (event == '_Enter') or (event == '_FocusOut' and popupTimer != 0 and timeOpened >= 100):
             messagePopup.close()
             return True
         elif event == 'messagePopupRemindButton':
             messagePopup.close()
             return "Week"
-        elif event == 'messagePopupCancelButton':
+        elif event == 'messagePopupCancelButton' or (event == '_Delete' and "Confirmation" in popupMessageTitle) or (event == '_Delete' and "New Update Available" in popupMessageTitle):
             messagePopup.close()
             return False
         elif popupTimer != 0 and timeOpened >= popupTimer: ## Fade Out Window (3000)
@@ -1316,7 +1317,7 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
 
 ## Music Tools
 
-def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNeeded, renameFile):
+def downloadYouTubeOLD(youtubeLink, downloadLocation, audioFileNeeded, videoFileNeeded, renameFile):
     global audioSavedPath, loadingStatus, youtubeTitle
     try:
         print(f"[INFO]: Downloading YouTube: {youtubeLink}, downloadLocation: {downloadLocation}, ({audioFileNeeded}, {videoFileNeeded}, {renameFile})")
@@ -1329,9 +1330,9 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNee
             youtubeTitle = f"{base} ({index}){ext}"
         stream.download(downloadLocation, filename=youtubeTitle) ## Download the video
         youtubeTitle = youtubeTitle[:youtubeTitle.rfind(".mp4")]
-    except:
+    except Exception as error:
         try: print(f"[ERROR]: Retrieved title: {youtubeTitle}")
-        except: print(f"[ERROR]: Retrieved title: FATAL ERROR")
+        except: print(f"[ERROR]: Retrieved title: {error}")
         loadingStatus = "Failed_YouTubeDownloader"
         return
     if audioFileNeeded: ## Convert MP4 Video to MP3 Audio
@@ -1359,6 +1360,89 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNee
         except: print(f"[ERROR]: Failed to remove to {downloadLocation} + \\ + {youtubeTitle}, video file")
     loadingStatus = "Done_YouTubeDownloader"
 
+
+
+def generate_unique_filename(filepath):
+    """
+    Generate a unique file name by appending a numeric suffix if the file already exists.
+    """
+    if not os.path.exists(filepath):
+        return filepath
+
+    base, ext = os.path.splitext(filepath)
+    counter = 1
+    while os.path.exists(f"{base} ({counter}){ext}"):
+        counter += 1
+    return f"{base} ({counter}){ext}"
+
+def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNeeded, renameFile):
+    global audioSavedPath, loadingStatus, youtubeTitle
+    try:
+        print(f"[INFO]: Downloading YouTube: {youtubeLink}, downloadLocation: {downloadLocation}, ({audioFileNeeded}, {videoFileNeeded}, {renameFile})")
+        with yt_dlp.YoutubeDL({'format': 'best[ext=mp4]', 'outtmpl': os.path.join(downloadLocation, '%(title)s.%(ext)s'), 'noplaylist': True,}) as ydl:
+            info_dict = ydl.extract_info(youtubeLink, download=True)
+            youtubeTitle = ydl.prepare_filename(info_dict)
+        youtubeTitle = os.path.basename(youtubeTitle)
+        videoSavedLocation = os.path.join(downloadLocation, youtubeTitle)
+
+        # Handle video file naming
+        if renameFile:
+            new_video_path = os.path.join(downloadLocation, f"{renameFile}.mp4")
+            if os.path.exists(new_video_path):
+                new_video_path = generate_unique_filename(new_video_path)
+        else:
+            new_video_path = videoSavedLocation
+            if os.path.exists(new_video_path):
+                new_video_path = generate_unique_filename(new_video_path)
+        
+        os.rename(videoSavedLocation, new_video_path)
+        youtubeTitle = os.path.basename(new_video_path).replace('.mp4', '')
+
+    except Exception as error:
+        try:
+            print(f"[ERROR]: Retrieved title: {youtubeTitle}")
+        except:
+            print(f"[ERROR]: MAJOR ERROR: {error}")
+        loadingStatus = "Failed_YouTubeDownloader"
+        return
+
+    if audioFileNeeded:  # Convert MP4 Video to MP3 Audio
+        audioSavedPath = os.path.join(downloadLocation, youtubeTitle + ".mp3")
+        loadingStatus = "Downloading Audio File..."  # MP3 File Name
+        try:
+            videoFile = VideoFileClip(new_video_path)
+        except:
+            print(f"[ERROR]: Failed to convert to .MP3")
+            loadingStatus = "Failed_YouTubeDownloader"
+            return
+        audioFile = videoFile.audio
+        audioFile.write_audiofile(audioSavedPath)
+        audioFile.close()
+        videoFile.close()
+
+        # Handle audio file renaming if necessary
+        if renameFile:
+            new_audio_path = os.path.join(downloadLocation, f"{renameFile}.mp3")
+            if os.path.exists(new_audio_path):
+                new_audio_path = generate_unique_filename(new_audio_path)
+            os.rename(audioSavedPath, new_audio_path)
+            audioSavedPath = new_audio_path
+        else:
+            if os.path.exists(audioSavedPath):
+                new_audio_path = generate_unique_filename(audioSavedPath)
+                os.rename(audioSavedPath, new_audio_path)
+                audioSavedPath = new_audio_path
+
+    if not videoFileNeeded:  # Delete video file if only audio is needed
+        try:
+            os.remove(new_video_path)
+        except:
+            print(f"[ERROR]: Failed to remove {new_video_path}, video file")
+    
+    loadingStatus = "Done_YouTubeDownloader"
+
+
+
 def downloadAudio(youtubeLink, downloadLocation):
     global audioSavedPath, loadingStatus, youtubeTitle
     try:
@@ -1372,9 +1456,9 @@ def downloadAudio(youtubeLink, downloadLocation):
             youtubeTitle = f"{base} ({index}){ext}"
         stream.download(downloadLocation, filename=youtubeTitle) ## Download the video
         youtubeTitle = youtubeTitle[:youtubeTitle.rfind(".mp4")]
-    except:
+    except Exception as error:
         try: print(f"[ERROR]: Retrieved title: {youtubeTitle}")
-        except: print(f"[ERROR]: Retrieved title: FATAL ERROR")
+        except: print(f"[ERROR]: Retrieved title: {error}")
         loadingStatus = "Failed_MusicDownloaderYouTube"
         return
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
@@ -1441,7 +1525,7 @@ def loadGeniusMusic(userInput, forceResult):
         return
     while goodResult == False:
         if artistSearch == False or str(musicSearchApiBodyPath["artist_names"]).replace("\u200b","").replace(" ", "-").split('(')[0].lower() == userInput: ## Check if Search is Artist
-            if forceResult == False and str(musicSearchApiBodyPath["artist_names"]).replace(" ", "-").lower() == userInput: ## Change to Artist Search
+            if forceResult == False and str(musicSearchApiBodyPath["artist_names"]).replace(" ", "-").lower() == userInput.replace(" ", "-").lower(): ## Change to Artist Search
                 print(f"[ERROR]: Music Search: Artist check detected")
                 loadingAction = "Artist_Search"
                 return
@@ -1701,13 +1785,13 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
                     except: pass
                 elif event == 'Lookup Definition': webbrowser.open("https://www.dictionary.com/browse/" + (lyricsLine.Widget.selection_get().split(" ")[0]).replace(",", "").replace(".", "").replace("?", "").replace("!", "").replace(" ", "-"), new=2, autoraise=True)
                 elif event == 'Add to Profanity Engine' and lyricsLine.Widget.selection_get().strip().replace("'", "~").lower() not in profanityEngineDefinitions: ## Add Text to Profanity Engine
-                    if True:
+                    try:
                         wordToAdd = re.sub(r'[\'"\.,!?;:]', '', (lyricsLine.Widget.selection_get()).strip().lower())
                         profanityEngineDefinitions.append(wordToAdd.replace("'", "~"))
                         saveProfanityEngine(profanityEngineDefinitions)
                         musicSearchPrintSongLyrics("musicSearch", musicSearchResultData["lyricsListFinal"]) ## Reload Music Search's Lyrics
                         popupMessage("Profanity Engine", '"' + wordToAdd + '"  has been successfully added to the Profanity Engine.', "saved", 3000) ## Show Success Message
-                    if False: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
+                    except: popupMessage("Profanity Engine", 'Failed to add "' + wordToAdd + '" to the Profanity Engine.', "error", 3000) ## Show Error Message
                 elif event == 'Remove from Profanity Engine': ## Remove Text from Profanity Engine
                     try:
                         wordToRemove = re.sub(r'[\'"\.,!?;:]', '', (lyricsLine.Widget.selection_get()).strip().lower())
