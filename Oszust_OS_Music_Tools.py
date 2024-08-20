@@ -1,7 +1,7 @@
 ## Oszust OS Music Tools - Oszust Industries
 ## Created on: 1-02-23 - Last update: 8-20-24
 softwareVersion = "v1.4.2"
-systemName, systemBuild = "Oszust OS Music Tools", "dist"
+systemName, systemBuild = "Oszust OS Music Tools", "dev"
 import AutoUpdater
 try:
     filesVerified = True
