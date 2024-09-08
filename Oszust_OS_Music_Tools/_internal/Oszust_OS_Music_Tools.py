@@ -1,6 +1,6 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 8-20-24
-softwareVersion = "v1.4.2"
+## Created on: 1-02-23 - Last update: 9-08-24
+softwareVersion = "v1.4.3"
 systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import AutoUpdater
 try:
@@ -9,6 +9,7 @@ try:
     from moviepy.editor import *
     from mutagen.mp3 import MP3
     from mutagen.wave import WAVE
+    from pygame import mixer
     from PIL import Image
     import PySimpleGUI as sg
 except Exception as Argument:
@@ -30,6 +31,13 @@ def softwareConfig():
             "billboardList": "hot 100", ## User's preferred Billboard List
             "billboardRollbackDate": "False", ## Billboard Rollback Date
             "defaultDownloadLocation": str(pathlib.Path.home() / "Downloads"), ## User's preferred Default Download Location
+            "softwareLanguage": "English", ## User's perferred Language
+            "softwareScaling": 100, ## User's preferred Scaling
+            "windowedEnabled": False, ## User's preferred Windowed
+            "forceOffline": False, ## User's preferred Force Offline
+            "disableAutoUpdater": False, ## User's preferred Disable AutoUpdater
+            "musicPlayerVolume": 100, ## User's preferred Music Volume
+            "systemVolume": 100, ## User's preferred System Volume
         }
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'w') as file: json.dump(userSettingsData, file)
     print(f"[userSettingsData]: {userSettingsData}")
@@ -51,12 +59,14 @@ def softwareSetup():
     print(f"[LOG START] {datetime.datetime.now().strftime("%Y-%m-%d | %H:%M:%S")}:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
     softwareConfig()
     ## Check WIFI
+    forceOffline = userSettingsData.get("forceOffline", False)
     appSelected, wifiStatus = None, True
-    checkInternetstatusThread = threading.Thread(name="checkInternetstatus", target=checkInternetstatus)
-    checkInternetstatusThread.start()
+    if forceOffline == False:
+        checkInternetstatusThread = threading.Thread(name="checkInternetstatus", target=checkInternetstatus)
+        checkInternetstatusThread.start()
+    else: wifiStatus = False
     ## Billboard Top 100 Hits from Cache
-    try: billboardRollbackDate = userSettingsData["billboardRollbackDate"]
-    except: billboardRollbackDate = False
+    billboardRollbackDate = userSettingsData.get("billboardRollbackDate", False)
     try:
         if billboardRollbackDate != False: savingSettings("billboardRollbackDate", False)
         billboardCache, index, topSongsList = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"), "r")).read().split("\n"), 1, []
@@ -71,7 +81,7 @@ def softwareSetup():
                         index += 2
                     else: break ## Get list from Cache
         else:
-            print(f"[WARNING]: Outdated Billboard")
+            print(f"[WARNING]: Outdated Billboard - {datetime.datetime.strptime(billboardCache[0], '%Y-%m-%d')}")
             loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
     except:
         print(f"[WARNING]: Billboard file failed to load")
@@ -79,7 +89,9 @@ def softwareSetup():
     ## Retrieve Profanity Engine Definitions
     loadProfanityEngineDefinitions(False)
     ## AutoUpdater
-    checkAutoUpdater("setup")
+    disableAutoUpdater = userSettingsData.get("disableAutoUpdater", False)
+    if disableAutoUpdater == False: checkAutoUpdater("setup")
+    else: homeScreen()
 
 def crashMessage(message):
     RightClickMenu = ['', ['Copy']] ## Right Click Menu - Crash Message
@@ -118,7 +130,9 @@ def crashMessage(message):
 def checkInternetstatus():
     global wifiStatus
     while True:
+        forceOffline = userSettingsData.get("forceOffline", False)
         try:
+            if forceOffline: return
             urllib.request.urlopen("http://google.com", timeout=3)
             wifiStatus = True
         except: wifiStatus = False
@@ -127,10 +141,8 @@ def checkInternetstatus():
 def downloadBillboardSongs():
     global loadingStatus, topSongsList
     ## Set Local Variables
-    try: billboardList = userSettingsData["billboardList"]
-    except: billboardList = "hot 100"
-    try: billboardRollbackDate = userSettingsData["billboardRollbackDate"]
-    except: billboardRollbackDate = False
+    billboardList = userSettingsData.get("billboardList", "hot 100")
+    billboardRollbackDate = userSettingsData.get("billboardRollbackDate", False)
     try:
         import billboard
         try: billboardCache, index, topSongsList = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"), "r")).read().split("\n"), 1, []
@@ -264,14 +276,15 @@ def checkAutoUpdater(command):
    
 def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ## Set Local Variables
-    try: musicSub = userSettingsData["musicService"]
-    except: musicSub = "Apple Music"
-    try: billboardList = userSettingsData["billboardList"]
-    except: billboardList = "hot 100"
-    try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
-    except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
-    try: billboardRollbackDate = userSettingsData["billboardRollbackDate"]
-    except: billboardRollbackDate = False
+    musicSub = userSettingsData.get("musicService", "Apple Music")
+    billboardList = userSettingsData.get("billboardList", "hot 100")
+    defaultDownloadLocation = userSettingsData.get("defaultDownloadLocation", str(pathlib.Path.home() / "Downloads"))
+    billboardRollbackDate = userSettingsData.get("billboardRollbackDate", False)
+    windowedEnabled = userSettingsData.get("windowedEnabled", False)
+    forceOffline = userSettingsData.get("forceOffline", False)
+    disableAutoUpdater = userSettingsData.get("disableAutoUpdater", False)
+    musicPlayerVolume = userSettingsData.get("musicPlayerVolume", 100)
+    systemVolume = userSettingsData.get("systemVolume", 100)
     toolsPanel, toolPanelAppLocation, toolsPanelRow = [[]], 0, []
     for toolsPanelRowNumber in range(math.ceil(len(toolPanelApps)/6)):
         try:
@@ -377,10 +390,13 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\resetList.png', border_width=0, button_color='#2B475D', key='desktopMoverPanel_pinnedResetButton', tooltip="Reset Pinned Apps")]
     ], vertical_alignment='center', background_color='#2B475D')]], relief='flat', title_location='nw', background_color='#2B475D'), ]], pad=((0, 0), (0, 0)), background_color='#2B475D', visible=False, key='desktopMoverPanel'),
     ## Settings Panel
-    sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Settings:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
-    [sg.Frame("User Preferences", [[sg.Push(background_color='#2B475D'), sg.Text("Music Service:", background_color='#2B475D'), sg.Combo(('Apple Music', 'Spotify'), readonly=True, default_value=musicSub, key='settingsPanel_musicServiceCombo'), sg.Text("Billboard List:", background_color='#2B475D'), sg.Combo(("Hot 100", "Billboard 200", "Global", "Streaming Songs", "Radio Songs", "Adult Contemporary", "Digital Song Sales", "Pop Songs", "Country Songs", "Rock Songs", "Rap Songs", "Latin Songs", "Christian Songs", "Gospel Songs", "Jazz Songs", "Soundtracks"), readonly=True, default_value=billboardList, key='settingsPanel_billboardListCombo'), sg.Push(background_color='#2B475D')], [sg.Push(background_color='#2B475D'), sg.Text("Default Download Location:", background_color='#2B475D'), sg.Input(defaultDownloadLocation, do_not_clear=True, size=(30,1), enable_events=True, key='settingsPanel_defaultDownloadLocationInput'), sg.FolderBrowse(initial_folder=defaultDownloadLocation, key='settingsPanel_defaultDownloadLocationBrowser'), sg.Push(background_color='#2B475D')]], size=(580, 80), background_color='#2B475D')],
-    [sg.Frame("Cache Management", [[sg.Push(background_color='#2B475D'), sg.Text(str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB", background_color='#2B475D', key='settingsPanel_cacheStorageText'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clean.png', border_width=0, button_color='#2B475D', key='settingsPanel_cleanCacheButton', tooltip="Clean Cache Storage"), sg.Push(background_color='#2B475D')]], size=(580, 60), background_color='#2B475D')],
-    [sg.Push(background_color='#2B475D'), sg.Button("Save Settings", button_color='#2B475D', key='settingsPanel_saveButton'), sg.Push(background_color='#2B475D')]
+    sg.Column([[sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Settings", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Cache: 00.0 MB", font='Any 11', background_color='#2B475D', key='settingsPanel_cacheStorageText'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\clean.png', border_width=0, button_color='#2B475D', key='settingsPanel_cleanCacheButton', tooltip="Clean Cache Storage")],
+    [sg.Text("", font='Any 3', background_color='#2B475D')], [sg.Text("Music Service:", font='Any 12', background_color='#2B475D'), sg.Combo(('Apple Music', 'Spotify'), readonly=True, default_value=musicSub, key='settingsPanel_musicServiceCombo'), sg.Push(background_color='#2B475D'), sg.Text("Billboard List:", font='Any 12', background_color='#2B475D'), sg.Combo(("Hot 100", "Billboard 200", "Global", "Streaming Songs", "Radio Songs", "Adult Contemporary", "Digital Song Sales", "Pop Songs", "Country Songs", "Rock Songs", "Rap Songs", "Latin Songs", "Christian Songs", "Gospel Songs", "Jazz Songs", "Soundtracks"), readonly=True, default_value=billboardList, key='settingsPanel_billboardListCombo')], [sg.Text("Default Download Location:", font='Any 12', background_color='#2B475D'), sg.Input(defaultDownloadLocation, do_not_clear=True, size=(44,1), enable_events=True, key='settingsPanel_defaultDownloadLocationInput'), sg.FolderBrowse(initial_folder=defaultDownloadLocation, key='settingsPanel_defaultDownloadLocationBrowser')], [sg.HorizontalSeparator()],
+    [sg.Push(background_color='#2B475D'), sg.Text("Accessibility", font=("Helvetica", 14), background_color='#2B475D'), sg.Image(filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\accessibility.png', background_color='#2B475D'), sg.Push(background_color='#2B475D')], [sg.Text("Language:", font='Any 12', background_color='#2B475D'), sg.Combo(("English", ""), readonly=True, default_value="English", key='settingsPanel_languageListCombo'), sg.Push(background_color='#2B475D'), sg.Text("Scaling:", font='Any 12', background_color='#2B475D'), sg.Slider(range=(100, 100), resolution=25, default_value=100, size=(15, 15), enable_events=True, orientation='horizontal', key='settingsPanel_scalingSlider', background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Enable Windowed:", font='Any 12', background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+str(windowedEnabled).lower()+'.png', border_width=0, button_color='#2B475D', key='settingsPanel_windowedCheckbox')], [sg.HorizontalSeparator()],
+    [sg.Push(background_color='#2B475D'), sg.Text("Hardware", font=("Helvetica", 14), background_color='#2B475D'), sg.Image(filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\hardware.png', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
+    [sg.Text("Force Offline:", font='Any 12', background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+str(forceOffline).lower()+'.png', border_width=0, button_color='#2B475D', key='settingsPanel_forceOfflineCheckbox'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("Music Player Volume:", font='Any 12', background_color='#2B475D'), sg.Slider(range=(0, 100), resolution=10, default_value=musicPlayerVolume, size=(20, 15), enable_events=True, orientation='horizontal', key='settingsPanel_musicVolumeSlider', background_color='#2B475D')],
+    [sg.Text("Disable AutoUpdater:", font='Any 12', background_color='#2B475D'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\'+str(disableAutoUpdater).lower()+'.png', border_width=0, button_color='#2B475D', key='settingsPanel_disableUpdaterCheckbox'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Push(background_color='#2B475D'), sg.Text("System Volume:", font='Any 12', background_color='#2B475D'), sg.Slider(range=(0, 100), resolution=10, default_value=systemVolume, size=(20, 15), enable_events=True, orientation='horizontal', key='settingsPanel_systemVolumeSlider', background_color='#2B475D')], [sg.HorizontalSeparator()],
+    [sg.Push(background_color='#2B475D'), sg.Button("Save Settings", button_color=("White", "Blue"), font='Any 14', size=(15, 1), key='settingsPanel_saveButton'), sg.Push(background_color='#2B475D')]
     ], pad=((0,0), (0, 0)), background_color='#2B475D', visible=False, key='settingsPanel'),
     ## Lyrics Checker Panel
      sg.Column([[sg.Push(background_color='#2B475D'), sg.Text("Lyrics Checker:", font='Any 20 bold', background_color='#2B475D'), sg.Push(background_color='#2B475D')],
@@ -396,19 +412,17 @@ def homeScreenAppPanels(toolPanelApps, pinnedApps):
     ]]
 
 def homeScreen():
-    global appSelected, HomeWindow, homeWindowLocationX, homeWindowLocationY, musicSearchResultData, profanityEngineDefinitions
-    try: billboardList = userSettingsData["billboardList"]
-    except: billboardList = "hot 100"
-    try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
-    except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
-    ## Import PyGame
-    try: from pygame import mixer
-    except:
-        print(f"[ERROR]: Software files are missing. Please reinstall the software from GitHub and try again. Missing: pygame")
-        crashMessage("Missing the pygame package.")
+    global appSelected, HomeWindow, homeWindowLocationX, homeWindowLocationY, musicPlayerQueueCurrentState, musicSearchResultData, profanityEngineDefinitions
+    billboardList = userSettingsData.get("billboardList", "hot 100")
+    defaultDownloadLocation = userSettingsData.get("defaultDownloadLocation", str(pathlib.Path.home() / "Downloads"))
+    windowedEnabled = userSettingsData.get("windowedEnabled", False)
+    forceOffline = userSettingsData.get("forceOffline", False)
+    disableAutoUpdater = userSettingsData.get("disableAutoUpdater", False)
+    musicPlayerVolume = userSettingsData.get("musicPlayerVolume", 100)
+    systemVolume = userSettingsData.get("systemVolume", 100)
     applist, defaultToolPanelApps, defaultPinnedApps, onlineApps = [[]], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Player", "Lyrics Checker", "Profanity Engine", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader", "Metadata Burner", "Music Tools", "Settings"], ["Music Search", "Music Downloader", "Youtube Downloader"]
-    #if systemBuild == "dev":
-    #    for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
+    if systemBuild == "dev" and False:
+        for app in ["Playlist Maker", "Radio Show Maker", "CD Ripper", "CD Burner", "Music Player", "Music Editor", "Lyrics Guesser"]: defaultToolPanelApps.append(app)
     try: ## All Music Tools
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "toolLayout.json"), 'r') as file:
             toolLayoutData = (json.load(file))
@@ -431,7 +445,7 @@ def homeScreen():
     if wifiStatus: layout += [[sg.Column([[sg.Text(f"{platform.system()} | {softwareVersion} | {systemBuild} | Online", enable_events=True, font='Any 13', background_color='#5A6E80', key='versionTextHomeBottom', tooltip="View Changelog and Check Updates"), sg.Push(background_color='#5A6E80'), sg.Text("Oszust Industries", enable_events=True, font='Any 13', background_color='#5A6E80', key='creditsTextHomeBottom')], [sg.Column([[]], size=(710, 1), pad=(0,0))]], size=(710, 30), pad=(0,0), background_color='#5A6E80')]]
     else: layout += [[sg.Column([[sg.Text(f"{platform.system()} | {softwareVersion} | {systemBuild} | Offline", enable_events=True, font='Any 13', background_color='#5A6E80', key='versionTextHomeBottom'), sg.Push(background_color='#5A6E80'), sg.Text("Oszust Industries", enable_events=True, font='Any 13', background_color='#5A6E80', key='creditsTextHomeBottom')], [sg.Column([[]], size=(710, 1), pad=(0,0))]], size=(710, 30), pad=(0,0), background_color='#5A6E80')]]
     windowSize = ((int((-4*(ctypes.windll.shcore.GetScaleFactorForDevice(0))+1060) * (ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100)), int((-4*(ctypes.windll.shcore.GetScaleFactorForDevice(0))+800) * (ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100))))
-    HomeWindow = sg.Window('Oszust OS Music Tools', layout, size=windowSize, background_color='#657076', margins=(0,0), finalize=True, resizable=False, text_justification='r')
+    HomeWindow = sg.Window('Oszust OS Music Tools', layout, size=windowSize, background_color='#657076', margins=(0,0), finalize=True, resizable=windowedEnabled, text_justification='r')
     HomeWindow.hide()
     HomeWindow.TKroot.minsize(710, 440)
     ## Music Search: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
@@ -443,7 +457,7 @@ def homeScreen():
     for key in ['normalSongSearchButton', 'listSongSearchButton', 'rollbackBillboardButton', 'billboardTopSongsList']: HomeWindow['musicSearchPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     billboardRollbackDate = ""
     ## Settings: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
-    for key in ['musicServiceCombo', 'billboardListCombo', 'defaultDownloadLocationBrowser', 'saveButton']: HomeWindow['settingsPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
+    for key in ['cleanCacheButton', 'musicServiceCombo', 'billboardListCombo', 'defaultDownloadLocationInput', 'defaultDownloadLocationBrowser', 'languageListCombo', 'scalingSlider', 'windowedCheckbox', 'forceOfflineCheckbox', 'musicVolumeSlider', 'disableUpdaterCheckbox', 'systemVolumeSlider', 'saveButton']: HomeWindow['settingsPanel_' + key].Widget.config(cursor="hand2") ## Hover icons
     ## Music Downloader: Mouse Icon Changes, Key Binds, Mouse Binds, App Variables
     HomeWindow['musicDownloaderPanel_youtubeUrlInput'].bind('<Return>', '_Enter')  ## Enter on Link Input
     musicBurnLyrics, musicCompilationAlbum, musicDownloadName = True, False, False ## App Variables
@@ -493,7 +507,7 @@ def homeScreen():
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
             if appSelected == "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=True) ## Show Music Tools Window
             elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window
-            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
+            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update("Cache: " + str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
         else:
             for app in toolPanelApps: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
             appSelected = "Music_Tools" ## App Variables
@@ -515,6 +529,7 @@ def homeScreen():
     while True:
         event, values = HomeWindow.read(timeout=10)
         homeWindowLocationX, homeWindowLocationY = HomeWindow.CurrentLocation() ## X & Y Location of Home Window
+        if musicPlayerQueueCurrentState == "play" and event != 'musicPlayerPanel_timeSlider': mixer.music.set_volume(musicPlayerVolume/100) ## Music Player Volume     
 ## Closed Window      
         if event == sg.WIN_CLOSED or event == 'Exit':
             HomeWindow.close()
@@ -552,7 +567,7 @@ def homeScreen():
                 else: HomeWindow[(app[:4].lower() + app[4:]).replace(" ", "") + "Panel"].update(visible=False)
             if appSelected == "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=True) ## Show Music Tools Window
             elif appSelected != "Music_Tools": HomeWindow["musicToolsPanel"].update(visible=False) ## Hide Music Tools Window
-            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
+            if appSelected == "Settings": HomeWindow.Element('settingsPanel_cacheStorageText').Update("Cache: " + str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
 ## Music Tools
         elif appSelected == "Music_Tools":
             if savedWifiStatus != wifiStatus: ## Change in Internet
@@ -623,23 +638,39 @@ def homeScreen():
 ## Settings (Buttons/Events)
         elif appSelected == "Settings":
             if event == 'settingsPanel_saveButton':
+                restartNeeded = False
+                if windowedEnabled != userSettingsData["windowedEnabled"]: restartNeeded = True
+                if forceOffline != userSettingsData["forceOffline"]: restartNeeded = "Setup"
+                if values['settingsPanel_billboardListCombo'] != billboardList: restartNeeded = "Billboard"
                 savingSettings("musicService", values['settingsPanel_musicServiceCombo'])
+                savingSettings("windowedEnabled", windowedEnabled)
+                savingSettings("forceOffline", forceOffline)
+                savingSettings("disableAutoUpdater", disableAutoUpdater)
+                savingSettings("musicPlayerVolume", values['settingsPanel_musicVolumeSlider'])
+                savingSettings("systemVolume", values['settingsPanel_systemVolumeSlider'])
+                savingSettings("billboardList", values['settingsPanel_billboardListCombo'])
                 try:
                     if os.access(values['settingsPanel_defaultDownloadLocationInput'], os.W_OK) and (open(os.path.join(values['settingsPanel_defaultDownloadLocationInput'], 'test_write.tmp'), 'w').close() or os.remove(os.path.join(values['settingsPanel_defaultDownloadLocationInput'], 'test_write.tmp')) or True): savingSettings("defaultDownloadLocation", values['settingsPanel_defaultDownloadLocationInput'])
                 except: popupMessage("Settings", "The Default Download Location must be a valid folder with write permissions.", "error")
-                if values['settingsPanel_billboardListCombo'] != billboardList:
-                    savingSettings("billboardList", values['settingsPanel_billboardListCombo'])
-                    try: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"))
-                    except: pass
+                ## Restart Software to make Changes
+                if (restartNeeded or values['settingsPanel_billboardListCombo'] != billboardList) and popupMessage("Restart Confirmation", "Some of the settings you changed require a restart. Please save your work before proceeding. Do you want to restart now?", "confirmation"):
                     HomeWindow.close()
-                    loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
-                    homeScreen()
+                    appSelected = None
+                    if restartNeeded == True: homeScreen()
+                    elif restartNeeded == "Setup": softwareSetup()
+                    elif restartNeeded == "Billboard":
+                        try: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"))
+                        except: pass
+                        loadingScreen("Billboard_List_Download", False) ## Download Billboard Data
+                        homeScreen()
                     return
                 ## Set Variables as Settings
                 try: billboardList = userSettingsData["billboardList"]
                 except: billboardList = "hot 100"
                 try: defaultDownloadLocation = userSettingsData["defaultDownloadLocation"]
                 except: defaultDownloadLocation = str(pathlib.Path.home() / "Downloads")
+                try: musicPlayerVolume = userSettingsData["musicPlayerVolume"]
+                except: musicPlayerVolume = 100
                 HomeWindow['musicDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
                 HomeWindow['youtubeDownloaderPanel_downloadLocationInput'].update(defaultDownloadLocation)
                 print(f"[INFO]: Settings were saved: {userSettingsData}")
@@ -651,9 +682,27 @@ def homeScreen():
                                 for item in os.listdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location)):
                                     os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location, item))
                                 os.rmdir(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", location))
-                        HomeWindow.Element('settingsPanel_cacheStorageText').Update(str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
+                        HomeWindow.Element('settingsPanel_cacheStorageText').Update("Cache: " + str(round(sum(os.path.getsize(os.path.join(dp, f)) for dp, _, filenames in os.walk(str(os.getenv('APPDATA')) + "\\Oszust Industries\\Oszust OS Music Tools\\Cache\\") for f in filenames) / (1024 * 1024), 2)) + " MB")
                         popupMessage("Settings", "Cache has been successfully cleaned.", "success")
                     except: popupMessage("Settings", "Unable to clean the Cache.", "error")
+            elif event == 'settingsPanel_windowedCheckbox' and windowedEnabled == True: ## Enabled Windowed - False
+                HomeWindow['settingsPanel_windowedCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\false.png')
+                windowedEnabled = False
+            elif event == 'settingsPanel_windowedCheckbox' and windowedEnabled == False: ## Enabled Windowed - True
+                HomeWindow['settingsPanel_windowedCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\true.png')
+                windowedEnabled = True
+            elif event == 'settingsPanel_forceOfflineCheckbox' and forceOffline == True: ## Force Offline - False
+                HomeWindow['settingsPanel_forceOfflineCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\false.png')
+                forceOffline = False
+            elif event == 'settingsPanel_forceOfflineCheckbox' and forceOffline == False: ## Force Offline - True
+                HomeWindow['settingsPanel_forceOfflineCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\true.png')
+                forceOffline = True
+            elif event == 'settingsPanel_disableUpdaterCheckbox' and disableAutoUpdater == True: ## DisabkeAutoUpdater - False
+                HomeWindow['settingsPanel_disableUpdaterCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\false.png')
+                disableAutoUpdater = False
+            elif event == 'settingsPanel_disableUpdaterCheckbox' and disableAutoUpdater == False: ## DisabkeAutoUpdater - True
+                HomeWindow['settingsPanel_disableUpdaterCheckbox'].update(image_filename=str(pathlib.Path(__file__).resolve().parent) + '\\data\\icons\\true.png')
+                disableAutoUpdater = True
 ## Music Search (Buttons/Events)
         elif appSelected == "Music_Search":
             if (event == 'musicSearchPanel_normalSongSearchButton' or (event == 'musicSearchPanel_songSearchInput' + '_Enter')) and values['musicSearchPanel_songSearchInput'].replace(" ","").lower() not in ["", "resultfailedtoload", "billboardfailedtoload"]: geniusMusicSearch(values['musicSearchPanel_songSearchInput'], False) ## Music Search
@@ -1313,6 +1362,7 @@ def loadingScreen(functionLoader, homeHasLaunched, agr1=False, arg2=False, arg3=
             break
 
 def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTimer=0):
+    systemVolume = userSettingsData.get("systemVolume", 100)
     popupMessageText = '\n'.join((textwrap.TextWrapper(width=45, max_lines=6, placeholder='...')).wrap(popupMessageText))
     if "New Update Available" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#1B2838', key='messagePopupExitButton', tooltip="Install Update Now"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\nextWeek.png', border_width=0, button_color='#1B2838', key='messagePopupRemindButton', tooltip="Remind Me Next Week"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#1B2838', key='messagePopupCancelButton', tooltip="Don't Install Update")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
     elif "Confirmation" in popupMessageTitle: alpha, messagePopup, timeOpened = 0.9, sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\Popup icons\\" + popupMessageIcon + ".png", background_color='#1b2838', key='loadingGIFImage')], [sg.Text(popupMessageTitle, font='Any 24 bold', background_color='#1b2838', key='messagePopupTitle')], [sg.Text(popupMessageText, font='Any 13', background_color='#1b2838', key='messagePopupMessage')], [sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\yes.png', border_width=0, button_color='#1B2838', key='messagePopupExitButton', tooltip="Accept"), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\Popup icons\\no.png', border_width=0, button_color='#1B2838', key='messagePopupCancelButton', tooltip="Cancel")]], background_color='#1b2838', element_justification='c', text_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), 0
@@ -1326,7 +1376,21 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
     messagePopup.bind('<FocusOut>', '_FocusOut')        ## Window Focus Out
     messagePopup.bind('<Delete>', '_Delete')            ## Close Window shortcut
     messagePopup.bind('<Return>', '_Enter')             ## Enter Window shortcut
-    messagePopup['messagePopupExitButton'].Widget.config(cursor="hand2") ## Hover icons
+    if "New Update Available" in popupMessageTitle:
+        if musicPlayerQueueCurrentState != "play": mixer.music.load(str(pathlib.Path(__file__).resolve().parent)+'\\data\\sounds\\Notify.mp3')
+        for key in ['messagePopupExitButton', 'messagePopupRemindButton', 'messagePopupCancelButton']: messagePopup[key].Widget.config(cursor="hand2") ## Hover icons
+    elif "Confirmation" in popupMessageTitle:
+        if musicPlayerQueueCurrentState != "play": mixer.music.load(str(pathlib.Path(__file__).resolve().parent)+'\\data\\sounds\\Notify.mp3')
+        for key in ['messagePopupExitButton', 'messagePopupCancelButton']: messagePopup[key].Widget.config(cursor="hand2") ## Hover icons
+    else:
+        if musicPlayerQueueCurrentState != "play":
+            if "success" == popupMessageIcon or "saved" == popupMessageIcon: mixer.music.load(str(pathlib.Path(__file__).resolve().parent)+'\\data\\sounds\\Success.mp3')
+            elif "error" == popupMessageIcon or "fail" == popupMessageIcon: mixer.music.load(str(pathlib.Path(__file__).resolve().parent)+'\\data\\sounds\\Error.mp3')
+            else: mixer.music.load(str(pathlib.Path(__file__).resolve().parent)+'\\data\\sounds\\Notify.mp3')
+        messagePopup['messagePopupExitButton'].Widget.config(cursor="hand2") ## Hover icons
+    if musicPlayerQueueCurrentState != "play":
+        mixer.music.set_volume(systemVolume/100)
+        mixer.music.play()
     while True:
         event, values = messagePopup.read(timeout=100)
         try: messagePopup.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - messagePopup.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - messagePopup.size[1] // 2)
@@ -1622,8 +1686,8 @@ def loadGeniusMusic(userInput, forceResult):
 def geniusMusicSearch(userInput, forceResult, searchType="search"):
     global appSelected, MusicSearchSongWindow, loadingAction, metadataInfo, musicSearchResultData
     ## Set Local Variables
-    try: musicSub = userSettingsData["musicService"]
-    except: musicSub = "Apple Music"
+    musicSub = userSettingsData.get("musicService", "Apple Music")
+    windowedEnabled = userSettingsData.get("windowedEnabled", False)
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
     loadingPopup.hide()
@@ -1691,7 +1755,7 @@ def geniusMusicSearch(userInput, forceResult, searchType="search"):
     if musicSearchResultData["geniusMusicSearchLabels"] != None and len(musicSearchResultData["geniusMusicSearchLabels"]) > 1: layout += [[sg.Text("Labels: " + str(musicSearchResultData["geniusMusicSearchLabels"]).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Labels
     elif musicSearchResultData["geniusMusicSearchLabels"] != None and len(musicSearchResultData["geniusMusicSearchLabels"]) == 1: layout += [[sg.Text("Label: " + str(musicSearchResultData["geniusMusicSearchLabels"]).replace("&amp;", "&").replace("[", "").replace("]", "").replace('"', "").replace("'", ""), font='Any 11', background_color='#2B475D', enable_events=True, key='geniusMusicSearchLabels')]] ## Song's Label
     layout += [[sg.Text("Music Search powered by Genius", font='Any 11', background_color='#2B475D')]] ## Credits
-    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=True, finalize=True, keep_on_top=False, element_justification='c')
+    MusicSearchSongWindow = sg.Window("Music Search - Song", layout, background_color='#2B475D', resizable=windowedEnabled, finalize=True, keep_on_top=False, element_justification='c')
     if musicSearchResultData["lyrics"] != None:
         lyricsLine:sg.Multiline = MusicSearchSongWindow['MusicSearchSongWindowLyrics'] ## Lyrics Right Click Menu
         MusicSearchSongWindow.TKroot.minsize(580, 710)
@@ -2078,8 +2142,8 @@ def loadGeniusMusicList(userInput, forceResult):
 def geniusMusicSearchList(userInput, searchType="search"):
     global appSelected, loadingAction
     ## Set Local Variables
-    try: musicSub = userSettingsData["musicService"]
-    except: musicSub = "Apple Music"
+    musicSub = userSettingsData.get("musicService", "Apple Music")
+    windowedEnabled = userSettingsData.get("windowedEnabled", False)
     ## Loading Screen
     loadingPopup, loadingAction = sg.Window("", [[sg.Image(str(pathlib.Path(__file__).resolve().parent) + "\\data\\loading.gif", background_color='#1b2838', key='loadingGIFImage')]], background_color='#1b2838', element_justification='c', no_titlebar=True, keep_on_top=True, finalize=True), "Start"
     loadingPopup.hide()
@@ -2128,7 +2192,7 @@ def geniusMusicSearchList(userInput, searchType="search"):
         elif loadingAction == "Search_Finished": ## Show Music Search List Window
             loadingPopup.close()
             break
-    MusicSearchListWindow = sg.Window("Music Search - List Results", musicListResultData["musicListLayout"], background_color='#657076', finalize=True, resizable=True, keep_on_top=False, element_justification='l')
+    MusicSearchListWindow = sg.Window("Music Search - List Results", musicListResultData["musicListLayout"], background_color='#657076', finalize=True, resizable=windowedEnabled, keep_on_top=False, element_justification='l')
     MusicSearchListWindow.TKroot.minsize(700, 310)
     MusicSearchListWindow.hide()
     MusicSearchListWindow.move(HomeWindow.TKroot.winfo_x() + HomeWindow.TKroot.winfo_width() // 2 - MusicSearchListWindow.size[0] // 2, HomeWindow.TKroot.winfo_y() + HomeWindow.TKroot.winfo_height() // 2 - MusicSearchListWindow.size[1] // 2)
