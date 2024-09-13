@@ -4,8 +4,8 @@
 
 | Version  | Supported          |
 | -------- | ------------------ |
-| > v1.3.0 | :white_check_mark: |
-| < v1.3.0 | :x:                |
+| > v1.4.2 | :white_check_mark: |
+| < v1.4.2 | :x:                |
 
 ## Stay Safe
 
