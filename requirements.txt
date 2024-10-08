@@ -1,4 +1,3 @@
-AutoUpdater
 bs4
 cloudscraper
 ctypes
@@ -16,6 +15,7 @@ random
 re
 requests
 shutil
+subprocess
 textwrap
 threading
 time
@@ -27,5 +27,6 @@ moviepy
 mutagen
 pygame
 Pillow
-PySimpleGUI
-billboard
+PySimpleGUI==4.70.1
+billboard==7.0.2
+zipfile
