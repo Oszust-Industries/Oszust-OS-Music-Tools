@@ -1,12 +1,12 @@
 ## Oszust OS Music Tools - Oszust Industries
-## Created on: 1-02-23 - Last update: 10-08-24
+## Created on: 1-02-23 - Last update: 12-21-24
 softwareVersion = "v1.4.4"
-systemName, systemBuild = "Oszust OS Music Tools", "dev"
+systemName, systemBuild = "Oszust OS Music Tools", "dist"
 import AutoUpdater
 try:
     filesVerified = True
-    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, random, re, requests, shutil, textwrap, threading, time, urllib.request, webbrowser, win32clipboard, yt_dlp
-    from moviepy.editor import *
+    import bs4, cloudscraper, ctypes, datetime, eyed3, io, json, math, os, pathlib, platform, psutil, pyuac, random, re, requests, shutil, sys, textwrap, threading, time, urllib.request, webbrowser, win32clipboard, yt_dlp
+    from moviepy import *
     from mutagen.mp3 import MP3
     from mutagen.wave import WAVE
     from pygame import mixer
@@ -18,7 +18,8 @@ except Exception as Argument:
 
 def softwareConfig():
     ## System Configuration
-    global userSettingsData
+    global userSettingsData, cacheExpireDays
+    cacheExpireDays = 30
     try: ## Try opening exisiting setting file
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Settings.json"), 'r') as file: userSettingsData = json.load(file)
         if userSettingsData["firstSoftwareUse"] != None: pass
@@ -58,6 +59,7 @@ def softwareSetup():
     ## Get User's Configs
     print(f"[LOG START] {datetime.datetime.now().strftime("%Y-%m-%d | %H:%M:%S")}:\nSoftware: {systemName}\nBuild: {systemBuild}\nVersion: {softwareVersion}")
     softwareConfig()
+    mixer.init()
     ## Check WIFI
     forceOffline = userSettingsData.get("forceOffline", False)
     appSelected, wifiStatus = None, True
@@ -148,7 +150,7 @@ def downloadBillboardSongs():
         try: billboardCache, index, topSongsList = (open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Billboard.txt"), "r")).read().split("\n"), 1, []
         except: billboardCache = None
         if billboardRollbackDate != False: chart, topSongsList = billboard.ChartData(billboardList.replace(" ", "-").lower(), fetch=True, max_retries=3, timeout=25, date=billboardRollbackDate), []
-        elif billboardCache != None: ## Get list from Cache
+        elif billboardCache != None and (datetime.datetime.strptime(billboardCache[0], '%Y-%m-%d') + datetime.timedelta(days=7) >= datetime.datetime.now()): ## Get list from Cache
             while index < len(billboardCache):
                 if index + 1 < len(billboardCache):
                     topSongsList.append([billboardCache[index].strip(), billboardCache[index + 1].strip()])
@@ -1421,29 +1423,38 @@ def popupMessage(popupMessageTitle, popupMessageText, popupMessageIcon, popupTim
 
 def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNeeded, renameFile):
     global audioSavedPath, loadingStatus, youtubeTitle
+    def progress_hook(d):
+        global loadingStatus
+        if d['status'] == 'downloading':
+            percent = d['downloaded_bytes'] / d['total_bytes'] * 100
+            loadingStatus = f"Downloading {percent:.2f}%..."
     try:
         print(f"[INFO]: Downloading YouTube: {youtubeLink}, downloadLocation: {downloadLocation}, ({audioFileNeeded}, {videoFileNeeded}, {renameFile})")
-        ydl_opts = {'format': 'best[ext=mp4]', 'outtmpl': os.path.join(downloadLocation, '%(title)s.%(ext)s'), 'noplaylist': True,}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(youtubeLink, download=False)
-            youtubeTitle = info_dict.get('title', 'Unknown Title') + ".mp4"
-            youtubeTitle = re.sub(r'[<>:"/\\|?*]', '', youtubeTitle)
-        if os.path.exists(os.path.join(downloadLocation, youtubeTitle)) or os.path.exists(os.path.join(downloadLocation, youtubeTitle[:-4] + ".mp3")): ## Check if the file already exists
-            base, ext = os.path.splitext(youtubeTitle)
-            index = 1
-            while os.path.exists(os.path.join(downloadLocation, f"{base} ({index}){ext}")) or os.path.exists(os.path.join(downloadLocation, f"{base} ({index}).mp3")): index += 1
-            youtubeTitle = f"{base} ({index}){ext}"
-        ydl_opts['outtmpl'] = os.path.join(downloadLocation, youtubeTitle)
+        if renameFile == False: ## Get Offical YouTube Name
+            ydl_opts = {'format': 'best[ext=mp4]', 'outtmpl': os.path.join(downloadLocation, '%(title)s.%(ext)s'), 'noplaylist': True, 'progress_hooks': [progress_hook],}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info_dict = ydl.extract_info(youtubeLink, download=False)
+                youtubeTitle = info_dict.get('title', 'Unknown Title') + ".mp4"
+                youtubeTitle = re.sub(r'[<>:"/\\|?*]', '', youtubeTitle)
+            if os.path.exists(os.path.join(downloadLocation, youtubeTitle)) or os.path.exists(os.path.join(downloadLocation, youtubeTitle[:-4] + ".mp3")): ## Check if the file already exists
+                base, ext = os.path.splitext(youtubeTitle)
+                index = 1
+                while os.path.exists(os.path.join(downloadLocation, f"{base} ({index}){ext}")) or os.path.exists(os.path.join(downloadLocation, f"{base} ({index}).mp3")): index += 1
+                youtubeTitle = f"{base} ({index}){ext}"
+        else: youtubeTitle = renameFile + ".mp4"
+        ydl_opts['outtmpl'] = os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", youtubeTitle)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl: ydl.download([youtubeLink]) ## Download the video
         youtubeTitle = youtubeTitle[:youtubeTitle.rfind(".mp4")]
+        shutil.move(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools") + "\\" + youtubeTitle + ".mp4", os.path.join(downloadLocation, youtubeTitle + ".mp4"))
     except Exception as error:
         print(f"[ERROR]: Error Downloading: {error}")
         loadingStatus = "Failed_YouTubeDownloader"
         return
     if audioFileNeeded: ## Convert MP4 Video to MP3 Audio
-        print(youtubeTitle)
+        loadingStatus = "Failed_MusicDownloaderYouTube" ## MAKE AUDIO FAIL SINCE BROKEN
+        return
         audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
-        try: videoFile = VideoFileClip(downloadLocation + "\\" + youtubeTitle + ".mp4")
+        try: videoFile = VideoFileClip(os.path.join(downloadLocation, youtubeTitle + ".mp4"))
         except Exception as error:
             print(f"[ERROR]: Failed to convert to .MP3: {error}")
             loadingStatus = "Failed_YouTubeDownloader"
@@ -1468,9 +1479,14 @@ def downloadYouTube(youtubeLink, downloadLocation, audioFileNeeded, videoFileNee
 
 def downloadAudio(youtubeLink, downloadLocation):
     global audioSavedPath, loadingStatus, youtubeTitle
+    def progress_hook(d):
+        global loadingStatus
+        if d['status'] == 'downloading':
+            percent = d['downloaded_bytes'] / d['total_bytes'] * 100
+            loadingStatus = f"Downloading {percent:.2f}%..."
     try:
         print(f"[INFO]: Downloading Audio: {youtubeLink}, downloadLocation: {downloadLocation}")
-        ydl_opts = {'format': 'best[ext=mp4]', 'outtmpl': os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", '%(title)s.%(ext)s'), 'noplaylist': True,}
+        ydl_opts = {'format': 'best[ext=mp4]', 'outtmpl': os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", '%(title)s.%(ext)s'), 'noplaylist': True, 'progress_hooks': [progress_hook],}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(youtubeLink, download=False)
             youtubeTitle = info_dict.get('title', 'Unknown Title') + ".mp4"
@@ -1488,17 +1504,19 @@ def downloadAudio(youtubeLink, downloadLocation):
         loadingStatus = "Failed_YouTubeDownloader"
         return
     audioSavedPath, loadingStatus = downloadLocation + "\\" + youtubeTitle + ".mp3", "Downloading Audio File..." ## MP3 File Name
-    try: videoFile = VideoFileClip(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools") + "\\" + youtubeTitle + ".mp4")
+    loadingStatus = "Failed_MusicDownloaderYouTube"  ## MAKE AUDIO FAIL SINCE BROKEN
+    return
+    try: videoFile = VideoFileClip(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", youtubeTitle + ".mp4"))
     except:
-        print(f"[ERROR]: Failed to convert to .MP3")
-        loadingStatus = "Failed_MusicDownloaderYouTube"
-        return
+       print(f"[ERROR]: Failed to convert to .MP3")
+       loadingStatus = "Failed_MusicDownloaderYouTube"
+       return
     audioFile = videoFile.audio
     audioFile.write_audiofile(audioSavedPath)
     audioFile.close()
     videoFile.close()
     try: os.remove(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools") + "\\" + youtubeTitle + ".mp4") ## Delete video file
-    except: print(f"[ERROR]: Failed to remove to {os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools")} + \\ + {youtubeTitle}, video file")\
+    except: print(f"[ERROR]: Failed to remove to {os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools")} + \\ + {youtubeTitle}, video file")
     ## Remove extra characters from YouTube title for Music Search
     youtubeTitle = re.sub(r'\([^)]*\)', '', youtubeTitle)
     loadingStatus = "Done_MusicDownloader"
@@ -1608,25 +1626,44 @@ def loadGeniusMusic(userInput, forceResult):
                 loadingAction = "Genius_Robot_Check"
                 return
             try: ## Album
-                songScrapedInfo = html.select("div[class*=PrimaryAlbum__AlbumDetails]") ## Album Container
+                songScrapedInfo = html.select("div[class*=PrimaryAlbum]") ## Album Container
                 musicSearchResultData["geniusMusicSearchAlbum"] = ((re.sub(r'<.+?>', '', str(songScrapedInfo))).replace("[", "").replace("]", "").replace("&amp;", "&")).split(" (")[0] ## Song Album
                 if len(musicSearchResultData["geniusMusicSearchAlbum"]) == 0: musicSearchResultData["geniusMusicSearchAlbum"] = None ## No Album Found
             except: musicSearchResultData["geniusMusicSearchAlbum"] = None
-            try: ## Album List
-                songScrapedInfo, albumList, musicSearchResultData["geniusMusicSearchAlbumCurrent"] = str(html.select("div[class*=AlbumTracklist__Track]")).split('</a>'), [], None ## Song's Album List
-                for song in songScrapedInfo:
-                    match = re.search(r"<div class=\"AlbumTracklist__TrackNumber-sc-123giuo-3 epTVob\">(\d+)\. </div>" + musicSearchResultData["geniusMusicSearchSongNameInfo"], song)
-                    if match: musicSearchResultData["geniusMusicSearchAlbumCurrent"] = match.group(1)
-                    albumList.append(song)
-                albumList = [(song.text).split(". ")[1].replace("\\u200b", "").replace("', '", "") for song in bs4.BeautifulSoup(str(albumList), 'html.parser').find_all('div', class_='AlbumTracklist__TrackName-sc-123giuo-2')]
-                musicSearchResultData["geniusMusicSearchAlbumList"] = albumList
-                musicSearchResultData["geniusMusicSearchAlbumLength"] = len(albumList)
-                if len(albumList) <= 1:
-                    musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbum"], musicSearchResultData["geniusMusicSearchAlbumList"] = 1, musicSearchResultData["geniusMusicSearchSongName"] + " - Single", None
-            except: musicSearchResultData["geniusMusicSearchAlbumCurrent"], musicSearchResultData["geniusMusicSearchAlbumLength"], musicSearchResultData["geniusMusicSearchAlbumList"] = None, None, None
+            try: # Album List           
+                # Get all ordered lists (<ol>) that might contain album tracklists
+                album_containers = html.select("ol")
+                albumList = []
+                musicSearchResultData["geniusMusicSearchAlbumCurrent"] = None
+                for album_container in album_containers:
+                    for track in album_container.find_all('li'):
+                        trackName_A = track.find('a')
+                        trackName = None
+                        if trackName_A:
+                            trackName = trackName_A.text.strip()
+                        else:
+                            trackName = (track.get_text(strip=True)).split('.', 1)[1].strip()
+                        if trackName:
+                            albumList.append(trackName)
+                            # Check if this track matches the current song
+                            if musicSearchResultData["geniusMusicSearchSongNameInfo"] in trackName:
+                                musicSearchResultData["geniusMusicSearchAlbumCurrent"] = len(albumList)
+                # If any album list was found, update musicSearchResultData
+                if albumList:
+                    musicSearchResultData["geniusMusicSearchAlbumList"] = albumList
+                    musicSearchResultData["geniusMusicSearchAlbumLength"] = len(albumList)
+                    # If album length is 1, mark it as a single
+                    if len(albumList) <= 1:
+                        musicSearchResultData["geniusMusicSearchAlbumCurrent"] = 1
+                        musicSearchResultData["geniusMusicSearchAlbum"] = musicSearchResultData["geniusMusicSearchSongName"] + " - Single"
+                        musicSearchResultData["geniusMusicSearchAlbumList"] = None
+            except:
+                musicSearchResultData["geniusMusicSearchAlbumCurrent"] = None
+                musicSearchResultData["geniusMusicSearchAlbumLength"] = None
+                musicSearchResultData["geniusMusicSearchAlbumList"] = None
             try: ## Song's Genre
-                infoList = str(html.select("div[class*=SongTags__Container]")).split('</a>') ## Song Genre Container
-                musicSearchResultData["geniusMusicSearchGenre"] = (re.sub(r'<.+?>', '', str(infoList[0]))).replace("[", "").replace("]", "").replace("&amp;", "&") ## Song Genre
+                infoList = str(html.select("div[class*=SongTags]")).split('</a>') ## Song Genre Container
+                musicSearchResultData["geniusMusicSearchGenre"] = (re.sub(r'<.+?>', '', str(infoList[0]))).replace("Tags, ", "").replace("[", "").replace("]", "").replace("&amp;", "&") ## Song Genre
             except: musicSearchResultData["geniusMusicSearchGenre"] = None
             musicSearchResultData["geniusMusicSearchSongLength"] = None ## Song's Length
             try: ## Record Label
@@ -1638,7 +1675,7 @@ def loadGeniusMusic(userInput, forceResult):
             ## Song Lyrics
             if str(musicSearchApiBodyPath["lyrics_state"]).lower() == "complete":
                 try:
-                    lyrics, lyricsListFinal, count = html.select("div[class*=Lyrics__Container]"), [], 1
+                    lyrics, lyricsListFinal, count = html.select('div[data-lyrics-container="true"]'), [], 1
                     lyricsList = str(lyrics).split('<br/>')
                     for line in lyricsList:
                         oldLyricLine = line ## Save Unedited Lyric Line
@@ -1673,7 +1710,7 @@ def loadGeniusMusic(userInput, forceResult):
                 loadingAction = "No_Result_Found" ## No Good Result Found
                 return
     try: ## Save Info to Cache
-        musicSearchResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=10))
+        musicSearchResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=cacheExpireDays))
         pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info")).mkdir(parents=True, exist_ok=True) ## Create Music Search Info Cache Folder
         with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'w') as file:
             json.dump({k: v for k, v in musicSearchResultData.items() if k not in ["lyrics", "png_data"]}, file)
@@ -1972,8 +2009,12 @@ def loadGeniusMusicList(userInput, forceResult):
     artistSearch, musicListResultData["geniusMusicSearchDate"], musicListResultData["geniusSongIDs"], musicListResultData["geniusURLs"], musicListResultData["longArtists"], musicListResultData["longSongNameInfo"], musicListResultData["lyricsHoverMessage"], musicListResultData["lyricsImage"], musicListResultData["musicListLayout"], resultColumns, resultNumber, musicListResultData["resultNumbers"], musicListResultData["songArtists"], musicListResultData["songNames"], musicListResultData["song_art_image_url"] = False, [], [], [], [], [], [], [], [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]], [], 0, [], [], [], []
     if forceResult != "refresh": ## Read from Cache
         try:
-            with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'r') as file:
-                musicListResultData = json.load(file)
+            if isinstance(userInput, list):
+                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInputDisplay.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'r') as file:
+                    musicListResultData = json.load(file)
+            else:
+                with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'r') as file:
+                    musicListResultData = json.load(file)
             musicListResultData["musicListLayout"] = [[sg.Push(background_color='#657076'), sg.Text('Music Search Results:', font='Any 20', background_color='#657076'), sg.Push(background_color='#657076')], [sg.Push(background_color='#657076'), sg.Input(userInputDisplay, do_not_clear=True, size=(60,1), enable_events=True, key='geniusMusicListSearchInput'), sg.Button("", image_filename=str(pathlib.Path(__file__).resolve().parent)+'\\data\\icons\\search.png', border_width=0, button_color='#657076', key='geniusMusicListSearchButton', tooltip="Search"), sg.Push(background_color='#657076')]]
             if datetime.datetime.strptime(musicListResultData["geniusMusicSearchExpireDate"], '%Y-%m-%d') > datetime.datetime.now(): ## Cache Expired
                 for resultNumber in musicListResultData["resultNumbers"]:
@@ -2024,7 +2065,7 @@ def loadGeniusMusicList(userInput, forceResult):
             print(f"[ERROR]: Music Search List: No results found")
             loadingAction = "No_Result_Found"
             return
-        else: userInput = "done"
+        else: userInput = userInputDisplay
     elif userInput != "done":
         if "genius.com" in userInput: userInput = userInput.split("https://genius.com/",1)[1].split("-lyrics",1)[0] ## Genius Website URL
         musicSearchApiBody, hitsFound, pageNumber = [], 0, 1 
@@ -2129,7 +2170,7 @@ def loadGeniusMusicList(userInput, forceResult):
         loadingAction = "Only_One_Result"
     else:
         try: ## Save Info to Cache
-            musicListResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=10))
+            musicListResultData["geniusMusicSearchExpireDate"] = str(datetime.date.today() + datetime.timedelta(days=cacheExpireDays))
             pathlib.Path(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info")).mkdir(parents=True, exist_ok=True) ## Create Music Search List Info Cache Folder
             with open(os.path.join(os.getenv('APPDATA'), "Oszust Industries", "Oszust OS Music Tools", "Cache", "Music Search", "Music Search List Info", userInput.lower().replace(" ", "").rsplit('/', 1)[-1] + ".json"), 'w') as file:
                 json.dump({k: v for k, v in musicListResultData.items() if k not in ["musicListLayout"]}, file)

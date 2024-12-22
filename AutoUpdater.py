@@ -1,4 +1,4 @@
-## Oszust OS AutoUpdater - v5.0.0 (7.13.24) - Oszust Industries
+## Oszust OS AutoUpdater - v5.1.0 (12.21.24) - Oszust Industries
 import json, os, pathlib, requests, shutil, subprocess, threading, urllib.request, webbrowser, zipfile
 import PySimpleGUI as sg
 
@@ -52,6 +52,9 @@ def crashMessage(message, systemName):
                     except: pass
             except: pass
 
+def parseVersion(version):
+    return tuple(map(int, version.lstrip('v').split('.')))
+
 def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, reinstall):
     global current, loadingStatus, loadingStep
     try: urllib.request.urlopen("http://google.com", timeout=3) ## Test Internet
@@ -65,11 +68,12 @@ def OszustOSAutoUpdater(systemName, systemBuild, softwareVersion, reinstall):
             loadingStatus = "Error-Bad API call was made to GitHub's releases." ## Bad API Call
             return
         if newestVersion != softwareVersion:
-            try: releaseInfo = (json.loads(urllib.request.urlopen(f"https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases?per_page=1").read().decode()))[0]['body'] ## Changelog File
-            except: releaseInfo = "Failed"
-            if "[AutoUpdater Code 0]" in releaseInfo: ## AutoUpdater is Blacklisted
-                loadingStatus = "AutoUpdater can't install the files properly. User must install them manually."
-                return
+            for release in ((requests.get("https://api.github.com/repos/Oszust-Industries/" + systemName.replace(" ", "-") + "/releases")).json()):
+                releaseVersionTuple = parseVersion(release['tag_name'])
+                if "autoupdater code 0" in release['body'].lower(): ## AutoUpdater is Blacklisted
+                    if parseVersion(softwareVersion) < releaseVersionTuple: ## Blacklisted is Between Newest and Current
+                        loadingStatus = "AutoUpdater can't install the files properly. User must install them manually."
+                        return
         ## Create Temp Folder for Update in Appdata
             loadingStatus, loadingStep = "Creating Temp Folder...", 3    
             if os.path.exists(tempDownloadFolder) == False: os.mkdir(tempDownloadFolder)
